@@ -1,0 +1,25 @@
+{
+  "servers": {
+    "filesystem": {
+      "type": "stdio", 
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "/workspace/ubem-mcp-server",
+        "/app/software/EnergyPlusV26-1-0",
+        "/tmp"
+      ]
+    },
+    "ubem": {
+      "type": "stdio",
+      "command": "/workspace/ubem-mcp-server/.venv/bin/python",
+      "args": [
+        "-m",
+        "ubem_mcp_server.server"
+      ],
+      "env": {
+        "EPLUS_IDD_PATH": "/app/software/EnergyPlusV26-1-0/Energy+.idd"
+      }
+    }
+  }
+}

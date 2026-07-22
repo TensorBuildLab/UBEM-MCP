@@ -1,0 +1,16 @@
+{
+  "mcp.servers": {
+    "ubem": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v", "${workspaceFolder}:/workspace",
+        "-w", "/workspace/ubem-mcp-server",
+        "ubem-mcp-dev",
+        "uv", "run", "python", "-m", "ubem_mcp_server.server"
+      ]
+    }
+  }
+}

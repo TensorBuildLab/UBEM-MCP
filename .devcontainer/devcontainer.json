@@ -1,0 +1,38 @@
+{
+  "name": "UBEM-MCP Development",
+  "dockerFile": "Dockerfile",
+  "context": ".",
+  "workspaceFolder": "/workspace/ubem-mcp-server",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "forwardPorts": [6274, 8080, 3000],
+  "portsAttributes": {
+    "6274": {
+      "label": "MCP Inspector",
+      "onAutoForward": "openBrowser"
+    },
+    "8080": {
+      "label": "HTTP Server (Alternative)",
+      "onAutoForward": "silent"
+    },
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/workspace/ubem-mcp-server/.venv/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "weidawang.quick-python-print",
+        "bigladder.energyplus-modelkit",
+        "be5invis.toml"
+      ]
+    }
+  },
+  "postCreateCommand": "uv sync --extra dev",
+  "remoteUser": "vscode"
+}

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ubem-mcp-server"
+version = "0.1.0"
+description = "UBEM-MCP: batch/portfolio urban building energy modeling MCP server, built on EnergyPlus"
+authors = [{name = "TensorBuildLab"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.10",
+    "eppy",
+    "matplotlib",
+    "networkx",
+    "pandas",
+    "plotly",
+    "graphviz",
+    "uvicorn[standard]",
+    "python-dotenv",
+]
+license = {text = "BSD-3-Clause-LBNL"}
+keywords = ["EnergyPlus", "MCP", "server", "UBEM", "urban building energy modeling", "batch simulation"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+homepage = "https://github.com/TensorBuildLab/UBEM-MCP"
+repository = "https://github.com/TensorBuildLab/UBEM-MCP"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ubem_mcp_server*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "black",
+    "ruff",
+    "mypy",
+    "httpx",
+    "asgi-lifespan",
+]
