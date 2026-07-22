@@ -571,6 +571,11 @@ UBEM-MCP is built on EnergyPlus-MCP. If you use UBEM-MCP in your research, pleas
 
 ## License
 
-UBEM-MCP is distributed under the same modified BSD license as EnergyPlus-MCP, on which it's built — see [License.txt](License.txt) for the full license text and [Copyright.txt](Copyright.txt) for the copyright notice. See [NOTICE.md](NOTICE.md) for the relationship between this project and EnergyPlus-MCP.
+This repository uses two BSD-3-Clause licenses side by side:
+
+- [LICENSE](LICENSE) (TensorBuildLab) covers UBEM-MCP's own original code, including the batch simulation feature.
+- [License.txt](License.txt) / [Copyright.txt](Copyright.txt) (LBNL) covers the code carried over from EnergyPlus-MCP.
+
+See [NOTICE.md](NOTICE.md) for exactly which files each license covers and the relationship between this project and EnergyPlus-MCP.
 
 **Government Rights Notice**: The EnergyPlus-MCP portions of this software were developed under funding from the U.S. Department of Energy, and the U.S. Government consequently retains certain rights as described in [License.txt](License.txt).

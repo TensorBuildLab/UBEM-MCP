@@ -18,8 +18,21 @@ simulation tools (`run_batch_simulation`, `get_batch_status`,
 running many EnergyPlus models as a background, pollable job, which
 EnergyPlus-MCP does not provide.
 
-This project is distributed under the same BSD-3-Clause-LBNL license as
-EnergyPlus-MCP; see [License.txt](License.txt) and [Copyright.txt](Copyright.txt).
+## Licensing
+
+Two BSD-3-Clause licenses apply within this repository, covering different files:
+
+- **[LICENSE](LICENSE)** — BSD-3-Clause, Copyright (c) 2026 TensorBuildLab.
+  Covers UBEM-MCP's own original code: `batch_manager.py`, the six batch/portfolio
+  simulation tools in `server.py`, and other TensorBuildLab-authored additions.
+- **[License.txt](License.txt)** / **[Copyright.txt](Copyright.txt)** — BSD-3-Clause-LBNL,
+  Copyright (c) 2025 The Regents of the University of California, through Lawrence
+  Berkeley National Laboratory. Covers the code carried over from EnergyPlus-MCP
+  (see the header of each source file for a pointer back to this notice).
+
+Both are permissive BSD-3-Clause variants; keeping them side by side preserves
+LBNL's required copyright notice on the code it originated, without relicensing
+it under TensorBuildLab's name.
 
 ## Citation
 
