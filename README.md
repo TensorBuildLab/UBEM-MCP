@@ -308,10 +308,12 @@ curl -i -X POST http://localhost:8000/mcp \
 
 **5. Connect MCP Inspector.** Run the Inspector and point it at `http://localhost:8000/mcp` with transport `Streamable HTTP` and an `Authorization: Bearer <your-token>` header.
 
-**Tests** — transport and auth behavior is covered by `tests/test_config_transport.py` and `tests/test_auth.py`; batch orchestration is covered by `tests/test_batch_manager.py`. Run with:
+**Tests** — transport and auth behavior is covered by `tests/test_config_transport.py` and `tests/test_auth.py`; batch orchestration is covered by `tests/test_batch_manager.py` (mocked worker) and `tests/test_integration_energyplus.py` (real EnergyPlus runs in worker processes). Run with:
 ```bash
-uv run pytest tests/
+uv run pytest tests/                    # everything; EnergyPlus tests skip if EnergyPlus isn't installed
+uv run pytest tests/ -m "not energyplus" # fast tests only
 ```
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the fast tests on Python 3.10–3.12 and the integration tests against EnergyPlus 26.1.0.
 
 #### Building against a different EnergyPlus version
 
