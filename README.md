@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **41 tools** for loading, validating, modifying, analyzing, and simulating EnergyPlus building energy models — including **batch simulation of a whole portfolio of buildings at once**, which is the core addition over single-model EnergyPlus servers.
+A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **47 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, and from EnergyPlus models to **batch simulation of a whole portfolio of buildings at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -25,6 +25,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
     - [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version)
 - [Available Tools](#available-tools)
 - [Usage Examples](#usage-examples)
+- [Urban Building Stock](#urban-building-stock)
 - [Batch Simulation](#batch-simulation)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -342,7 +343,15 @@ docker build \
 
 ## Available Tools
 
-The server provides **41 tools** organized into **6 categories**:
+The server provides **47 tools** organized into **7 categories**:
+
+### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
+- `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
+- `load_building_stock` - Load building footprints from a GeoJSON file and normalize their attributes
+- `fetch_osm_buildings` - Download building footprints for an area from OpenStreetMap
+- `enrich_building_stock` - Fill guessed attributes (year built, use, floors, height) from a parcel/assessor layer by spatial join
+- `get_building_stock` - Summarize a stock and list/filter its buildings
+- `list_building_stocks` - List loaded stocks (persisted across restarts)
 
 ### 🏙️ Batch Simulation (6 tools) — new in UBEM-MCP
 - `discover_idf_files` - Glob a directory for IDF files to build a batch's model list
@@ -447,6 +456,42 @@ npx @modelcontextprotocol/inspector \
     uv run python -m ubem_mcp_server.server
 ```
 
+## Urban Building Stock
+
+UBEM starts from the city, not from finished EnergyPlus models. The urban tools turn building footprints into a **building stock**: one record per building with a local metric footprint, an archetype (use type), year built and vintage, floor count and height.
+
+1. **Get footprints** — from OpenStreetMap:
+   ```json
+   {"tool": "fetch_osm_buildings", "arguments": {"center_lat": 32.2335, "center_lon": -110.9465, "radius_m": 300, "stock_id": "sam_hughes", "default_year": 1960}}
+   ```
+   or from any GeoJSON (e.g. a city or Microsoft footprint dataset), naming columns if auto-detection misses them:
+   ```json
+   {"tool": "load_building_stock", "arguments": {"geojson_path": "footprints.geojson", "height_field": "HGT", "height_unit": "ft", "source_crs": "EPSG:2868"}}
+   ```
+
+2. **Check data quality** — the summary reports, per attribute, the share of buildings whose value was *inferred* rather than read from the data (e.g. a floor count guessed from the archetype), plus exclusions (sheds, garages, tiny footprints) and approximations (e.g. a church modeled as the closest DOE prototype). Every building lists its own `inferred_fields` and `notes`.
+
+3. **Fill gaps from parcel data** — footprint sources rarely include year built or use. Join an assessor/parcel layer onto the footprints:
+   ```json
+   {
+     "tool": "enrich_building_stock",
+     "arguments": {
+       "stock_id": "sam_hughes",
+       "layer_path": "parcels.geojson",
+       "field_map": {"year_built": "YEAR_BUILT", "use": "LAND_USE"},
+       "use_value_map": {"0131": "single_family", "0310": "office"},
+       "new_stock_id": "sam_hughes_enriched"
+     }
+   }
+   ```
+   Each building takes the attributes of the parcel containing its centroid (or covering most of its footprint). Only inferred attributes are filled unless `overwrite` is set, and the result is saved as a new stock so the original stays as a record.
+
+4. **Inspect** with `get_building_stock` (filter by archetype, vintage, or floor area).
+
+Stocks are saved under `outputs/stocks/<stock_id>/` as `buildings.geojson` (normalized, WGS84 — open it in QGIS or edit and reload it), `meta.json` (source, loader options, OSM query and data timestamp, enrichment provenance) and `excluded.json`. OpenStreetMap fetches also keep the raw Overpass response, so a study can be reproduced exactly.
+
+Archetypes follow the U.S. DOE commercial prototype buildings and the DOE single-family prototype; vintages follow the DOE reference buildings (pre-1980, 1980–2004, 2004+). Run `list_archetypes` for the full list.
+
 ## Batch Simulation
 
 This is the key difference from single-model EnergyPlus MCP servers: **run a whole portfolio of buildings and poll for results**, instead of one blocking call per building.
@@ -505,9 +550,9 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  41 tools organized into 6 categories
+│     Tools Layer         │  47 tools organized into 7 categories
 ├─────────────────────────┤
-│  Orchestration Layer    │  EnergyPlus Manager, Batch Manager & Config Module
+│  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
 │  EnergyPlus Integration │  Direct interface to simulation engine (per-model,
 │                         │  one worker process per concurrent batch model)
@@ -521,6 +566,7 @@ ubem-mcp-server/
 │   ├── server.py              # FastMCP server with tools
 │   ├── energyplus_tools.py    # Core EnergyPlus integration (single model)
 │   ├── batch_manager.py       # Batch/portfolio orchestration (new in UBEM-MCP)
+│   ├── urban/                 # Building stock: GIS intake, archetypes, enrichment (new in UBEM-MCP)
 │   ├── config.py              # Configuration management
 │   └── utils/                 # Specialized utilities
 ├── sample_files/               # Sample IDF and weather files

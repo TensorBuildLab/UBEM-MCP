@@ -16,3 +16,7 @@ def test_server_imports_and_registers_tools():
         "discover_idf_files", "run_batch_simulation", "get_batch_status",
         "get_batch_results", "list_batches", "cancel_batch",
     } <= names
+    assert {
+        "list_archetypes", "load_building_stock", "fetch_osm_buildings",
+        "get_building_stock", "list_building_stocks", "enrich_building_stock",
+    } <= names
