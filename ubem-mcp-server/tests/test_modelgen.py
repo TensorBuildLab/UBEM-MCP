@@ -224,3 +224,16 @@ def test_detailed_footprint_is_simplified_within_area_tolerance():
     # Residential footprints are simplified only as far as the vertex cap needs.
     res_fp, res_zones, _ = model_footprint(box(0, 0, 10, 8), commercial=False)
     assert res_zones is None and res_fp.equals(box(0, 0, 10, 8))
+
+
+def test_unsimplifiable_footprint_becomes_equal_area_rectangle():
+    from ubem_mcp_server.urban.modelgen import model_footprint
+
+    # A 200-point star: no simplification keeps both <= 30 vertices and the area within 5%.
+    star = Polygon([((30 if i % 2 else 15) * math.cos(a), (30 if i % 2 else 15) * math.sin(a))
+                    for i, a in enumerate(i * 2 * math.pi / 200 for i in range(200))])
+    model_fp, zones, note = model_footprint(star, commercial=True)
+    assert len(model_fp.exterior.coords) - 1 == 4
+    assert model_fp.area == pytest.approx(star.area, rel=1e-9)
+    assert "oriented rectangle of the same area" in note
+    assert zones is not None

@@ -27,11 +27,18 @@ See the header of each source file for a pointer back to this notice.
   `urban/generate.py`), the archetype-data builders and validation under
   `scripts/`, and the `generate_building_models` / `simulate_building_stock`
   tools.
+- Site weather and climate zones (`urban/weather.py`) and the
+  `find_weather_stations` / `get_site_weather` tools.
 
 The archetype data in `ubem_mcp_server/urban/data/` are derived from U.S.
 Department of Energy datasets (DOE Commercial Reference Buildings, CC BY 4.0;
 DOE/PNNL residential prototype models); see that folder's README for
 sources and citations.
+
+Weather files and the weather-station index are not redistributed with
+UBEM-MCP; they are downloaded at run time from Climate.OneBuilding.Org
+(Lawrie, L. K., Crawley, D. B., Development of Global Typical Meteorological
+Years (TMYx), https://climate.onebuilding.org), whose terms apply to them.
 
 ## Licensing
 
