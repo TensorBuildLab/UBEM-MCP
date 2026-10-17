@@ -43,7 +43,7 @@ where = ["."]
 include = ["ubem_mcp_server*"]
 
 [tool.setuptools.package-data]
-ubem_mcp_server = ["urban/data/*.json", "urban/data/README.md"]
+ubem_mcp_server = ["urban/data/*.json", "urban/data/README.md", "guides/*.md"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

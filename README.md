@@ -347,7 +347,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **58 tools** organized into **11 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
+The server provides **59 tools** organized into **12 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
 
 **Responses.** The 23 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
 
@@ -357,6 +357,11 @@ The server provides **58 tools** organized into **11 categories**. It uses only 
 ```
 
 Responses are summaries kept under 20,000 characters (lists are paged with `limit`/`offset`, groups are capped), with full detail written to files. Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so a client can tell which tools only read, which discard work, and which reach the internet. The single-model tools carried over from EnergyPlus-MCP keep their original text responses.
+
+**Guides for any client.** Step-by-step workflow guides ship inside the server, not in any one client's skill system. Each guide is offered three ways: through the `get_workflow_guide` tool (works in every MCP client), as an MCP prompt, and as an MCP resource under `ubem://guides/`. Current guides: `stock-to-district` (model a district from footprints), `retrofit-scenario` (compare a retrofit or decarbonisation scenario), `data-only` (work with building data without a model) and `own-models` (run your own EnergyPlus models as a batch). Reference data are resources too: `ubem://archetypes`, `ubem://retrofit-measures` and `ubem://scenario-schema`, generated from the code. On connection, every client receives short server instructions on how the tools fit together.
+
+### 📘 Guides (1 tool) — new in UBEM-MCP
+- `get_workflow_guide` - List the workflow guides, or return one guide's step-by-step text
 
 ### 🗺️ Urban Building Stock (9 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins

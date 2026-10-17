@@ -31,6 +31,7 @@ from ubem_mcp_server.energyplus_tools import EnergyPlusManager
 from ubem_mcp_server.config import get_config, Config
 from ubem_mcp_server.batch_manager import BatchManager, discover_idf_files as _discover_idf_files
 from ubem_mcp_server.urban import ARCHETYPES, StockManager, provenance
+from ubem_mcp_server import guides as workflow_guides
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,35 @@ else:
 _mcp_kwargs: dict = {}
 if _transport_security is not None:
     _mcp_kwargs["transport_security"] = _transport_security
-mcp = FastMCP(config.server.name, **_mcp_kwargs)
+# Sent to every MCP client on connection. Plain guidance, no client-specific features.
+SERVER_INSTRUCTIONS = """\
+UBEM-MCP runs urban building energy modeling (UBEM): building stock data from GIS
+footprints and parcels, archetype EnergyPlus models or the user's own models,
+background batch simulation, district results and retrofit scenarios.
+
+How the tools fit together:
+- Work flows through named objects passed by ID: a stock (stock_id) -> its site
+  weather -> a model set (model_set_id) -> a batch (batch_id) -> results -> a
+  scenario derived from a baseline. Keep the IDs a tool returns and pass them on.
+- Nothing is overwritten: enrichment, archetype assignment and scenarios create
+  new objects, so earlier work stays available.
+- Long simulations run in the background. After simulate_building_stock,
+  simulate_retrofit_scenario or run_batch_simulation, poll get_batch_status every
+  one to two minutes until is_complete, then aggregate. Follow next_steps.
+- Use the tools rather than writing your own scripts for what they already do.
+- Data-only questions need no model: load with mode="data", then query_stock and
+  export_stock.
+
+Every UBEM-MCP tool returns {"ok": ...}. On ok=false, read error_type and error.
+Pass warnings on to the user, together with how much of the input was guessed
+(inferred_share) or is known (known_share), and the attribution line for any
+map or report.
+
+Step-by-step guides: call get_workflow_guide (no arguments lists them), or use
+the MCP prompts or the resources under ubem://guides/.
+"""
+
+mcp = FastMCP(config.server.name, instructions=SERVER_INSTRUCTIONS, **_mcp_kwargs)
 
 # Initialize EnergyPlus manager with configuration
 ep_manager = EnergyPlusManager(config)
@@ -2326,6 +2355,83 @@ async def compare_retrofit_scenario(
         baseline_results_id=baseline_results_id, scenario_results_id=scenario_results_id,
         emission_factors=emission_factors)
     return result
+
+
+# ============================================================================
+# Workflow guides and reference data for any MCP client — new in UBEM-MCP
+# ============================================================================
+# The same guides are offered as a tool (works in every client), as MCP prompts
+# and as MCP resources. Reference catalogues are generated from the code, so they
+# cannot drift from what the tools accept.
+
+@ubem_tool(read_only=True)
+async def get_workflow_guide(name: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Step-by-step guides for common UBEM tasks; call with no name to list them
+
+    Guides cover: modeling a district from footprints, retrofit and
+    decarbonisation scenarios, working with building data without a model,
+    and running your own EnergyPlus models as a batch. Each guide names the
+    exact tools and arguments to use, in order.
+
+    Args:
+        name: Guide to return, e.g. "stock-to-district"; omit to list all guides
+
+    Returns:
+        JSON with the list of guides, or one guide's title, use case and Markdown text.
+    """
+    if name is None:
+        return {"guides": workflow_guides.list_guides()}
+    return workflow_guides.get_guide(name)
+
+
+def _register_guide_prompt(guide: Dict[str, str]) -> None:
+    def prompt() -> str:
+        return workflow_guides.get_guide(guide["name"])["text"]
+
+    prompt.__name__ = guide["name"].replace("-", "_")
+    mcp.prompt(name=guide["name"], title=guide["title"], description=guide["description"])(prompt)
+
+    def resource() -> str:
+        return workflow_guides.get_guide(guide["name"])["text"]
+
+    resource.__name__ = "guide_" + guide["name"].replace("-", "_")
+    mcp.resource(f"ubem://guides/{guide['name']}", name=guide["name"], title=guide["title"],
+                 description=guide["description"], mime_type="text/markdown")(resource)
+
+
+for _guide in workflow_guides.list_guides():
+    _register_guide_prompt(_guide)
+
+
+@mcp.resource("ubem://archetypes", name="archetypes", title="Building archetypes and vintages",
+              description="The DOE prototype archetypes and vintage bins UBEM-MCP models", mime_type="application/json")
+def archetypes_resource() -> str:
+    return json.dumps({
+        "archetypes": [{"key": a.key, "label": a.label, "sector": a.sector, "default_floors": a.default_floors,
+                        "floor_to_floor_m": a.floor_to_floor_m} for a in ARCHETYPES.values()],
+        "vintages": {"pre1980": "built before 1980", "1980_2004": "built 1980-2003", "post2004": "built 2004 or later"},
+    }, indent=1)
+
+
+@mcp.resource("ubem://retrofit-measures", name="retrofit-measures", title="Retrofit measures",
+              description="Measure types and parameters for retrofit scenarios", mime_type="application/json")
+def retrofit_measures_resource() -> str:
+    from ubem_mcp_server.urban.retrofit import list_measures
+    return json.dumps(list_measures(), indent=1)
+
+
+@mcp.resource("ubem://scenario-schema", name="scenario-schema", title="Retrofit scenario format",
+              description="Keys a retrofit scenario accepts, with an example", mime_type="application/json")
+def scenario_schema_resource() -> str:
+    from ubem_mcp_server.urban.retrofit import _FILTER_KEYS, _SCENARIO_KEYS
+    return json.dumps({
+        "scenario_keys": sorted(_SCENARIO_KEYS),
+        "measure_filter_keys": sorted(_FILTER_KEYS - {"type"}),
+        "example": {"name": "electrify", "measures": [{"type": "heat_pump", "heating_cop": 3.3},
+                                                      {"type": "lighting", "reduction": 0.4}],
+                    "vintages": ["pre1980"], "adoption_rate": 0.5, "seed": 1},
+    }, indent=1)
 
 
 if __name__ == "__main__":
