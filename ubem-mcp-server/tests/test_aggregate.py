@@ -107,6 +107,7 @@ def test_aggregate_model_set(tmp_path):
     s = sm.aggregate_results("s", "m", emission_factors={"electricity": 0.5, "natural_gas": 0.2}, make_map=False)
     cov = s["coverage"]
     assert (cov["buildings_with_results"], cov["buildings_without_results"]) == (2, 2)
+    assert (sm.stock_dir("s") / "models" / "m" / "results" / "latest" / "ATTRIBUTION.txt").exists()
     assert {m["building_id"]: m["status"] for m in s["without_results"]} == {
         "b2": "failed", "b9": "model generation failed"}
 

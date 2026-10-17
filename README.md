@@ -482,7 +482,7 @@ UBEM starts from the city, not from finished EnergyPlus models. The urban tools 
 
 1. **Get footprints** — from OpenStreetMap:
    ```json
-   {"tool": "fetch_osm_buildings", "arguments": {"center_lat": 32.2335, "center_lon": -110.9465, "radius_m": 300, "stock_id": "sam_hughes", "default_year": 1960}}
+   {"tool": "fetch_osm_buildings", "arguments": {"center_lat": 32.2335, "center_lon": -110.9465, "radius_m": 300, "stock_id": "uofa_campus", "default_year": 1960}}
    ```
    or from any GeoJSON (e.g. a city or Microsoft footprint dataset), naming columns if auto-detection misses them:
    ```json
@@ -496,17 +496,21 @@ UBEM starts from the city, not from finished EnergyPlus models. The urban tools 
    {
      "tool": "enrich_building_stock",
      "arguments": {
-       "stock_id": "sam_hughes",
+       "stock_id": "uofa_campus",
        "layer_path": "parcels.geojson",
        "field_map": {"year_built": "YEAR_BUILT", "use": "LAND_USE"},
        "use_value_map": {"0131": "single_family", "0310": "office"},
-       "new_stock_id": "sam_hughes_enriched"
+       "new_stock_id": "uofa_campus_enriched"
      }
    }
    ```
    Each building takes the attributes of the parcel containing its centroid (or covering most of its footprint). Only inferred attributes are filled unless `overwrite` is set, and the result is saved as a new stock so the original stays as a record.
 
 4. **Inspect** with `get_building_stock` (filter by archetype, vintage, or floor area).
+
+5. **Know where the data came from** — every stock records its data sources with their licences and the attribution they require: OpenStreetMap (ODbL), your own files (pass `license` and `attribution` to `load_building_stock`, or `layer_license` and `layer_attribution` to `enrich_building_stock`), the weather file (Climate.OneBuilding.Org) and the archetype library (DOE, CC BY 4.0). Tool results list the sources and warn when a licence is unknown or when ODbL footprints are combined with data whose terms may not allow it. Model sets and results carry the same record, and each results folder gets an `ATTRIBUTION.txt` to copy into reports and maps.
+
+**Personal data.** Columns about people, such as an owner's name, mailing address, phone or e-mail in assessor data, are dropped when a stock is loaded, and the tool reports which columns were removed. Modeling never needs them. Pass `keep_personal_fields: true` only if you need them and are allowed to hold them.
 
 Stocks are saved under `outputs/stocks/<stock_id>/` as `buildings.geojson` (normalized, WGS84 — open it in QGIS or edit and reload it), `meta.json` (source, loader options, OSM query and data timestamp, enrichment provenance) and `excluded.json`. OpenStreetMap fetches also keep the raw Overpass response, so a study can be reproduced exactly.
 
@@ -517,7 +521,7 @@ Archetypes follow the U.S. DOE commercial prototype buildings and the DOE single
 A stock's location determines its weather file and climate zone, so they do not have to be looked up by hand:
 
 ```json
-{"tool": "get_site_weather", "arguments": {"stock_id": "sam_hughes"}}
+{"tool": "get_site_weather", "arguments": {"stock_id": "uofa_campus"}}
 ```
 
 - **Station**: the station nearest to the stock's center, from the [Climate.OneBuilding.Org](https://climate.onebuilding.org) TMYx index of about 17,000 stations worldwide. The index is downloaded on first use and cached under `outputs/weather/`. Use `find_weather_stations` to see the alternatives and pass `station` to pick another one.
@@ -543,7 +547,7 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
   - Or use `hvac="ideal"` for ideal loads.
 
 ```json
-{"tool": "simulate_building_stock", "arguments": {"stock_id": "sam_hughes_enriched"}}
+{"tool": "simulate_building_stock", "arguments": {"stock_id": "uofa_campus_enriched"}}
 ```
 
 Without `climate_zone` or `weather_file`, the stock's site weather is used (see [Site Weather](#site-weather)). This returns a `batch_id`; poll it with `get_batch_status`, then aggregate the results (see [District Results](#district-results)). Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
@@ -583,7 +587,7 @@ A scenario applies measures to the archetype parameters of the buildings it targ
 ```json
 {"tool": "simulate_retrofit_scenario",
  "arguments": {
-   "stock_id": "sam_hughes", "baseline_model_set_id": "baseline",
+   "stock_id": "uofa_campus", "baseline_model_set_id": "baseline",
    "scenario": {
      "name": "electrify",
      "measures": [
@@ -615,7 +619,7 @@ After the scenario's batch completes, aggregate it with `aggregate_stock_results
 
 ```json
 {"tool": "compare_retrofit_scenario",
- "arguments": {"stock_id": "sam_hughes", "scenario_model_set_id": "baseline__electrify",
+ "arguments": {"stock_id": "uofa_campus", "scenario_model_set_id": "baseline__electrify",
                "emission_factors": {"electricity": 0.4, "natural_gas": 0.18}}}
 ```
 
