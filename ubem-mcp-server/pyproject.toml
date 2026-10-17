@@ -19,6 +19,8 @@ dependencies = [
     "graphviz",
     "uvicorn[standard]",
     "python-dotenv",
+    "shapely>=2.1",
+    "pyproj>=3.6",
 ]
 license = {text = "BSD-3-Clause-LBNL"}
 keywords = ["EnergyPlus", "MCP", "server", "UBEM", "urban building energy modeling", "batch simulation"]

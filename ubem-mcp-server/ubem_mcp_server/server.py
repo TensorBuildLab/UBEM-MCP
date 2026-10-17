@@ -26,6 +26,7 @@ from mcp.server.fastmcp import FastMCP
 from ubem_mcp_server.energyplus_tools import EnergyPlusManager
 from ubem_mcp_server.config import get_config, Config
 from ubem_mcp_server.batch_manager import BatchManager, discover_idf_files as _discover_idf_files
+from ubem_mcp_server.urban import ARCHETYPES, StockManager
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +75,9 @@ ep_manager = EnergyPlusManager(config)
 
 # Initialize batch manager for multi-model (portfolio) simulation
 batch_manager = BatchManager(config)
+
+# Initialize building-stock registry for urban (GIS-based) modeling
+stock_manager = StockManager(config)
 
 logger.info(f"UBEM-MCP Server '{config.server.name}' v{config.server.version} initialized")
 
@@ -1582,6 +1586,263 @@ async def cancel_batch(batch_id: str) -> str:
     except Exception as e:
         logger.error(f"Error cancelling batch {batch_id}: {str(e)}")
         return f"Error cancelling batch: {str(e)}"
+
+
+# ============================================================================
+# Urban Building Stock (GIS footprints -> normalized buildings) — new in UBEM-MCP
+# ============================================================================
+
+def _stock_loader_options(**opts) -> Dict[str, Any]:
+    return {k: v for k, v in opts.items() if v is not None}
+
+
+@mcp.tool()
+async def list_archetypes() -> str:
+    """
+    List the building archetypes (use types) and vintage bins UBEM-MCP models
+
+    Archetypes follow the U.S. DOE commercial prototype buildings plus the DOE
+    single-family residential prototype. Use these keys for `default_archetype`
+    or in an explicit use column of your GIS data.
+
+    Returns:
+        JSON with archetype keys, labels, sector, default floor count and
+        floor-to-floor height, and the vintage bins (by year built).
+    """
+    data = {
+        "archetypes": [
+            {"key": a.key, "label": a.label, "sector": a.sector,
+             "default_floors": a.default_floors, "floor_to_floor_m": a.floor_to_floor_m}
+            for a in ARCHETYPES.values()
+        ],
+        "vintages": {"pre1980": "built before 1980", "1980_2004": "built 1980-2003",
+                     "post2004": "built 2004 or later"},
+    }
+    return json.dumps(data, indent=2)
+
+
+@mcp.tool()
+async def load_building_stock(
+    geojson_path: str,
+    stock_id: Optional[str] = None,
+    source_crs: Optional[str] = None,
+    height_field: Optional[str] = None,
+    floors_field: Optional[str] = None,
+    use_field: Optional[str] = None,
+    year_field: Optional[str] = None,
+    id_field: Optional[str] = None,
+    height_unit: str = "m",
+    default_archetype: str = "single_family",
+    default_year: int = 1980,
+    min_footprint_m2: float = 20.0,
+) -> str:
+    """
+    Load building footprints from a GeoJSON file as a building stock for urban modeling
+
+    Each footprint is projected to a local metric frame and given a normalized
+    archetype, year built / vintage, floor count and height. Attribute columns are
+    auto-detected (e.g. height, building:levels, building/amenity, start_date,
+    year_built); pass the *_field arguments to name them explicitly. Values that
+    had to be guessed are listed per building in `inferred_fields`, and the
+    summary reports the inferred share per attribute. Sheds, garages and
+    footprints under `min_footprint_m2` are excluded with a reason.
+
+    The normalized stock is saved as <stock_directory>/buildings.geojson. To
+    correct attributes, edit that file and load it again under a new stock_id.
+
+    Args:
+        geojson_path: GeoJSON FeatureCollection of building polygons
+        stock_id: Optional name for the stock (letters, digits, _ or -); auto-generated if omitted
+        source_crs: CRS of the coordinates if not WGS84 lon/lat, e.g. "EPSG:2868"
+        height_field / floors_field / use_field / year_field / id_field: column names to use
+        height_unit: "m" or "ft" for numeric heights without a unit
+        default_archetype: Archetype for buildings with no recognizable use (see list_archetypes)
+        default_year: Year built for buildings with no construction year
+        min_footprint_m2: Smaller footprints are excluded
+
+    Returns:
+        JSON summary: stock_id, building counts by archetype and vintage, floor
+        areas, inferred-attribute shares, and exclusions by reason.
+    """
+    try:
+        opts = _stock_loader_options(
+            source_crs=source_crs, height_field=height_field, floors_field=floors_field,
+            use_field=use_field, year_field=year_field, id_field=id_field, height_unit=height_unit,
+            default_archetype=default_archetype, default_year=default_year,
+            min_footprint_m2=min_footprint_m2,
+        )
+        result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, **opts)
+        return f"Building stock loaded:\n{json.dumps(result, indent=2)}"
+    except (ValueError, FileNotFoundError) as e:
+        return f"Could not load building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error loading building stock {geojson_path}: {str(e)}")
+        return f"Error loading building stock: {str(e)}"
+
+
+@mcp.tool()
+async def fetch_osm_buildings(
+    bbox: Optional[List[float]] = None,
+    center_lat: Optional[float] = None,
+    center_lon: Optional[float] = None,
+    radius_m: Optional[float] = None,
+    stock_id: Optional[str] = None,
+    default_archetype: str = "single_family",
+    default_year: int = 1980,
+    min_footprint_m2: float = 20.0,
+) -> str:
+    """
+    Download building footprints from OpenStreetMap and load them as a building stock
+
+    Queries the Overpass API for every building way/multipolygon in the area,
+    then normalizes it exactly like load_building_stock (OSM tags such as
+    building, amenity, shop, building:levels, height and start_date are used).
+    The raw OSM response and OSM data timestamp are saved with the stock so the
+    study can be reproduced. Areas are limited to 25 km2 per request.
+
+    Args:
+        bbox: [south, west, north, east] in decimal degrees, or use center + radius
+        center_lat, center_lon: Center of the area (decimal degrees)
+        radius_m: Half-width of a square area around the center, in metres
+        stock_id: Optional name for the stock
+        default_archetype: Archetype for buildings tagged only building=yes (see list_archetypes)
+        default_year: Year built when OSM has no start_date (most buildings)
+        min_footprint_m2: Smaller footprints are excluded
+
+    Returns:
+        JSON summary of the stock, as for load_building_stock.
+    """
+    try:
+        opts = _stock_loader_options(
+            default_archetype=default_archetype, default_year=default_year,
+            min_footprint_m2=min_footprint_m2,
+        )
+        result = await asyncio.to_thread(
+            stock_manager.fetch_osm, bbox=bbox, center_lat=center_lat, center_lon=center_lon,
+            radius_m=radius_m, stock_id=stock_id, **opts,
+        )
+        return f"OpenStreetMap buildings loaded:\n{json.dumps(result, indent=2)}"
+    except ValueError as e:
+        return f"Could not fetch OSM buildings: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error fetching OSM buildings: {str(e)}")
+        return f"Error fetching OSM buildings (the Overpass API may be busy; retry shortly): {str(e)}"
+
+
+@mcp.tool()
+async def enrich_building_stock(
+    stock_id: str,
+    layer_path: str,
+    field_map: Dict[str, str],
+    use_value_map: Optional[Dict[str, str]] = None,
+    layer_crs: Optional[str] = None,
+    overwrite: bool = False,
+    height_unit: str = "m",
+    min_overlap: float = 0.5,
+    new_stock_id: Optional[str] = None,
+) -> str:
+    """
+    Fill a building stock's guessed attributes from another GIS layer (e.g. assessor parcels)
+
+    Footprint sources such as OpenStreetMap rarely carry year built or use. This
+    joins a GeoJSON layer onto the footprints: each building takes the attributes
+    of the layer polygon containing its centroid (or covering most of its
+    footprint), or of a point feature inside it. By default only attributes that
+    were inferred are filled. The result is saved as a new stock; the original
+    is unchanged.
+
+    Args:
+        stock_id: Stock to enrich
+        layer_path: GeoJSON FeatureCollection (polygons such as parcels, or points)
+        field_map: Target attribute -> layer column, using any of
+                   "year_built", "use", "num_floors", "height_m",
+                   e.g. {"year_built": "YEAR_BUILT", "use": "LAND_USE"}
+        use_value_map: Translate layer use values (e.g. land-use codes) to archetype
+                       keys or use words, e.g. {"0131": "single_family", "0310": "office"}
+        layer_crs: CRS of the layer if not WGS84 lon/lat, e.g. "EPSG:2868"
+        overwrite: Also replace values that came from the footprint source
+        height_unit: "m" or "ft" for the layer's height column
+        min_overlap: Minimum footprint share a polygon must cover when the centroid test fails
+        new_stock_id: Optional name for the enriched stock
+
+    Returns:
+        JSON with match counts, filled attribute counts, unrecognized use values,
+        inferred shares before/after, and the new stock's summary.
+    """
+    try:
+        result = stock_manager.enrich(
+            stock_id, layer_path, field_map, new_stock_id=new_stock_id,
+            use_value_map=use_value_map, layer_crs=layer_crs, overwrite=overwrite,
+            height_unit=height_unit, min_overlap=min_overlap,
+        )
+        return f"Building stock enriched:\n{json.dumps(result, indent=2)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not enrich building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error enriching building stock {stock_id}: {str(e)}")
+        return f"Error enriching building stock: {str(e)}"
+
+
+@mcp.tool()
+async def get_building_stock(
+    stock_id: str,
+    archetypes: Optional[List[str]] = None,
+    vintages: Optional[List[str]] = None,
+    min_gfa_m2: Optional[float] = None,
+    max_gfa_m2: Optional[float] = None,
+    limit: int = 50,
+) -> str:
+    """
+    Summarize a building stock and list its buildings, optionally filtered
+
+    Args:
+        stock_id: ID from load_building_stock or fetch_osm_buildings
+        archetypes: Only buildings with these archetype keys
+        vintages: Only these vintages ("pre1980", "1980_2004", "post2004")
+        min_gfa_m2 / max_gfa_m2: Gross floor area range
+        limit: Max buildings to list (the summary always covers the whole stock)
+
+    Returns:
+        JSON with the stock summary, the number of matching buildings, and up to
+        `limit` matching buildings with their normalized attributes.
+    """
+    try:
+        stock = stock_manager.get(stock_id)
+        matches = stock.filter(archetypes=archetypes, vintages=vintages,
+                               min_gfa_m2=min_gfa_m2, max_gfa_m2=max_gfa_m2)
+        buildings = []
+        for b in matches[:max(0, limit)]:
+            props = b.to_properties()
+            props.pop("source_properties", None)
+            buildings.append(props)
+        data = {
+            "stock_id": stock_id,
+            "stock_directory": str(stock_manager.stock_dir(stock_id)),
+            "summary": stock.summary(),
+            "num_matching": len(matches),
+            "buildings": buildings,
+        }
+        return json.dumps(data, indent=2)
+    except (KeyError, ValueError) as e:
+        return f"Could not get building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error reading building stock {stock_id}: {str(e)}")
+        return f"Error reading building stock: {str(e)}"
+
+
+@mcp.tool()
+async def list_building_stocks() -> str:
+    """
+    List building stocks loaded so far (persisted across server restarts)
+
+    Returns:
+        JSON list of stocks with stock_id, creation time, source and building count.
+    """
+    try:
+        return json.dumps(stock_manager.list_stocks(), indent=2)
+    except Exception as e:
+        logger.error(f"Error listing building stocks: {str(e)}")
+        return f"Error listing building stocks: {str(e)}"
 
 
 if __name__ == "__main__":

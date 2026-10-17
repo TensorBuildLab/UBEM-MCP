@@ -12,19 +12,26 @@ utilities under `utils/` — is carried over from EnergyPlus-MCP with only
 mechanical renames (package name, project identifiers, log file names).
 See the header of each source file for a pointer back to this notice.
 
-**What's new in UBEM-MCP:** `batch_manager.py` and the six batch/portfolio
-simulation tools (`run_batch_simulation`, `get_batch_status`,
-`get_batch_results`, `list_batches`, `cancel_batch`, `discover_idf_files`) —
-running many EnergyPlus models as a background, pollable job, which
-EnergyPlus-MCP does not provide.
+**What's new in UBEM-MCP:**
+
+- `batch_manager.py` and the six batch/portfolio simulation tools
+  (`run_batch_simulation`, `get_batch_status`, `get_batch_results`,
+  `list_batches`, `cancel_batch`, `discover_idf_files`) — running many
+  EnergyPlus models as a background, pollable job, which EnergyPlus-MCP does
+  not provide.
+- The `urban/` package and the six building-stock tools (`list_archetypes`,
+  `load_building_stock`, `fetch_osm_buildings`, `enrich_building_stock`,
+  `get_building_stock`, `list_building_stocks`) — GIS footprint intake,
+  archetype classification and attribute enrichment for urban-scale modeling.
 
 ## Licensing
 
 Two BSD-3-Clause licenses apply within this repository, covering different files:
 
 - **[LICENSE](LICENSE)** — BSD-3-Clause, Copyright (c) 2026 TensorBuildLab.
-  Covers UBEM-MCP's own original code: `batch_manager.py`, the six batch/portfolio
-  simulation tools in `server.py`, and other TensorBuildLab-authored additions.
+  Covers UBEM-MCP's own original code: `batch_manager.py`, the `urban/` package,
+  the batch/portfolio and building-stock tools in `server.py`, the tests and CI
+  added in UBEM-MCP, and other TensorBuildLab-authored additions.
 - **[License.txt](License.txt)** / **[Copyright.txt](Copyright.txt)** — BSD-3-Clause-LBNL,
   Copyright (c) 2025 The Regents of the University of California, through Lawrence
   Berkeley National Laboratory. Covers the code carried over from EnergyPlus-MCP
