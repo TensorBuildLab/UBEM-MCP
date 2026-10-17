@@ -32,4 +32,5 @@ def test_server_imports_and_registers_tools():
     assert {
         "list_archetypes", "load_building_stock", "fetch_osm_buildings",
         "get_building_stock", "list_building_stocks", "enrich_building_stock",
+        "generate_building_models", "simulate_building_stock",
     } <= names

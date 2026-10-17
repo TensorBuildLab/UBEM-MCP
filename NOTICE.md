@@ -23,6 +23,15 @@ See the header of each source file for a pointer back to this notice.
   `load_building_stock`, `fetch_osm_buildings`, `enrich_building_stock`,
   `get_building_stock`, `list_building_stocks`) — GIS footprint intake,
   archetype classification and attribute enrichment for urban-scale modeling.
+- Archetype model generation (`urban/library.py`, `urban/modelgen.py`,
+  `urban/generate.py`), the archetype-data builders and validation under
+  `scripts/`, and the `generate_building_models` / `simulate_building_stock`
+  tools.
+
+The archetype data in `ubem_mcp_server/urban/data/` are derived from U.S.
+Department of Energy datasets (DOE Commercial Reference Buildings, CC BY 4.0;
+DOE/PNNL residential prototype models); see that folder's README for
+sources and citations.
 
 ## Licensing
 

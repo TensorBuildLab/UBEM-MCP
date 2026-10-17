@@ -1,0 +1,1751 @@
+{
+ "source": {
+  "title": "DOE/PNNL residential prototype building models (IECC 2006, single-family)",
+  "model": "single-family, gas furnace + DX cooling, slab-on-grade, IECC 2006",
+  "url": "https://www.energycodes.gov/prototype-building-models",
+  "energyplus_version": "23.1",
+  "built_on": "2026-10-16",
+  "files": {
+   "US+SF+CZ1AWH+gasfurnace+slab+IECC_2006.idf": "619501f65d05f15ebbca8dddf9dedcf18889f98a1b44513d5b708a4e1cd58586",
+   "US+SF+CZ1AWH+gasfurnace+slab+IECC_2006.table.htm": "cd59c8898ad4d2815f7884576e0a1cb5e422c4a8c616422645b3ca540b989dba",
+   "US+SF+CZ2AWH+gasfurnace+slab+IECC_2006.idf": "67ebd51bc724c2b6cad346f104525c80a47f18bf8bdb6d831485af74d73ad8bb",
+   "US+SF+CZ2AWH+gasfurnace+slab+IECC_2006.table.htm": "e61dc631b2663c2cabd485f4ca7731ae3a3a5bc4cfd2005a2abb76d0b46017e9",
+   "US+SF+CZ2B+gasfurnace+slab+IECC_2006.idf": "1f58d39681dbf923da69c1e9433a577e32670281bdf0201bd328faa17d8cdfff",
+   "US+SF+CZ2B+gasfurnace+slab+IECC_2006.table.htm": "4cd651739c2f7d50f7b006d3aa7e6b3f272e45f4e7bd152cd416eba24ddb4627",
+   "US+SF+CZ3A+gasfurnace+slab+IECC_2006.idf": "516eda46410176b5cde55dd42c95b3d76b2c5ccdb74f956747c7feca84470dbf",
+   "US+SF+CZ3A+gasfurnace+slab+IECC_2006.table.htm": "d680deaa7e7242c1f82bad35319111d504162d35eefe7bd6aea136adde7d1c4c",
+   "US+SF+CZ3B+gasfurnace+slab+IECC_2006.idf": "209d7901eac5230d12159d2ecd669d9e13c09346202332d015b01f0c73c64bef",
+   "US+SF+CZ3B+gasfurnace+slab+IECC_2006.table.htm": "f20e74d7d6f3e478314ea4d625033b55bcca8ba09d3245ff36713530249348a0",
+   "US+SF+CZ3C+gasfurnace+slab+IECC_2006.idf": "4147ef2786ef133d0ffc7bfebafa97f8fc187b78ba93f418f490c5e2ac492cb6",
+   "US+SF+CZ3C+gasfurnace+slab+IECC_2006.table.htm": "9d095f2fac56615bb2da53be633be9e876a2e9e7c4ee4b80cfdb3b3b209c443c",
+   "US+SF+CZ4A+gasfurnace+slab+IECC_2006.idf": "e4e06c71ed74261e428ae97176ab8e6d07a9e3eebde1bcb1ceb303e6eae4bc88",
+   "US+SF+CZ4A+gasfurnace+slab+IECC_2006.table.htm": "d64aa7bffd2c1ad182471b2ecb3607c82c82ed593d2a27d668e0d59b411c035c",
+   "US+SF+CZ4B+gasfurnace+slab+IECC_2006.idf": "e1525215c943469bc6fe89f6bdd6f40e0a2d9552ae09c5a7440179a64fb0b878",
+   "US+SF+CZ4B+gasfurnace+slab+IECC_2006.table.htm": "30dd80200e1b778926ad9993b1c00f2d6d56ba5cd2804ce16ab90ae893c4c860",
+   "US+SF+CZ4C+gasfurnace+slab+IECC_2006.idf": "6a1882ddf2829c7d5f053c90d0afbe73ae0a73ce15da42dbc35202ef295b30ba",
+   "US+SF+CZ4C+gasfurnace+slab+IECC_2006.table.htm": "380ae31e878cb9d5c06ebd3807d47a829822c94a1083bfe3f3725ef55a7c6bf9",
+   "US+SF+CZ5A+gasfurnace+slab+IECC_2006.idf": "92d92661f4311470b79ce85aade8575053192f850b1f6fd61ef0a9ba42e39062",
+   "US+SF+CZ5A+gasfurnace+slab+IECC_2006.table.htm": "91cc257082e8e9653b3dbeb17f4624942414a3492115f7ff526f49383d58d235",
+   "US+SF+CZ5B+gasfurnace+slab+IECC_2006.idf": "004fc21b47936b1a71b3a18770e4b22361be6a169bca21890069c2c1e615c0ae",
+   "US+SF+CZ5B+gasfurnace+slab+IECC_2006.table.htm": "a34565f17071b7a54b9bc5fc87ebb8dbea371e92a12b9b6d1e3a60151054c947",
+   "US+SF+CZ6A+gasfurnace+slab+IECC_2006.idf": "dab79a804f9200e9177c46892bd7e292d8afe0cb407dd71f83af90d098b243a4",
+   "US+SF+CZ6A+gasfurnace+slab+IECC_2006.table.htm": "f9b8f49718e29b09a3c01387fccde0a022c6b04ebc8f607238d523af013a496d",
+   "US+SF+CZ6B+gasfurnace+slab+IECC_2006.idf": "c3570f51a71ee7af3daf167b7bb6dc44f4e7d50644687756ad51456a2466500c",
+   "US+SF+CZ6B+gasfurnace+slab+IECC_2006.table.htm": "3782089ebbf7b64a2a0871bcf4008597f0d1a1851dd9a7146675f025777503b6",
+   "US+SF+CZ7+gasfurnace+slab+IECC_2006.idf": "5866b166d1a369e18c6a2abbf858092beafd9d44fa62e47ca403ae0084a81d58",
+   "US+SF+CZ7+gasfurnace+slab+IECC_2006.table.htm": "e9f5650550f811950c3978436433bd18176601329058e27455b4bc88a8c184c5",
+   "US+SF+CZ8+gasfurnace+slab+IECC_2006.idf": "5de97c3d6501748b82886c39fcd7ca0bef6ed464ac3b0fda0117e0f957aef67f",
+   "US+SF+CZ8+gasfurnace+slab+IECC_2006.table.htm": "3f5c261a57fc1d35a9535c488e93ef96e03cb23454447634cf7679e8a57e5515"
+  }
+ },
+ "climate": {
+  "1A": {
+   "model": "US+SF+CZ1AWH+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 6.8139,
+   "window_shgc": 0.335,
+   "window_vt": 0.885,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 17.944,
+     "interior_equipment": 52.618,
+     "water_systems": 63.61
+    },
+    "electricity": {
+     "cooling": 110.885,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 24.388
+    }
+   },
+   "reference_eui_mj_m2_total": 417.13,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "2A": {
+   "model": "US+SF+CZ2AWH+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 4.2644,
+   "window_shgc": 0.34,
+   "window_vt": 0.884,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 63.309,
+     "interior_equipment": 52.618,
+     "water_systems": 71.273
+    },
+    "electricity": {
+     "cooling": 91.57,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 24.364
+    }
+   },
+   "reference_eui_mj_m2_total": 450.82,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "2B": {
+   "model": "US+SF+CZ2B+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 4.2644,
+   "window_shgc": 0.34,
+   "window_vt": 0.884,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 81.691,
+     "interior_equipment": 52.618,
+     "water_systems": 71.586
+    },
+    "electricity": {
+     "cooling": 91.909,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 29.25
+    }
+   },
+   "reference_eui_mj_m2_total": 474.74,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "3A": {
+   "model": "US+SF+CZ3A+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 3.6965,
+   "window_shgc": 0.337,
+   "window_vt": 0.884,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 221.299,
+     "interior_equipment": 52.618,
+     "water_systems": 88.195
+    },
+    "electricity": {
+     "cooling": 53.289,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 21.588
+    }
+   },
+   "reference_eui_mj_m2_total": 584.68,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "3B": {
+   "model": "US+SF+CZ3B+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 3.6965,
+   "window_shgc": 0.337,
+   "window_vt": 0.884,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 144.579,
+     "interior_equipment": 52.618,
+     "water_systems": 83.055
+    },
+    "electricity": {
+     "cooling": 62.115,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 26.158
+    }
+   },
+   "reference_eui_mj_m2_total": 516.21,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "3C": {
+   "model": "US+SF+CZ3C+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1987,
+   "window_u_w_m2k": 3.6965,
+   "window_shgc": 0.337,
+   "window_vt": 0.884,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 95.767,
+     "interior_equipment": 52.618,
+     "water_systems": 89.147
+    },
+    "electricity": {
+     "cooling": 31.249,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 17.459
+    }
+   },
+   "reference_eui_mj_m2_total": 433.93,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "4A": {
+   "model": "US+SF+CZ4A+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1703,
+   "window_u_w_m2k": 2.2713,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 388.621,
+     "interior_equipment": 52.618,
+     "water_systems": 102.049
+    },
+    "electricity": {
+     "cooling": 34.952,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 18.828
+    }
+   },
+   "reference_eui_mj_m2_total": 744.76,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "4B": {
+   "model": "US+SF+CZ4B+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.494,
+   "ceiling_u_w_m2k": 0.1703,
+   "window_u_w_m2k": 2.2713,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 217.159,
+     "interior_equipment": 52.618,
+     "water_systems": 96.531
+    },
+    "electricity": {
+     "cooling": 40.513,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 24.577
+    }
+   },
+   "reference_eui_mj_m2_total": 579.09,
+   "hvac": {
+    "cooling_cop": 4.30390188093723,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "4C": {
+   "model": "US+SF+CZ4C+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3634,
+   "ceiling_u_w_m2k": 0.1703,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 269.36,
+     "interior_equipment": 52.618,
+     "water_systems": 105.898
+    },
+    "electricity": {
+     "cooling": 13.793,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 16.778
+    }
+   },
+   "reference_eui_mj_m2_total": 606.14,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "5A": {
+   "model": "US+SF+CZ5A+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3634,
+   "ceiling_u_w_m2k": 0.1703,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 504.365,
+     "interior_equipment": 52.618,
+     "water_systems": 105.634
+    },
+    "electricity": {
+     "cooling": 21.996,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 19.254
+    }
+   },
+   "reference_eui_mj_m2_total": 851.56,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "5B": {
+   "model": "US+SF+CZ5B+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3634,
+   "ceiling_u_w_m2k": 0.1703,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 312.099,
+     "interior_equipment": 52.618,
+     "water_systems": 103.162
+    },
+    "electricity": {
+     "cooling": 30.479,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 22.301
+    }
+   },
+   "reference_eui_mj_m2_total": 668.35,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "6A": {
+   "model": "US+SF+CZ6A+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3634,
+   "ceiling_u_w_m2k": 0.1476,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 684.865,
+     "interior_equipment": 52.618,
+     "water_systems": 111.771
+    },
+    "electricity": {
+     "cooling": 24.83,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 22.316
+    }
+   },
+   "reference_eui_mj_m2_total": 1044.09,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "6B": {
+   "model": "US+SF+CZ6B+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3634,
+   "ceiling_u_w_m2k": 0.1476,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 524.56,
+     "interior_equipment": 52.618,
+     "water_systems": 110.197
+    },
+    "electricity": {
+     "cooling": 19.858,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 20.852
+    }
+   },
+   "reference_eui_mj_m2_total": 875.77,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "7": {
+   "model": "US+SF+CZ7+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3407,
+   "ceiling_u_w_m2k": 0.1476,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 727.057,
+     "interior_equipment": 52.618,
+     "water_systems": 118.959
+    },
+    "electricity": {
+     "cooling": 18.189,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 22.306
+    }
+   },
+   "reference_eui_mj_m2_total": 1086.82,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  },
+  "8": {
+   "model": "US+SF+CZ8+gasfurnace+slab+IECC_2006",
+   "wall_u_w_m2k": 0.3407,
+   "ceiling_u_w_m2k": 0.1476,
+   "window_u_w_m2k": 1.9874,
+   "window_shgc": 0.335,
+   "window_vt": 0.883,
+   "window_to_wall_ratio": 0.1216,
+   "reference_eui_mj_m2": {
+    "natural_gas": {
+     "heating": 908.422,
+     "interior_equipment": 52.618,
+     "water_systems": 128.731
+    },
+    "electricity": {
+     "cooling": 10.425,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 24.334
+    }
+   },
+   "reference_eui_mj_m2_total": 1272.22,
+   "hvac": {
+    "cooling_cop": 4.09262751117264,
+    "furnace_efficiency": 0.8,
+    "fuel": "NaturalGas"
+   },
+   "effective_leakage_area_cm2_at_4pa": 953.07
+  }
+ },
+ "conditioned_area_m2": 220.84,
+ "envelope_area_m2": 314.74,
+ "num_floors": 2,
+ "loads": {
+  "people_per_dwelling": 3.0,
+  "occupancy_schedule": "Occupancy",
+  "activity_schedule": "activity_sch",
+  "lights": [
+   {
+    "name": "Living Hardwired Lighting1",
+    "schedule": "InteriorLightingHE",
+    "w_per_m2": 1.91368,
+    "return_air_fraction": 0.0,
+    "fraction_radiant": 0.6,
+    "fraction_visible": 0.2
+   },
+   {
+    "name": "Living Plug-in Lighting1",
+    "schedule": "InteriorLightingHE",
+    "w_per_m2": 0.47842,
+    "return_air_fraction": 0.0,
+    "fraction_radiant": 0.6,
+    "fraction_visible": 0.2
+   }
+  ],
+  "electric_equipment": [
+   {
+    "name": "dishwasher1",
+    "schedule": "DishWasher_equip_sch",
+    "w_per_m2": 0.29749,
+    "fraction_latent": 0.15,
+    "fraction_radiant": 0.6,
+    "fraction_lost": 0.25
+   },
+   {
+    "name": "refrigerator1",
+    "schedule": "Refrigerator",
+    "w_per_m2": 0.41232,
+    "fraction_latent": 0.0,
+    "fraction_radiant": 1.0,
+    "fraction_lost": 0.0
+   },
+   {
+    "name": "clotheswasher1",
+    "schedule": "ClothesWasher_equip_sch",
+    "w_per_m2": 0.12896,
+    "fraction_latent": 0.0,
+    "fraction_radiant": 0.8,
+    "fraction_lost": 0.2
+   },
+   {
+    "name": "gas_dryer1",
+    "schedule": "ClothesDryer",
+    "w_per_m2": 0.08793,
+    "fraction_latent": 0.0,
+    "fraction_radiant": 1.0,
+    "fraction_lost": 0.0
+   },
+   {
+    "name": "gas_mels1",
+    "schedule": "MiscPlugLoad",
+    "w_per_m2": 2.29646,
+    "fraction_latent": 0.06,
+    "fraction_radiant": 0.69,
+    "fraction_lost": 0.25
+   },
+   {
+    "name": "IECC_Adj1",
+    "schedule": "MiscPlugLoad",
+    "w_per_m2": 2.28853,
+    "fraction_latent": 0.0624390461422629,
+    "fraction_radiant": 0.41190936353998,
+    "fraction_lost": 0.251045347957769
+   }
+  ],
+  "gas_equipment": [
+   {
+    "name": "gas_dryer1",
+    "schedule": "ClothesDryer",
+    "w_per_m2": 1.79132,
+    "fraction_latent": 0.05,
+    "fraction_radiant": 0.1,
+    "fraction_lost": 0.85
+   },
+   {
+    "name": "gas_range1",
+    "schedule": "CookingRange",
+    "w_per_m2": 2.44947,
+    "fraction_latent": 0.06,
+    "fraction_radiant": 0.69,
+    "fraction_lost": 0.25
+   },
+   {
+    "name": "gas_mels1",
+    "schedule": "MiscPlugLoad",
+    "w_per_m2": 0.27679,
+    "fraction_latent": 0.06,
+    "fraction_radiant": 0.69,
+    "fraction_lost": 0.25
+   }
+  ],
+  "heating_setpoint_schedule": "heating_sch",
+  "cooling_setpoint_schedule": "cooling_sch",
+  "hot_water": [
+   {
+    "name": "Clothes Washer_unit1",
+    "peak_flow_m3_s": 1.6219189818e-06,
+    "flow_schedule": "ClothesWasher_flow_sch",
+    "target_temperature_schedule": "CWWaterTempSchedule",
+    "hot_supply_temperature_schedule": null
+   },
+   {
+    "name": "Dishwasher_unit1",
+    "peak_flow_m3_s": 6.36685353e-07,
+    "flow_schedule": "Dishwasher_flow_sch",
+    "target_temperature_schedule": "DWWaterTempSchedule",
+    "hot_supply_temperature_schedule": null
+   },
+   {
+    "name": "Sinks_unit1",
+    "peak_flow_m3_s": 7.1934e-05,
+    "flow_schedule": "BA_sink_sch",
+    "target_temperature_schedule": "SSBWaterTempSchedule",
+    "hot_supply_temperature_schedule": null
+   },
+   {
+    "name": "Showers_unit1",
+    "peak_flow_m3_s": 0.000141975,
+    "flow_schedule": "BA_shower_sch",
+    "target_temperature_schedule": "SSBWaterTempSchedule",
+    "hot_supply_temperature_schedule": null
+   },
+   {
+    "name": "Baths_unit1",
+    "peak_flow_m3_s": 0.00027764,
+    "flow_schedule": "BA_bath_sch",
+    "target_temperature_schedule": "SSBWaterTempSchedule",
+    "hot_supply_temperature_schedule": null
+   }
+  ],
+  "water_heater": {
+   "fuel": "naturalgas",
+   "efficiency": 0.8,
+   "tank_m3": 0.15141644,
+   "setpoint_schedule": "dhw_setpt"
+  },
+  "exterior_lights": [
+   {
+    "name": "Exterior-Lights_unit1",
+    "schedule": "ExteriorLighting",
+    "watts": 78.6575342465753
+   },
+   {
+    "name": "Garage-Lights_unit1",
+    "schedule": "InteriorLightingHE",
+    "watts": 13.0293159609121
+   }
+  ]
+ },
+ "schedules": {
+  "BA_bath_sch": {
+   "type": "any number",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.000181818181818182,
+      9.09090909090909e-05,
+      9.09090909090909e-05,
+      9.09090909090909e-05,
+      0.000181818181818182,
+      0.000431818181818182,
+      0.00104545454545455,
+      0.00131818181818182,
+      0.0015,
+      0.00131818181818182,
+      0.00104545454545455,
+      0.000795454545454545,
+      0.000704545454545454,
+      0.000522727272727273,
+      0.000522727272727273,
+      0.000522727272727273,
+      0.000886363636363636,
+      0.00104545454545455,
+      0.00175,
+      0.00227272727272727,
+      0.00227272727272727,
+      0.00175,
+      0.0015,
+      0.000886363636363636
+     ]
+    }
+   ]
+  },
+  "BA_shower_sch": {
+   "type": "any number",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.00194740740740741,
+      0.000885185185185185,
+      0.000531111111111111,
+      0.000885185185185185,
+      0.00247851851851852,
+      0.00920592592592592,
+      0.0208903703703704,
+      0.0207133333333333,
+      0.0168185185185185,
+      0.0131007407407407,
+      0.0106222222222222,
+      0.00832074074074074,
+      0.00601925925925926,
+      0.00513407407407407,
+      0.00460296296296296,
+      0.00442592592592593,
+      0.00531111111111111,
+      0.00690444444444444,
+      0.00743555555555556,
+      0.00743555555555556,
+      0.00743555555555556,
+      0.00725851851851852,
+      0.00513407407407407,
+      0.00371777777777778
+     ]
+    }
+   ]
+  },
+  "BA_sink_sch": {
+   "type": "any number",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.0043187134502924,
+      0.0021593567251462,
+      0.00154239766081871,
+      0.00154239766081871,
+      0.0021593567251462,
+      0.00555263157894737,
+      0.0129561403508772,
+      0.019125730994152,
+      0.020359649122807,
+      0.019125730994152,
+      0.0166578947368421,
+      0.0154239766081871,
+      0.0151154970760234,
+      0.0138815789473684,
+      0.0132646198830409,
+      0.0126476608187135,
+      0.0148070175438597,
+      0.0200511695906433,
+      0.0231359649122807,
+      0.0212850877192982,
+      0.0175833333333333,
+      0.0148070175438597,
+      0.0123391812865497,
+      0.00832894736842105
+     ]
+    }
+   ]
+  },
+  "CWWaterTempSchedule": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889
+     ]
+    }
+   ]
+  },
+  "ClothesDryer": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "Weekdays"
+     ],
+     "values": [
+      0.0996818663838815,
+      0.0598091198303289,
+      0.0398727465535526,
+      0.0199363732767763,
+      0.0398727465535526,
+      0.0598091198303289,
+      0.15949098621421,
+      0.31898197242842,
+      0.486427370202556,
+      0.685791102970318,
+      0.785472969354199,
+      0.817391304347826,
+      0.745600222800647,
+      0.677836691410393,
+      0.610073160020138,
+      0.578154825026511,
+      0.558218451749735,
+      0.546236490032885,
+      0.518345705196183,
+      0.510391293636256,
+      0.526300116756109,
+      0.546236490032885,
+      0.438600212089077,
+      0.239236479321316
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "CustomDay1"
+     ],
+     "values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "AllOtherDays"
+     ],
+     "values": [
+      0.121951219512195,
+      0.0731707317073171,
+      0.0487804878048781,
+      0.024390243902439,
+      0.0487804878048781,
+      0.0731707317073171,
+      0.195121951219512,
+      0.390243902439024,
+      0.59509731460951,
+      0.8389997536339,
+      0.960950973146095,
+      1.0,
+      0.912170485341217,
+      0.829268292682927,
+      0.746366100024637,
+      0.707317073170732,
+      0.682926829268293,
+      0.668268046316827,
+      0.634146341463415,
+      0.624414880512441,
+      0.643877802414388,
+      0.668268046316827,
+      0.536585365853659,
+      0.292682926829268
+     ]
+    }
+   ]
+  },
+  "ClothesWasher_equip_sch": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "Weekdays"
+     ],
+     "values": [
+      0.0887931470412736,
+      0.0710155041111689,
+      0.0354602182509584,
+      0.0354602182509584,
+      0.0710155041111689,
+      0.106570789971378,
+      0.213141579942758,
+      0.461933513354977,
+      0.69294780383709,
+      0.817391304347826,
+      0.799613661417722,
+      0.710725446767196,
+      0.639614875046775,
+      0.568599370935607,
+      0.497488799215186,
+      0.461933513354977,
+      0.479711156285081,
+      0.461933513354977,
+      0.461933513354977,
+      0.461933513354977,
+      0.461933513354977,
+      0.444155870424871,
+      0.302029794593282,
+      0.159903718761693
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "CustomDay1"
+     ],
+     "values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "AllOtherDays"
+     ],
+     "values": [
+      0.108629913933473,
+      0.086880669923238,
+      0.0433821819027681,
+      0.0433821819027681,
+      0.086880669923238,
+      0.130379157943708,
+      0.260758315887416,
+      0.565131425913003,
+      0.847755291928355,
+      1.0,
+      0.978250755989765,
+      0.86950453593859,
+      0.782507559897651,
+      0.695626889974413,
+      0.608629913933473,
+      0.565131425913003,
+      0.586880669923238,
+      0.565131425913003,
+      0.565131425913003,
+      0.565131425913003,
+      0.565131425913003,
+      0.543382181902768,
+      0.36950453593859,
+      0.195626889974413
+     ]
+    }
+   ]
+  },
+  "ClothesWasher_flow_sch": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "Weekdays"
+     ],
+     "values": [
+      0.0887931470412736,
+      0.0710155041111689,
+      0.0354602182509584,
+      0.0354602182509584,
+      0.0710155041111689,
+      0.106570789971378,
+      0.213141579942758,
+      0.461933513354977,
+      0.69294780383709,
+      0.817391304347826,
+      0.799613661417722,
+      0.710725446767196,
+      0.639614875046775,
+      0.568599370935607,
+      0.497488799215186,
+      0.461933513354977,
+      0.479711156285081,
+      0.461933513354977,
+      0.461933513354977,
+      0.461933513354977,
+      0.461933513354977,
+      0.444155870424871,
+      0.302029794593282,
+      0.159903718761693
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "CustomDay1"
+     ],
+     "values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "AllOtherDays"
+     ],
+     "values": [
+      0.108629913933473,
+      0.086880669923238,
+      0.0433821819027681,
+      0.0433821819027681,
+      0.086880669923238,
+      0.130379157943708,
+      0.260758315887416,
+      0.565131425913003,
+      0.847755291928355,
+      1.0,
+      0.978250755989765,
+      0.86950453593859,
+      0.782507559897651,
+      0.695626889974413,
+      0.608629913933473,
+      0.565131425913003,
+      0.586880669923238,
+      0.565131425913003,
+      0.565131425913003,
+      0.565131425913003,
+      0.565131425913003,
+      0.543382181902768,
+      0.36950453593859,
+      0.195626889974413
+     ]
+    }
+   ]
+  },
+  "CookingRange": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.04715848452508,
+      0.04715848452508,
+      0.0235458911419424,
+      0.0235458911419424,
+      0.04715848452508,
+      0.0707043756670224,
+      0.165088046958378,
+      0.283017609391676,
+      0.306563500533618,
+      0.320771077908218,
+      0.283017609391676,
+      0.330176093916756,
+      0.377334578441836,
+      0.306563500533618,
+      0.292422625400213,
+      0.377334578441836,
+      0.613193703308431,
+      1.0,
+      0.778348452508004,
+      0.400947171824973,
+      0.235859124866596,
+      0.165088046958378,
+      0.103721985058698,
+      0.0707043756670224
+     ]
+    }
+   ]
+  },
+  "DWWaterTempSchedule": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889,
+      48.8888888888889
+     ]
+    }
+   ]
+  },
+  "DishWasher_equip_sch": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "Weekdays"
+     ],
+     "values": [
+      0.129162158913331,
+      0.0573867051328282,
+      0.0429979564851542,
+      0.0286933525664145,
+      0.0286933525664145,
+      0.0860800576992427,
+      0.172244260127419,
+      0.258408462555596,
+      0.488207717273711,
+      0.545594422406539,
+      0.473818968626037,
+      0.402043514845535,
+      0.344572664983772,
+      0.387654766197861,
+      0.315879312417358,
+      0.301490563769684,
+      0.315879312417358,
+      0.416348118764274,
+      0.732311575910566,
+      0.93333333333333,
+      0.761004928476981,
+      0.559983171054213,
+      0.373266017550187,
+      0.258408462555596
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "CustomDay1"
+     ],
+     "values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "AllOtherDays"
+     ],
+     "values": [
+      0.13838802740714,
+      0.0614857554994591,
+      0.0460692390912369,
+      0.0307428777497295,
+      0.0307428777497295,
+      0.0922286332491886,
+      0.184547421565092,
+      0.276866209880995,
+      0.523079697078976,
+      0.584565452578435,
+      0.507663180670754,
+      0.430760908763072,
+      0.369184998196899,
+      0.41534439235485,
+      0.338442120447169,
+      0.323025604038947,
+      0.338442120447169,
+      0.44608727010458,
+      0.784619545618464,
+      1.0,
+      0.815362423368193,
+      0.599981968986657,
+      0.399927875946628,
+      0.276866209880995
+     ]
+    }
+   ]
+  },
+  "Dishwasher_flow_sch": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "Weekdays"
+     ],
+     "values": [
+      0.129162158913331,
+      0.0573867051328282,
+      0.0429979564851542,
+      0.0286933525664145,
+      0.0286933525664145,
+      0.0860800576992427,
+      0.172244260127419,
+      0.258408462555596,
+      0.488207717273711,
+      0.545594422406539,
+      0.473818968626037,
+      0.402043514845535,
+      0.344572664983772,
+      0.387654766197861,
+      0.315879312417358,
+      0.301490563769684,
+      0.315879312417358,
+      0.416348118764274,
+      0.732311575910566,
+      0.93333333333333,
+      0.761004928476981,
+      0.559983171054213,
+      0.373266017550187,
+      0.258408462555596
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "CustomDay1"
+     ],
+     "values": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "through": "12/31",
+     "days": [
+      "AllOtherDays"
+     ],
+     "values": [
+      0.13838802740714,
+      0.0614857554994591,
+      0.0460692390912369,
+      0.0307428777497295,
+      0.0307428777497295,
+      0.0922286332491886,
+      0.184547421565092,
+      0.276866209880995,
+      0.523079697078976,
+      0.584565452578435,
+      0.507663180670754,
+      0.430760908763072,
+      0.369184998196899,
+      0.41534439235485,
+      0.338442120447169,
+      0.323025604038947,
+      0.338442120447169,
+      0.44608727010458,
+      0.784619545618464,
+      1.0,
+      0.815362423368193,
+      0.599981968986657,
+      0.399927875946628,
+      0.276866209880995
+     ]
+    }
+   ]
+  },
+  "ExteriorLighting": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ]
+    }
+   ]
+  },
+  "InteriorLightingHE": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.06875,
+      0.06875,
+      0.06875,
+      0.06875,
+      0.20625,
+      0.4296875,
+      0.48125,
+      0.4296875,
+      0.1890625,
+      0.12890625,
+      0.12890625,
+      0.12890625,
+      0.12890625,
+      0.12890625,
+      0.12890625,
+      0.2234375,
+      0.48125,
+      0.6703125,
+      0.90234375,
+      1.0,
+      1.0,
+      0.75625,
+      0.42109375,
+      0.171875
+     ]
+    }
+   ]
+  },
+  "MiscPlugLoad": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.607490272373541,
+      0.559338521400778,
+      0.552853437094682,
+      0.545071335927367,
+      0.524481193255512,
+      0.585278858625162,
+      0.676232166018158,
+      0.718547341115435,
+      0.607490272373541,
+      0.517023346303502,
+      0.529182879377432,
+      0.529345006485084,
+      0.520428015564202,
+      0.538424124513619,
+      0.568741893644617,
+      0.600356679636835,
+      0.71011673151751,
+      0.862678339818418,
+      0.936608300907912,
+      0.966763942931258,
+      1.0,
+      0.976653696498055,
+      0.845168612191959,
+      0.73443579766537
+     ]
+    }
+   ]
+  },
+  "Occupancy": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.8831,
+      0.40861,
+      0.24189,
+      0.24189,
+      0.24189,
+      0.24189,
+      0.24189,
+      0.24189,
+      0.24189,
+      0.29498,
+      0.5531,
+      0.89693,
+      0.89693,
+      0.89693,
+      1.0,
+      1.0,
+      1.0
+     ]
+    }
+   ]
+  },
+  "Refrigerator": {
+   "type": "Fraction",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      0.8,
+      0.782696177062374,
+      0.765593561368209,
+      0.742857142857143,
+      0.731388329979879,
+      0.731388329979879,
+      0.759959758551308,
+      0.8,
+      0.817102615694165,
+      0.828571428571429,
+      0.8,
+      0.8,
+      0.839839034205231,
+      0.839839034205231,
+      0.828571428571429,
+      0.839839034205231,
+      0.885714285714286,
+      0.971428571428572,
+      1.0,
+      0.971428571428572,
+      0.942857142857143,
+      0.925553319919517,
+      0.885714285714286,
+      0.828571428571429
+     ]
+    }
+   ]
+  },
+  "SSBWaterTempSchedule": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556,
+      40.5555555555556
+     ]
+    }
+   ]
+  },
+  "activity_sch": {
+   "type": "any number",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28,
+      117.28
+     ]
+    }
+   ]
+  },
+  "cooling_sch": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889,
+      23.888888888889
+     ]
+    }
+   ]
+  },
+  "dhw_setpt": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0,
+      48.0
+     ]
+    }
+   ]
+  },
+  "heating_sch": {
+   "type": "Temperature",
+   "rules": [
+    {
+     "through": "12/31",
+     "days": [
+      "AllDays"
+     ],
+     "values": [
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223,
+      22.2222222222223
+     ]
+    }
+   ]
+  }
+ }
+}

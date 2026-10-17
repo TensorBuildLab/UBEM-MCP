@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **47 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, and from EnergyPlus models to **batch simulation of a whole portfolio of buildings at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
+A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **49 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -26,6 +26,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [Available Tools](#available-tools)
 - [Usage Examples](#usage-examples)
 - [Urban Building Stock](#urban-building-stock)
+- [Archetype Models](#archetype-models)
 - [Batch Simulation](#batch-simulation)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -343,7 +344,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **47 tools** organized into **7 categories**:
+The server provides **49 tools** organized into **8 categories**:
 
 ### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
@@ -352,6 +353,10 @@ The server provides **47 tools** organized into **7 categories**:
 - `enrich_building_stock` - Fill guessed attributes (year built, use, floors, height) from a parcel/assessor layer by spatial join
 - `get_building_stock` - Summarize a stock and list/filter its buildings
 - `list_building_stocks` - List loaded stocks (persisted across restarts)
+
+### 🏗️ Archetype Models (2 tools) — new in UBEM-MCP
+- `generate_building_models` - Generate an archetype EnergyPlus model for each building of a stock
+- `simulate_building_stock` - Generate models for a stock and simulate them all as one background batch
 
 ### 🏙️ Batch Simulation (6 tools) — new in UBEM-MCP
 - `discover_idf_files` - Glob a directory for IDF files to build a batch's model list
@@ -492,6 +497,37 @@ Stocks are saved under `outputs/stocks/<stock_id>/` as `buildings.geojson` (norm
 
 Archetypes follow the U.S. DOE commercial prototype buildings and the DOE single-family prototype; vintages follow the DOE reference buildings (pre-1980, 1980–2004, 2004+). Run `list_archetypes` for the full list.
 
+## Archetype Models
+
+Each building in a stock becomes an EnergyPlus model built from its footprint and its archetype, vintage and climate zone:
+
+- **Geometry**:
+  - The footprint is extruded floor by floor. Buildings above three floors are modeled as ground, middle and top floors, with the middle floor multiplied.
+  - Commercial floors get core/perimeter zoning (4.57 m perimeter zones, as in the DOE prototypes) when the footprint allows it.
+  - Detailed outlines are simplified to at most 30 vertices, never changing the area by more than 5%.
+  - Walls shared with an adjacent building are adiabatic party walls. The nearest walls of surrounding buildings are added as shading.
+- **Constructions, loads and schedules**:
+  - Commercial buildings use the DOE Commercial Reference Buildings: 16 types × 3 vintages × 16 climate zones.
+  - Single-family houses use the DOE/PNNL IECC 2006 single-family prototype. See [the data README](ubem-mcp-server/ubem_mcp_server/urban/data/README.md) for sources and licenses.
+- **HVAC**:
+  - The reference system type is expressed with EnergyPlus HVACTemplate objects and autosized: packaged single-zone, PTAC, packaged VAV, or central VAV with chiller and boiler.
+  - Or use `hvac="ideal"` for ideal loads.
+
+```json
+{"tool": "simulate_building_stock",
+ "arguments": {"stock_id": "sam_hughes_enriched", "climate_zone": "2B",
+               "weather_file": "USA_AZ_Tucson.Intl.AP.722740_TMY3.epw"}}
+```
+
+This returns a `batch_id`; poll it with `get_batch_status`. Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
+
+**Validation.** `scripts/validate_archetypes.py` generates models with the reference buildings' own dimensions and compares their simulated site energy with the DOE reference results for the same climate zone. With Phoenix TMY3 weather (climate zone 2B, which covers Tucson), small and medium offices, stand-alone retail, the mid-rise apartment and the single-family house are within about ±11% of the reference EUI.
+
+Known differences:
+- Warehouses run higher (+31% in 2B), because the whole floor is cooled while the reference cools only office and fine-storage areas.
+- The single-family infiltration model overstates heating in windy, heating-dominated climates.
+- Elevators, commercial refrigeration and kitchen exhaust are not modeled.
+
 ## Batch Simulation
 
 This is the key difference from single-model EnergyPlus MCP servers: **run a whole portfolio of buildings and poll for results**, instead of one blocking call per building.
@@ -550,7 +586,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  47 tools organized into 7 categories
+│     Tools Layer         │  49 tools organized into 8 categories
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
@@ -566,9 +602,10 @@ ubem-mcp-server/
 │   ├── server.py              # FastMCP server with tools
 │   ├── energyplus_tools.py    # Core EnergyPlus integration (single model)
 │   ├── batch_manager.py       # Batch/portfolio orchestration (new in UBEM-MCP)
-│   ├── urban/                 # Building stock: GIS intake, archetypes, enrichment (new in UBEM-MCP)
+│   ├── urban/                 # Building stock, archetype library, model generation (new in UBEM-MCP)
 │   ├── config.py              # Configuration management
 │   └── utils/                 # Specialized utilities
+├── scripts/                    # Archetype-library builders and validation
 ├── sample_files/               # Sample IDF and weather files
 ├── tests/                      # Unit tests
 └── pyproject.toml              # Dependencies

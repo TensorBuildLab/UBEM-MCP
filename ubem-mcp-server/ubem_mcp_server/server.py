@@ -1845,6 +1845,119 @@ async def list_building_stocks() -> str:
         return f"Error listing building stocks: {str(e)}"
 
 
+# ============================================================================
+# Archetype model generation and stock simulation — new in UBEM-MCP
+# ============================================================================
+
+@mcp.tool()
+async def generate_building_models(
+    stock_id: str,
+    climate_zone: str,
+    weather_file: Optional[str] = None,
+    hvac: str = "template",
+    archetypes: Optional[List[str]] = None,
+    vintages: Optional[List[str]] = None,
+    building_ids: Optional[List[str]] = None,
+    max_buildings: Optional[int] = None,
+    model_set_id: Optional[str] = None,
+) -> str:
+    """
+    Generate an EnergyPlus archetype model (IDF) for each building of a stock
+
+    Each footprint is extruded into floors (buildings over three floors are
+    modeled as ground, middle and top floors with a multiplier), split into
+    core/perimeter zones when large enough, given windows, party walls with
+    adjacent buildings and shading from nearby buildings, and filled with the
+    constructions, internal loads, schedules and HVAC of its archetype, vintage
+    and climate zone (DOE Commercial Reference Buildings; DOE/PNNL IECC 2006
+    single-family prototype). Every assumption is listed per building in the
+    model set's manifest.json.
+
+    Args:
+        stock_id: Stock from load_building_stock / fetch_osm_buildings / enrich_building_stock
+        climate_zone: ASHRAE climate zone of the site, e.g. "2B" for Tucson or Phoenix
+                      (1A, 2A, 2B, 3A, 3B, 3B-CA, 3C, 4A, 4B, 4C, 5A, 5B, 6A, 6B, 7, 8)
+        weather_file: EPW used later for simulation; sets the model's site location (optional)
+        hvac: "template" (reference-building HVAC systems, autosized) or "ideal"
+              (ideal loads; faster, reports loads rather than equipment energy)
+        archetypes / vintages / building_ids: Only generate models for these buildings
+        max_buildings: Cap on the number of models (useful for a quick test)
+        model_set_id: Name for this set of models; defaults to a timestamp
+
+    Returns:
+        JSON with the model set id and directory, counts by HVAC system and zoning,
+        and any buildings that failed.
+    """
+    try:
+        result = await asyncio.to_thread(
+            stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
+            archetypes=archetypes, vintages=vintages, building_ids=building_ids,
+            max_buildings=max_buildings, model_set_id=model_set_id,
+        )
+        return f"Building models generated:\n{json.dumps(result, indent=2)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not generate building models: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error generating models for stock {stock_id}: {str(e)}")
+        return f"Error generating building models: {str(e)}"
+
+
+@mcp.tool()
+async def simulate_building_stock(
+    stock_id: str,
+    climate_zone: str,
+    weather_file: str,
+    hvac: str = "template",
+    archetypes: Optional[List[str]] = None,
+    vintages: Optional[List[str]] = None,
+    building_ids: Optional[List[str]] = None,
+    max_buildings: Optional[int] = None,
+    max_workers: Optional[int] = None,
+    model_set_id: Optional[str] = None,
+) -> str:
+    """
+    Generate archetype models for a building stock and simulate them all as a background batch
+
+    Combines generate_building_models and run_batch_simulation: every selected
+    building gets a model, and the models run in parallel worker processes.
+    Returns immediately with a batch_id; poll get_batch_status until complete.
+
+    Args:
+        stock_id: Stock to simulate
+        climate_zone: ASHRAE climate zone of the site, e.g. "2B"
+        weather_file: EPW weather file for the site
+        hvac: "template" (default) or "ideal"
+        archetypes / vintages / building_ids: Only simulate these buildings
+        max_buildings: Cap on the number of buildings (useful for a quick test)
+        max_workers: Parallel EnergyPlus processes (default: server setting)
+        model_set_id: Name for the generated model set
+
+    Returns:
+        JSON with the batch_id, the model set, and generation summary.
+    """
+    try:
+        gen = await asyncio.to_thread(
+            stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
+            archetypes=archetypes, vintages=vintages, building_ids=building_ids,
+            max_buildings=max_buildings, model_set_id=model_set_id,
+        )
+        manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
+        models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+        if not models:
+            return f"No models were generated:\n{json.dumps(gen, indent=2)}"
+        batch = batch_manager.submit_batch(
+            models=models, weather_file=gen["weather_file"], max_workers=max_workers,
+            output_directory=str(Path(gen["model_directory"]) / "runs"),
+            metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"]},
+        )
+        return f"Building stock simulation submitted:\n{json.dumps({'batch': batch, 'models': gen}, indent=2)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not simulate building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error simulating stock {stock_id}: {str(e)}")
+        return f"Error simulating building stock: {str(e)}"
+
+
 if __name__ == "__main__":
     logger.info(f"Starting {config.server.name} v{config.server.version}")
     logger.info(f"EnergyPlus version: {config.energyplus.version}")
