@@ -79,6 +79,9 @@ class ArchetypeParams:
     schedule_roles: Dict[str, str]
     schedules: Dict[str, Dict[str, Any]]
     exterior_lighting_w_per_m2: float = 0.0
+    # retrofit-only settings (baseline models keep the defaults)
+    roof_solar_absorptance: float = 0.7
+    heat_pump_heating_cop: Optional[float] = None  # air-source heat pump instead of furnace/resistance
     exterior_lighting_schedule: Optional[str] = None
     reference_eui_mj_m2: Dict[str, Dict[str, float]] = field(default_factory=dict)
     assumptions: List[str] = field(default_factory=list)

@@ -11,7 +11,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from shapely import STRtree
 
@@ -29,7 +29,11 @@ def generate_models(
     idd_path: str,
     weather_file: Optional[str] = None,
     hvac: str = "template",
+    param_hook: Optional[Callable] = None,
 ) -> Dict[str, Any]:
+    """`param_hook(building, params) -> (params, applied)` may modify a
+    building's archetype parameters (e.g. retrofit measures); `applied` is
+    recorded in the manifest as the building's "retrofit"."""
     cz = normalize_climate_zone(climate_zone)
     idd = load_idd(idd_path)
     location = epw_location(weather_file) if weather_file else None
@@ -46,6 +50,9 @@ def generate_models(
             neighbors = [Neighbor(all_buildings[int(i)].footprint, all_buildings[int(i)].height_m)
                          for i in near_idx if all_buildings[int(i)].building_id != b.building_id]
             params = resolve(b.archetype, b.vintage, cz)
+            applied: List[Dict[str, str]] = []
+            if param_hook is not None:
+                params, applied = param_hook(b, params)
             builder = ModelBuilder(idd, params, hvac=hvac)
             text = builder.build(b, neighbors, location)
             path = out / f"{b.building_id}.idf"
@@ -58,7 +65,8 @@ def generate_models(
                 "vintage": b.vintage,
                 "num_floors": b.num_floors,
                 "gross_floor_area_m2": round(b.gross_floor_area_m2, 1),
-                "hvac_system": params.hvac_system if hvac == "template" else "ideal_loads",
+                "hvac_system": (params.hvac_system + ("_heat_pump" if params.heat_pump_heating_cop else "")
+                                if hvac == "template" else "ideal_loads"),
                 "zones": info.num_zones,
                 "zoning": info.zoning,
                 "floors_modeled": info.floors_modeled,
@@ -68,6 +76,7 @@ def generate_models(
                 "inferred_fields": list(b.inferred_fields),
                 "notes": list(b.notes) + info.notes,
                 "assumptions": params.assumptions,
+                **({"retrofit": applied} if param_hook is not None else {}),
             })
         except Exception as e:  # noqa: BLE001 - one bad building must not stop the set
             failures.append({"building_id": b.building_id, "error": f"{type(e).__name__}: {e}"})

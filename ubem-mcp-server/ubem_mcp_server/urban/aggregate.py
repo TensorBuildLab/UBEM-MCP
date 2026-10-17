@@ -316,3 +316,153 @@ def write_map(path: Path, geojson_path: Path, title: str = "Site EUI") -> str:
                            "center": {"lon": (max(lons) + min(lons)) / 2, "lat": (max(lats) + min(lats)) / 2}})
     fig.write_html(str(path), include_plotlyjs=True, full_html=True)
     return str(path)
+
+
+# --------------------------------------------------------------------------- #
+# Scenario comparison
+# --------------------------------------------------------------------------- #
+
+def _read_buildings_csv(path: Path) -> Dict[str, Dict[str, Any]]:
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    out = {}
+    for r in rows:
+        out[r["building_id"]] = {k: (_num(v) if k.endswith(("_kwh", "_kw", "_m2", "kwh_m2")) else v)
+                                 for k, v in r.items()}
+    return out
+
+
+def _num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _read_hourly(path: Path) -> Dict[str, List[float]]:
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        cols = [c for c in (reader.fieldnames or []) if c.endswith("_kw")]
+        series: Dict[str, List[float]] = {c[:-3]: [] for c in cols}
+        for row in reader:
+            for c in cols:
+                series[c[:-3]].append(float(row[c]))
+    return series
+
+
+def _pct(saved: float, base: float) -> Optional[float]:
+    return 100.0 * saved / base if base else None
+
+
+def compare_results(baseline_dir: str, scenario_dir: str, out_dir: str, scenario_manifest: Dict[str, Any],
+                    emission_factors: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    """Compare aggregated scenario results with the baseline's, building by building.
+
+    Only buildings with results in both are compared, so savings are like for like.
+    """
+    bdir, sdir, out = Path(baseline_dir), Path(scenario_dir), Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    base = _read_buildings_csv(bdir / "buildings.csv")
+    scen = _read_buildings_csv(sdir / "buildings.csv")
+    retro = {m["building_id"]: m.get("retrofit", []) for m in scenario_manifest["models"]}
+    common = sorted(set(base) & set(scen))
+    fuels = sorted({k[:-4] for r in list(base.values()) + list(scen.values()) for k in r
+                    if k.endswith("_kwh") and k[:-4] in ("electricity", "natural_gas", "district_cooling",
+                                                         "district_heating", "district_heating_steam")})
+
+    rows = []
+    for bid in common:
+        b, s = base[bid], scen[bid]
+        row = {"building_id": bid, "archetype": b["archetype"], "vintage": b["vintage"],
+               "retrofitted": bool(retro.get(bid)),
+               "measures": ";".join(a["measure"] for a in retro.get(bid, [])),
+               "baseline_kwh": b["total_kwh"], "scenario_kwh": s["total_kwh"],
+               "savings_kwh": b["total_kwh"] - s["total_kwh"],
+               "savings_pct": _pct(b["total_kwh"] - s["total_kwh"], b["total_kwh"]),
+               "baseline_eui_kwh_m2": b["site_eui_kwh_m2"], "scenario_eui_kwh_m2": s["site_eui_kwh_m2"]}
+        for f in fuels:
+            row[f"baseline_{f}_kwh"] = b.get(f"{f}_kwh") or 0.0
+            row[f"scenario_{f}_kwh"] = s.get(f"{f}_kwh") or 0.0
+        if emission_factors:
+            eb = sum(row[f"baseline_{f}_kwh"] * emission_factors.get(f, 0.0) for f in fuels)
+            es = sum(row[f"scenario_{f}_kwh"] * emission_factors.get(f, 0.0) for f in fuels)
+            row.update({"baseline_kg_co2e": eb, "scenario_kg_co2e": es, "avoided_kg_co2e": eb - es})
+        rows.append(row)
+
+    with open(out / "buildings_comparison.csv", "w", newline="", encoding="utf-8") as f:
+        if rows:
+            w = csv.DictWriter(f, fieldnames=list(rows[0]))
+            w.writeheader()
+            for r in rows:
+                w.writerow({k: _round(v) for k, v in r.items()})
+
+    def total(key):
+        return sum(r[key] for r in rows)
+
+    by_fuel = {f: {"baseline_kwh": total(f"baseline_{f}_kwh"), "scenario_kwh": total(f"scenario_{f}_kwh")}
+               for f in fuels}
+    for v in by_fuel.values():
+        v["change_pct"] = _pct(v["scenario_kwh"] - v["baseline_kwh"], v["baseline_kwh"])
+
+    hb, hs = _read_hourly(bdir / "district_hourly.csv"), _read_hourly(sdir / "district_hourly.csv")
+    peaks = {}
+    if set(common) == set(base) == set(scen):  # hourly profiles cover the same buildings
+        for f in sorted(set(hb) & set(hs)):
+            pb, ps = _peak(hb[f]), _peak(hs[f])
+            peaks[f] = {"baseline": pb, "scenario": ps, "change_pct": _pct(ps["kw"] - pb["kw"], pb["kw"])}
+
+    groups: Dict[str, Dict[str, float]] = {}
+    for r in rows:
+        g = groups.setdefault(r["archetype"], {"buildings": 0, "retrofitted": 0, "baseline_kwh": 0.0, "scenario_kwh": 0.0})
+        g["buildings"] += 1
+        g["retrofitted"] += int(r["retrofitted"])
+        g["baseline_kwh"] += r["baseline_kwh"]
+        g["scenario_kwh"] += r["scenario_kwh"]
+    for g in groups.values():
+        g["savings_pct"] = _pct(g["baseline_kwh"] - g["scenario_kwh"], g["baseline_kwh"])
+
+    retrofitted = [r for r in rows if r["retrofitted"]]
+    increased = [r for r in retrofitted if r["savings_kwh"] < 0]
+    summary: Dict[str, Any] = {
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "scenario": scenario_manifest["scenario"],
+        "baseline_model_set_id": scenario_manifest["baseline_model_set_id"],
+        "scenario_model_set_id": scenario_manifest.get("model_set_id"),
+        "adoption": scenario_manifest.get("adoption"),
+        "results": {"baseline": str(bdir), "scenario": str(sdir)},
+        "coverage": {
+            "buildings_compared": len(common),
+            "buildings_retrofitted": len(retrofitted),
+            "only_in_baseline": sorted(set(base) - set(scen)),
+            "only_in_scenario": sorted(set(scen) - set(base)),
+            "note": "savings cover buildings with results in both the baseline and the scenario",
+        },
+        "district": {
+            "baseline_kwh": total("baseline_kwh"),
+            "scenario_kwh": total("scenario_kwh"),
+            "savings_kwh": total("savings_kwh"),
+            "savings_pct": _pct(total("savings_kwh"), total("baseline_kwh")),
+            "by_fuel": by_fuel,
+            "peak_kw": peaks or None,
+            "savings_pct_retrofitted_buildings": _pct(sum(r["savings_kwh"] for r in retrofitted),
+                                                      sum(r["baseline_kwh"] for r in retrofitted)),
+        },
+        "by_archetype": dict(sorted(groups.items())),
+        "retrofitted_buildings_with_increased_use": [
+            {"building_id": r["building_id"], "measures": r["measures"], "savings_pct": r["savings_pct"]}
+            for r in increased],
+        "savings_distribution_pct": _quantiles([r["savings_pct"] for r in retrofitted]),
+        "files": {"buildings_comparison_csv": str(out / "buildings_comparison.csv")},
+    }
+    if emission_factors:
+        eb, es = total("baseline_kg_co2e"), total("scenario_kg_co2e")
+        summary["district"]["emissions_kg_co2e"] = {"baseline": eb, "scenario": es, "avoided": eb - es,
+                                                    "change_pct": _pct(es - eb, eb)}
+        summary["emission_factors_kg_per_kwh"] = emission_factors
+    if not peaks:
+        summary["district"]["peak_note"] = ("peak comparison skipped: baseline and scenario results "
+                                            "do not cover the same buildings")
+    with open(out / "comparison.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=1, default=str)
+    summary["files"]["comparison_json"] = str(out / "comparison.json")
+    return summary

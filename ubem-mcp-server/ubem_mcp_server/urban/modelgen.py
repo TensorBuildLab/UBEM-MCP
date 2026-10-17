@@ -315,7 +315,7 @@ class ModelBuilder:
         mat("Stucco 25mm", 0.0254, 0.6918, 1858, 837)
         mat("Gypsum 13mm", 0.0127, 0.16, 784.9, 830, 0.4)
         mat("CMU 200mm", 0.2032, 0.5104, 800, 920)
-        mat("Roof membrane", 0.0095, 0.16, 1121.3, 1460)
+        mat("Roof membrane", 0.0095, 0.16, 1121.3, 1460, p.roof_solar_absorptance)
         mat("Metal deck", 0.0015, 45.006, 7680, 418.4)
         mat("Concrete 100mm", 0.1016, 1.311, 2240, 836.8)
         mat("Interior floor 100mm", 0.1016, 1.311, 2240, 836.8)
@@ -588,7 +588,38 @@ class ModelBuilder:
                     "Outdoor Air Method": "Flow/Area", "Outdoor Air Flow Rate per Zone Floor Area": oa_area})
             return
 
-        if p.hvac_system == "psz":
+        if p.hvac_system == "psz" and p.heat_pump_heating_cop:
+            for z in zones:
+                sys_name = f"PSZ-HP {z.name}"
+                w.add("HVACTemplate:System:UnitaryHeatPump:AirToAir", {
+                    "Name": sys_name, "System Availability Schedule Name": availability,
+                    "Control Zone or Thermostat Location Name": z.name,
+                    "Supply Fan Operating Mode Schedule Name": None if p.sector == "residential" else availability,
+                    "Supply Fan Total Efficiency": 0.6, "Supply Fan Delta Pressure": 622.0,
+                    "Supply Fan Motor Efficiency": 0.85, "Cooling Coil Type": "SingleSpeedDX",
+                    "Cooling Coil Gross Rated COP": p.cooling_cop,
+                    "Heat Pump Heating Coil Type": "SingleSpeedDXHeatPump",
+                    "Heat Pump Heating Coil Rated COP": p.heat_pump_heating_cop,
+                    "Heat Pump Heating Minimum Outdoor Dry-Bulb Temperature": -12.0,
+                    "Supplemental Heating Coil Type": "Electric",
+                    "Maximum Outdoor Air Flow Rate": "autosize", "Minimum Outdoor Air Flow Rate": "autosize",
+                    "Economizer Type": economizer, "Night Cycle Control": "CycleOnAny"})
+                w.add("HVACTemplate:Zone:Unitary", {
+                    "Zone Name": z.name, "Template Unitary System Name": sys_name,
+                    "Template Thermostat Name": "Thermostat", "Outdoor Air Method": "Flow/Area",
+                    "Outdoor Air Flow Rate per Zone Floor Area": oa_area})
+        elif p.hvac_system == "ptac" and p.heat_pump_heating_cop:
+            for z in zones:
+                w.add("HVACTemplate:Zone:PTHP", {
+                    "Zone Name": z.name, "Template Thermostat Name": "Thermostat",
+                    "Outdoor Air Method": "Flow/Area", "Outdoor Air Flow Rate per Zone Floor Area": oa_area,
+                    "System Availability Schedule Name": availability, "Supply Fan Operating Mode Schedule Name": availability,
+                    "Cooling Coil Type": "SingleSpeedDX", "Cooling Coil Gross Rated COP": p.cooling_cop,
+                    "Heat Pump Heating Coil Type": "SingleSpeedDXHeatPump",
+                    "Heat Pump Heating Coil Gross Rated COP": p.heat_pump_heating_cop,
+                    "Heat Pump Heating Minimum Outdoor Dry-Bulb Temperature": -12.0,
+                    "Supplemental Heating Coil Type": "Electric"})
+        elif p.hvac_system == "psz":
             for z in zones:
                 sys_name = f"PSZ {z.name}"
                 w.add("HVACTemplate:System:Unitary", {

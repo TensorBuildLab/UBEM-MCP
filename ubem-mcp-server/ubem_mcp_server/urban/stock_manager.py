@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, weather
-from .aggregate import aggregate
+from . import osm, retrofit, weather
+from .aggregate import aggregate, compare_results
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
 from .stock import BuildingStock, load_geojson, stock_from_geojson
@@ -195,6 +195,8 @@ class StockManager:
         building_ids: Optional[Sequence[str]] = None,
         max_buildings: Optional[int] = None,
         model_set_id: Optional[str] = None,
+        param_hook=None,
+        extra_manifest: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Write one archetype IDF per selected building under
         <stock_directory>/models/<model_set_id>/."""
@@ -216,14 +218,78 @@ class StockManager:
         if (out_dir / "manifest.json").exists():
             raise ValueError(f"Model set {set_id!r} already exists for stock {stock_id!r}")
         manifest = generate_models(stock, selected, climate_zone, str(out_dir),
-                                   self.config.energyplus.idd_path, weather_file=epw, hvac=hvac)
+                                   self.config.energyplus.idd_path, weather_file=epw, hvac=hvac,
+                                   param_hook=param_hook)
         manifest["stock_id"] = stock_id
         manifest["model_set_id"] = set_id
         manifest["climate"] = climate
+        if extra_manifest:
+            manifest.update(extra_manifest(manifest) if callable(extra_manifest) else extra_manifest)
         with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=1, default=str)
-        return {"stock_id": stock_id, "model_set_id": set_id, "weather_file": epw,
-                "climate": climate, **summarize_manifest(manifest, str(out_dir))}
+        result = {"stock_id": stock_id, "model_set_id": set_id, "weather_file": epw,
+                  "climate": climate, **summarize_manifest(manifest, str(out_dir))}
+        if "scenario" in manifest:
+            result["scenario"] = {"name": manifest["scenario"]["name"],
+                                  "baseline_model_set_id": manifest["baseline_model_set_id"],
+                                  **manifest["adoption"]}
+        return result
+
+    def generate_scenario(self, stock_id: str, baseline_model_set_id: str, scenario: Dict[str, Any],
+                          model_set_id: Optional[str] = None) -> Dict[str, Any]:
+        """Generate a retrofit scenario's models: the baseline model set's
+        buildings, climate, weather and HVAC option, with the scenario's
+        measures applied to the buildings that adopt it."""
+        spec = retrofit.validate_scenario(scenario)
+        base = self.model_manifest(stock_id, baseline_model_set_id)
+        if base.get("scenario"):
+            raise ValueError(f"Model set {baseline_model_set_id!r} is itself a scenario; use its baseline")
+        ids = [m["building_id"] for m in base["models"]]
+        stock = self.get(stock_id)
+        buildings = [b for b in stock.buildings if b.building_id in set(ids)]
+        adopters, targeted = retrofit.adopting_buildings(spec, buildings)
+        climate = base.get("climate") or {}
+        set_id = model_set_id or f"{baseline_model_set_id}__{spec['name']}"
+
+        def extra(manifest):
+            return {"scenario": spec, "baseline_model_set_id": baseline_model_set_id,
+                    "adoption": retrofit.summarize_adoption(manifest["models"], targeted)}
+
+        return self.generate_models(
+            stock_id, climate_zone=base["climate_zone"], weather_file=base.get("weather_file"),
+            hvac=base.get("hvac", "template"), building_ids=ids, model_set_id=set_id,
+            param_hook=retrofit.scenario_hook(spec, adopters),
+            extra_manifest=lambda m: {**extra(m), "climate": {**climate, "climate_zone": base["climate_zone"]}},
+        )
+
+    def compare_scenario(self, stock_id: str, scenario_model_set_id: str,
+                         baseline_results_id: Optional[str] = None,
+                         scenario_results_id: Optional[str] = None,
+                         emission_factors: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+        """Compare a scenario's aggregated results with its baseline's."""
+        manifest = self.model_manifest(stock_id, scenario_model_set_id)
+        if not manifest.get("scenario"):
+            raise ValueError(f"Model set {scenario_model_set_id!r} is not a retrofit scenario")
+        base_id = manifest["baseline_model_set_id"]
+        base_dir = self._results_dir(stock_id, base_id, baseline_results_id)
+        scen_dir = self._results_dir(stock_id, scenario_model_set_id, scenario_results_id)
+        out_dir = scen_dir / "comparison"
+        return compare_results(str(base_dir), str(scen_dir), str(out_dir), manifest,
+                               emission_factors=emission_factors)
+
+    def _results_dir(self, stock_id: str, model_set_id: str, results_id: Optional[str]) -> Path:
+        root = self.stock_dir(stock_id) / "models" / model_set_id / "results"
+        if results_id:
+            self._check_id(results_id)
+            d = root / results_id
+        else:
+            cands = [p.parent for p in root.glob("*/summary.json")] if root.is_dir() else []
+            if not cands:
+                raise KeyError(f"No aggregated results for model set {model_set_id!r}; run aggregate_stock_results")
+            d = max(cands, key=lambda p: (p / "summary.json").stat().st_mtime)
+        if not (d / "summary.json").exists():
+            raise KeyError(f"No aggregated results {results_id!r} for model set {model_set_id!r}")
+        return d
 
     def _weather_for_models(self, stock_id: str, climate_zone: Optional[str],
                             weather_file: Optional[str]):
