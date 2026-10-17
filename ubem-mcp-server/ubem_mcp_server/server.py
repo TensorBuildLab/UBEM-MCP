@@ -14,6 +14,8 @@ See License.txt in the parent directory for license details.
 import os
 import asyncio
 import logging
+import functools
+import inspect
 import json
 from typing import Optional, Dict, Any, List
 from pathlib import Path
@@ -21,6 +23,8 @@ from datetime import datetime
 
 # Import FastMCP instead of the low-level Server
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
+from pydantic import BaseModel, ConfigDict
 
 # Import our EnergyPlus utilities and configuration
 from ubem_mcp_server.energyplus_tools import EnergyPlusManager
@@ -84,7 +88,7 @@ logger.info(f"UBEM-MCP Server '{config.server.name}' v{config.server.version} in
 
 # Add this tool function to server.py
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def copy_file(source_path: str, target_path: str, overwrite: bool = False, file_types: Optional[List[str]] = None) -> str:
     """
     Copy a file from source to target location with intelligent path resolution
@@ -130,7 +134,7 @@ async def copy_file(source_path: str, target_path: str, overwrite: bool = False,
         return f"Error copying file: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def load_idf_model(idf_path: str) -> str:
     """
     Load and validate an EnergyPlus IDF file
@@ -156,7 +160,7 @@ async def load_idf_model(idf_path: str) -> str:
         return f"Error loading IDF {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_model_summary(idf_path: str) -> str:
     """
     Get basic model information (Building, Site, SimulationControl, Version)
@@ -179,7 +183,7 @@ async def get_model_summary(idf_path: str) -> str:
         return f"Error getting model summary for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def check_simulation_settings(idf_path: str) -> str:
     """
     Check SimulationControl and RunPeriod settings with information about modifiable fields
@@ -202,7 +206,7 @@ async def check_simulation_settings(idf_path: str) -> str:
         return f"Error checking simulation settings for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def inspect_schedules(idf_path: str, include_values: bool = False) -> str:
     """
     Inspect and inventory all schedule objects in the EnergyPlus model
@@ -226,7 +230,7 @@ async def inspect_schedules(idf_path: str, include_values: bool = False) -> str:
         return f"Error inspecting schedules for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def inspect_people(idf_path: str) -> str:
     """
     Inspect and list all People objects in the EnergyPlus model
@@ -253,7 +257,7 @@ async def inspect_people(idf_path: str) -> str:
         return f"Error inspecting People objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def modify_people(
     idf_path: str,
     modifications: List[Dict[str, Any]],
@@ -338,7 +342,7 @@ async def modify_people(
         return f"Error modifying People objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def inspect_lights(idf_path: str) -> str:
     """
     Inspect and list all Lights objects in the EnergyPlus model
@@ -365,7 +369,7 @@ async def inspect_lights(idf_path: str) -> str:
         return f"Error inspecting Lights objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def modify_lights(
     idf_path: str,
     modifications: List[Dict[str, Any]],
@@ -452,7 +456,7 @@ async def modify_lights(
         return f"Error modifying Lights objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def inspect_electric_equipment(idf_path: str) -> str:
     """
     Inspect and list all ElectricEquipment objects in the EnergyPlus model
@@ -479,7 +483,7 @@ async def inspect_electric_equipment(idf_path: str) -> str:
         return f"Error inspecting ElectricEquipment objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def modify_electric_equipment(
     idf_path: str,
     modifications: List[Dict[str, Any]],
@@ -560,7 +564,7 @@ async def modify_electric_equipment(
         return f"Error modifying ElectricEquipment objects for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def modify_simulation_control(
     idf_path: str, 
     field_updates: Dict[str, Any],  # Changed from str to Dict[str, Any]
@@ -596,7 +600,7 @@ async def modify_simulation_control(
         return f"Error modifying SimulationControl for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def modify_run_period(
     idf_path: str, 
     field_updates: Dict[str, Any],  # Changed from str to Dict[str, Any]
@@ -635,7 +639,7 @@ async def modify_run_period(
         return f"Error modifying RunPeriod for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def change_infiltration_by_mult(
     idf_path: str, 
     mult: float,
@@ -670,7 +674,7 @@ async def change_infiltration_by_mult(
         return f"Error Infiltration modification for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def add_window_film_outside(
     idf_path: str,
     u_value: float = 4.94,
@@ -709,7 +713,7 @@ async def add_window_film_outside(
         return f"Error adding window film for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def add_coating_outside(
     idf_path: str,
     location: str,
@@ -751,7 +755,7 @@ async def add_coating_outside(
         return f"Error adding exterior coating for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def list_zones(idf_path: str) -> str:
     """
     List all zones in the EnergyPlus model
@@ -774,7 +778,7 @@ async def list_zones(idf_path: str) -> str:
         return f"Error listing zones for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_surfaces(idf_path: str) -> str:
     """
     Get detailed surface information from the EnergyPlus model
@@ -796,7 +800,7 @@ async def get_surfaces(idf_path: str) -> str:
         logger.error(f"Error getting surfaces for {idf_path}: {str(e)}")
         return f"Error getting surfaces for {idf_path}: {str(e)}"
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_materials(idf_path: str) -> str:
     """
     Get material information from the EnergyPlus model
@@ -819,7 +823,7 @@ async def get_materials(idf_path: str) -> str:
         return f"Error getting materials for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def validate_idf(idf_path: str) -> str:
     """
     Validate an EnergyPlus IDF file and return validation results
@@ -842,7 +846,7 @@ async def validate_idf(idf_path: str) -> str:
         return f"Error validating IDF {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_output_variables(idf_path: str, discover_available: bool = False, run_days: int = 1) -> str:
     """
     Get output variables from the model - either configured variables or discover all available ones
@@ -873,7 +877,7 @@ async def get_output_variables(idf_path: str, discover_available: bool = False, 
         return f"Error getting output variables for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_output_meters(idf_path: str, discover_available: bool = False, run_days: int = 1) -> str:
     """
     Get output meters from the model - either configured meters or discover all available ones
@@ -904,7 +908,7 @@ async def get_output_meters(idf_path: str, discover_available: bool = False, run
         return f"Error getting output meters for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def add_output_variables(
     idf_path: str,
     variables: List,  # Can be List[Dict], List[str], or mixed
@@ -969,7 +973,7 @@ async def add_output_variables(
         return f"Error adding output variables: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def add_output_meters(
     idf_path: str,
     meters: List,  # Can be List[Dict], List[str], or mixed
@@ -1035,7 +1039,7 @@ async def add_output_meters(
         return f"Error adding output meters: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def list_available_files(
     include_example_files: bool = False,
     include_weather_data: bool = False
@@ -1059,7 +1063,7 @@ async def list_available_files(
         return f"Error listing available files: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_server_configuration() -> str:
     """
     Get current server configuration information
@@ -1076,7 +1080,7 @@ async def get_server_configuration() -> str:
         return f"Error getting configuration: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_server_status() -> str:
     """
     Get current server status and health information
@@ -1122,7 +1126,7 @@ async def get_server_status() -> str:
         return f"Error getting server status: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def discover_hvac_loops(idf_path: str) -> str:
     """
     Discover all HVAC loops (Plant, Condenser, Air) in the EnergyPlus model
@@ -1145,7 +1149,7 @@ async def discover_hvac_loops(idf_path: str) -> str:
         return f"Error discovering HVAC loops for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_loop_topology(idf_path: str, loop_name: str) -> str:
     """
     Get detailed topology information for a specific HVAC loop
@@ -1172,7 +1176,7 @@ async def get_loop_topology(idf_path: str, loop_name: str) -> str:
         return f"Error getting loop topology for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def visualize_loop_diagram(
     idf_path: str, 
     loop_name: Optional[str] = None,
@@ -1205,7 +1209,7 @@ async def visualize_loop_diagram(
         return f"Error creating loop diagram for {idf_path}: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def run_energyplus_simulation(
     idf_path: str, 
     weather_file: Optional[str] = None,
@@ -1253,7 +1257,7 @@ async def run_energyplus_simulation(
         return f"Error running simulation: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
 async def create_interactive_plot(
     output_directory: str,
     idf_name: Optional[str] = None,
@@ -1284,7 +1288,7 @@ async def create_interactive_plot(
         return f"Error creating interactive plot: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_server_logs(lines: int = 50) -> str:
     """
     Get recent server log entries
@@ -1320,7 +1324,7 @@ async def get_server_logs(lines: int = 50) -> str:
         return f"Error reading server logs: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, idempotentHint=True))
 async def get_error_logs(lines: int = 20) -> str:
     """
     Get recent error log entries
@@ -1355,7 +1359,7 @@ async def get_error_logs(lines: int = 20) -> str:
         return f"Error reading error logs: {str(e)}"
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True))
 async def clear_logs() -> str:
     """
     Clear/rotate current log files (creates backup)
@@ -1401,11 +1405,80 @@ async def clear_logs() -> str:
 
 
 # ============================================================================
+# Response envelope for the UBEM-MCP tools — new in UBEM-MCP
+# ============================================================================
+#
+# Every UBEM-MCP tool returns one structured object (MCP structured content,
+# with the same JSON as text for clients that read text only):
+#   success: {"ok": true, ...data, "warnings": [...], "next_steps": [...]}
+#   failure: {"ok": false, "error_type": "not_found" | "invalid_input" | "internal",
+#             "error": "..."}
+# Tool annotations tell any MCP client which tools only read, which may
+# change or discard work, and which reach the internet.
+
+class ToolResult(BaseModel):
+    """The envelope every UBEM-MCP tool returns; tool data are extra fields."""
+    model_config = ConfigDict(extra="allow")
+
+    ok: bool
+    warnings: List[str] = []
+    error_type: Optional[str] = None
+    error: Optional[str] = None
+
+
+def _ok(result: Any) -> Dict[str, Any]:
+    if isinstance(result, dict):
+        out = {"ok": True, **result}
+    elif isinstance(result, list):
+        out = {"ok": True, "count": len(result), "items": result}
+    else:
+        out = {"ok": True, "result": result}
+    out.setdefault("warnings", [])
+    return out
+
+
+def _fail(error_type: str, error: BaseException) -> Dict[str, Any]:
+    message = error.args[0] if isinstance(error, KeyError) and error.args else str(error)
+    return {"ok": False, "error_type": error_type, "error": str(message)}
+
+
+def ubem_tool(*, read_only: bool = False, destructive: bool = False, idempotent: bool = False,
+              open_world: bool = False):
+    """Register a UBEM-MCP tool with annotations and the response envelope."""
+    def decorate(fn):
+        @functools.wraps(fn)
+        async def wrapper(*args, **kwargs):
+            try:
+                out = _ok(await fn(*args, **kwargs))
+            except (KeyError, FileNotFoundError) as e:
+                out = _fail("not_found", e)
+            except (ValueError, TypeError) as e:
+                out = _fail("invalid_input", e)
+            except Exception as e:  # noqa: BLE001 - tool boundary: always answer the client
+                logger.exception(f"Error in {fn.__name__}")
+                out = _fail("internal", e)
+            # Round-trip through JSON so numpy numbers, paths and dates become plain values.
+            return ToolResult(**json.loads(json.dumps(out, default=str)))
+
+        wrapper.__signature__ = inspect.signature(fn).replace(return_annotation=ToolResult)
+
+        annotations = ToolAnnotations(readOnlyHint=read_only, destructiveHint=destructive,
+                                      idempotentHint=idempotent or read_only, openWorldHint=open_world)
+        return mcp.tool(annotations=annotations, structured_output=True)(wrapper)
+    return decorate
+
+
+def _batch_next_steps(batch_id: str) -> List[str]:
+    return [f"poll get_batch_status(batch_id={batch_id!r}) every minute or two until is_complete is true",
+            f"then aggregate_stock_results(batch_id={batch_id!r})"]
+
+
+# ============================================================================
 # Batch Simulation (portfolio / multi-model) — new in UBEM-MCP
 # ============================================================================
 
-@mcp.tool()
-async def discover_idf_files(directory: str, pattern: str = "*.idf") -> str:
+@ubem_tool(read_only=True)
+async def discover_idf_files(directory: str, pattern: str = "*.idf") -> Dict[str, Any]:
     """
     Glob a directory for IDF files to use as batch simulation inputs
 
@@ -1417,19 +1490,12 @@ async def discover_idf_files(directory: str, pattern: str = "*.idf") -> str:
         JSON string listing matched IDF files with path, size, and basic file info.
         Feed the "idf_path" values straight into run_batch_simulation's `models` list.
     """
-    try:
-        logger.info(f"Discovering IDF files in: {directory} (pattern={pattern})")
-        files = _discover_idf_files(config, directory, pattern)
-        return f"Discovered {len(files)} IDF file(s) in {directory}:\n{json.dumps(files, indent=2)}"
-    except FileNotFoundError as e:
-        logger.warning(f"Directory not found: {directory}")
-        return f"Directory not found: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error discovering IDF files in {directory}: {str(e)}")
-        return f"Error discovering IDF files: {str(e)}"
+    logger.info(f"Discovering IDF files in: {directory} (pattern={pattern})")
+    files = _discover_idf_files(config, directory, pattern)
+    return files
 
 
-@mcp.tool()
+@ubem_tool()
 async def run_batch_simulation(
     models: List[Any],
     weather_file: Optional[str] = None,
@@ -1440,13 +1506,14 @@ async def run_batch_simulation(
     design_day: bool = False,
     readvars: bool = True,
     expandobjects: bool = True,
-) -> str:
+) -> Dict[str, Any]:
     """
     Run EnergyPlus simulations for a batch (portfolio) of models in parallel background workers
 
     This is the key UBEM-MCP addition over single-model EnergyPlus-MCP: it runs many
-    IDFs concurrently (one worker process per model, since eppy's global IDD state
-    can't safely be shared across threads) and returns immediately with a batch_id.
+    IDFs concurrently (one worker process per model, each calling the EnergyPlus
+    command line) and returns immediately with a batch_id. Any complete IDF works,
+    including models built outside UBEM-MCP.
     Poll get_batch_status / get_batch_results to track progress and retrieve results —
     a portfolio of many buildings can take far longer than a single tool call should block for.
 
@@ -1479,30 +1546,24 @@ async def run_batch_simulation(
             {"idf_path": "bldg_002.idf", "weather_file": "chicago.epw", "label": "office_b"}
         ], continue_on_error=False)
     """
-    try:
-        logger.info(f"Submitting batch simulation: {len(models)} model(s)")
-        result = batch_manager.submit_batch(
-            models=models,
-            weather_file=weather_file,
-            max_workers=max_workers,
-            continue_on_error=continue_on_error,
-            output_directory=output_directory,
-            annual=annual,
-            design_day=design_day,
-            readvars=readvars,
-            expandobjects=expandobjects,
-        )
-        return f"Batch simulation submitted:\n{json.dumps(result, indent=2)}"
-    except ValueError as e:
-        logger.warning(f"Invalid arguments for run_batch_simulation: {str(e)}")
-        return f"Invalid arguments: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error submitting batch simulation: {str(e)}")
-        return f"Error submitting batch simulation: {str(e)}"
+    logger.info(f"Submitting batch simulation: {len(models)} model(s)")
+    result = batch_manager.submit_batch(
+        models=models,
+        weather_file=weather_file,
+        max_workers=max_workers,
+        continue_on_error=continue_on_error,
+        output_directory=output_directory,
+        annual=annual,
+        design_day=design_day,
+        readvars=readvars,
+        expandobjects=expandobjects,
+    )
+    return {**result, "next_steps": [f"poll get_batch_status(batch_id={result['batch_id']!r}) until is_complete, "
+                                     f"then get_batch_results"]}
 
 
-@mcp.tool()
-async def get_batch_status(batch_id: str) -> str:
+@ubem_tool(read_only=True)
+async def get_batch_status(batch_id: str) -> Dict[str, Any]:
     """
     Get the current status of a batch simulation job
 
@@ -1513,59 +1574,55 @@ async def get_batch_status(batch_id: str) -> str:
         JSON string with overall status, per-status counts, and completion flag.
         Poll this until "is_complete" is true, then call get_batch_results.
     """
-    try:
-        result = batch_manager.get_status(batch_id)
-        return f"Batch status for {batch_id}:\n{json.dumps(result, indent=2)}"
-    except KeyError as e:
-        logger.warning(f"Unknown batch_id: {batch_id}")
-        return f"Unknown batch_id: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error getting batch status for {batch_id}: {str(e)}")
-        return f"Error getting batch status: {str(e)}"
+    result = batch_manager.get_status(batch_id)
+    return result
 
 
-@mcp.tool()
-async def get_batch_results(batch_id: str) -> str:
+@ubem_tool(read_only=True)
+async def get_batch_results(batch_id: str, status: Optional[str] = None, limit: int = 50,
+                            offset: int = 0) -> Dict[str, Any]:
     """
     Get detailed per-model results for a batch simulation job
 
     Args:
         batch_id: Batch ID returned by run_batch_simulation
+        status: Only models with this status, e.g. "failed" or "success"
+        limit: Models to return per page (up to 200)
+        offset: First model to return; page with next_offset
 
     Returns:
-        JSON string with overall status plus per-model results (success/failure,
-        duration, output directory, error details). Safe to call before the batch
-        finishes — check "is_complete" and per-model "status" fields for partial results.
+        JSON with overall status and counts plus one page of per-model results
+        (status, duration, output directory, error details). Safe to call before
+        the batch finishes; check "is_complete".
     """
-    try:
-        result = batch_manager.get_results(batch_id)
-        return f"Batch results for {batch_id}:\n{json.dumps(result, indent=2)}"
-    except KeyError as e:
-        logger.warning(f"Unknown batch_id: {batch_id}")
-        return f"Unknown batch_id: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error getting batch results for {batch_id}: {str(e)}")
-        return f"Error getting batch results: {str(e)}"
+    result = batch_manager.get_results(batch_id)
+    models = [m for m in result.pop("models") if status is None or m.get("status") == status]
+    limit = max(1, min(limit, 200))
+    page = models[offset:offset + limit]
+    out = {**result, "num_models": len(models), "models": page}
+    if offset + limit < len(models):
+        out["next_offset"] = offset + limit
+    return out
 
 
-@mcp.tool()
-async def list_batches() -> str:
+@ubem_tool(read_only=True)
+async def list_batches(limit: int = 20) -> Dict[str, Any]:
     """
-    List all known batch simulation jobs (in-memory plus any persisted on disk)
+    List batch simulation jobs (in memory plus any persisted on disk), newest first
+
+    Args:
+        limit: Jobs to return (up to 200)
 
     Returns:
-        JSON string with a summary of every batch job this server knows about
+        JSON with the total number of jobs and a summary of the newest ones
     """
-    try:
-        result = batch_manager.list_batches()
-        return f"Batch jobs ({len(result)}):\n{json.dumps(result, indent=2)}"
-    except Exception as e:
-        logger.error(f"Error listing batches: {str(e)}")
-        return f"Error listing batches: {str(e)}"
+    jobs = batch_manager.list_batches()
+    jobs = sorted(jobs, key=lambda j: str(j.get("created_at") or ""), reverse=True)
+    return {"num_batches": len(jobs), "batches": jobs[:max(1, min(limit, 200))]}
 
 
-@mcp.tool()
-async def cancel_batch(batch_id: str) -> str:
+@ubem_tool(destructive=True)
+async def cancel_batch(batch_id: str) -> Dict[str, Any]:
     """
     Cancel a batch simulation job
 
@@ -1577,15 +1634,8 @@ async def cancel_batch(batch_id: str) -> str:
         this is best-effort for models already running (an in-flight EnergyPlus
         subprocess in a worker cannot be forcibly killed from here).
     """
-    try:
-        result = batch_manager.cancel_batch(batch_id)
-        return f"Batch cancellation requested for {batch_id}:\n{json.dumps(result, indent=2)}"
-    except KeyError as e:
-        logger.warning(f"Unknown batch_id: {batch_id}")
-        return f"Unknown batch_id: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error cancelling batch {batch_id}: {str(e)}")
-        return f"Error cancelling batch: {str(e)}"
+    result = batch_manager.cancel_batch(batch_id)
+    return result
 
 
 # ============================================================================
@@ -1596,8 +1646,8 @@ def _stock_loader_options(**opts) -> Dict[str, Any]:
     return {k: v for k, v in opts.items() if v is not None}
 
 
-@mcp.tool()
-async def list_archetypes() -> str:
+@ubem_tool(read_only=True)
+async def list_archetypes() -> Dict[str, Any]:
     """
     List the building archetypes (use types) and vintage bins UBEM-MCP models
 
@@ -1618,10 +1668,10 @@ async def list_archetypes() -> str:
         "vintages": {"pre1980": "built before 1980", "1980_2004": "built 1980-2003",
                      "post2004": "built 2004 or later"},
     }
-    return json.dumps(data, indent=2)
+    return data
 
 
-@mcp.tool()
+@ubem_tool()
 async def load_building_stock(
     geojson_path: str,
     stock_id: Optional[str] = None,
@@ -1639,7 +1689,7 @@ async def load_building_stock(
     attribution: Optional[str] = None,
     keep_personal_fields: bool = False,
     mode: str = "model",
-) -> str:
+) -> Dict[str, Any]:
     """
     Load building footprints (or any building inventory) from a GeoJSON file as a building stock
 
@@ -1680,26 +1730,20 @@ async def load_building_stock(
         licences, required attribution, and warnings (unknown licence, dropped
         personal columns).
     """
-    try:
-        opts = _stock_loader_options(
-            source_crs=source_crs, height_field=height_field, floors_field=floors_field,
-            use_field=use_field, year_field=year_field, id_field=id_field, height_unit=height_unit,
-            default_archetype=default_archetype, default_year=default_year,
-            min_footprint_m2=min_footprint_m2,
-            keep_personal_fields=keep_personal_fields or None,
-            mode=mode if mode != "model" else None,
-        )
-        result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, license=license,
-                                              attribution=attribution, **opts)
-        return f"Building stock loaded:\n{json.dumps(result, indent=2)}"
-    except (ValueError, FileNotFoundError) as e:
-        return f"Could not load building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error loading building stock {geojson_path}: {str(e)}")
-        return f"Error loading building stock: {str(e)}"
+    opts = _stock_loader_options(
+        source_crs=source_crs, height_field=height_field, floors_field=floors_field,
+        use_field=use_field, year_field=year_field, id_field=id_field, height_unit=height_unit,
+        default_archetype=default_archetype, default_year=default_year,
+        min_footprint_m2=min_footprint_m2,
+        keep_personal_fields=keep_personal_fields or None,
+        mode=mode if mode != "model" else None,
+    )
+    result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, license=license,
+                                          attribution=attribution, **opts)
+    return result
 
 
-@mcp.tool()
+@ubem_tool(open_world=True)
 async def fetch_osm_buildings(
     bbox: Optional[List[float]] = None,
     center_lat: Optional[float] = None,
@@ -1710,7 +1754,7 @@ async def fetch_osm_buildings(
     default_year: int = 1980,
     min_footprint_m2: Optional[float] = None,
     mode: str = "model",
-) -> str:
+) -> Dict[str, Any]:
     """
     Download building footprints from OpenStreetMap and load them as a building stock
 
@@ -1737,24 +1781,18 @@ async def fetch_osm_buildings(
     Returns:
         JSON summary of the stock, as for load_building_stock.
     """
-    try:
-        opts = _stock_loader_options(
-            default_archetype=default_archetype, default_year=default_year,
-            min_footprint_m2=min_footprint_m2, mode=mode if mode != "model" else None,
-        )
-        result = await asyncio.to_thread(
-            stock_manager.fetch_osm, bbox=bbox, center_lat=center_lat, center_lon=center_lon,
-            radius_m=radius_m, stock_id=stock_id, **opts,
-        )
-        return f"OpenStreetMap buildings loaded:\n{json.dumps(result, indent=2)}"
-    except ValueError as e:
-        return f"Could not fetch OSM buildings: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error fetching OSM buildings: {str(e)}")
-        return f"Error fetching OSM buildings (the Overpass API may be busy; retry shortly): {str(e)}"
+    opts = _stock_loader_options(
+        default_archetype=default_archetype, default_year=default_year,
+        min_footprint_m2=min_footprint_m2, mode=mode if mode != "model" else None,
+    )
+    result = await asyncio.to_thread(
+        stock_manager.fetch_osm, bbox=bbox, center_lat=center_lat, center_lon=center_lon,
+        radius_m=radius_m, stock_id=stock_id, **opts,
+    )
+    return result
 
 
-@mcp.tool()
+@ubem_tool()
 async def enrich_building_stock(
     stock_id: str,
     layer_path: str,
@@ -1767,7 +1805,7 @@ async def enrich_building_stock(
     new_stock_id: Optional[str] = None,
     layer_license: Optional[str] = None,
     layer_attribution: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Fill a building stock's guessed attributes from another GIS layer (e.g. assessor parcels)
 
@@ -1799,22 +1837,16 @@ async def enrich_building_stock(
         JSON with match counts, filled attribute counts, unrecognized use values,
         inferred shares before/after, and the new stock's summary.
     """
-    try:
-        result = stock_manager.enrich(
-            stock_id, layer_path, field_map, new_stock_id=new_stock_id,
-            use_value_map=use_value_map, layer_crs=layer_crs, overwrite=overwrite,
-            height_unit=height_unit, min_overlap=min_overlap,
-            layer_license=layer_license, layer_attribution=layer_attribution,
-        )
-        return f"Building stock enriched:\n{json.dumps(result, indent=2)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not enrich building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error enriching building stock {stock_id}: {str(e)}")
-        return f"Error enriching building stock: {str(e)}"
+    result = stock_manager.enrich(
+        stock_id, layer_path, field_map, new_stock_id=new_stock_id,
+        use_value_map=use_value_map, layer_crs=layer_crs, overwrite=overwrite,
+        height_unit=height_unit, min_overlap=min_overlap,
+        layer_license=layer_license, layer_attribution=layer_attribution,
+    )
+    return result
 
 
-@mcp.tool()
+@ubem_tool(read_only=True)
 async def get_building_stock(
     stock_id: str,
     archetypes: Optional[List[str]] = None,
@@ -1822,7 +1854,7 @@ async def get_building_stock(
     min_gfa_m2: Optional[float] = None,
     max_gfa_m2: Optional[float] = None,
     limit: int = 50,
-) -> str:
+) -> Dict[str, Any]:
     """
     Summarize a building stock and list its buildings, optionally filtered
 
@@ -1837,34 +1869,28 @@ async def get_building_stock(
         JSON with the stock summary, the number of matching buildings, and up to
         `limit` matching buildings with their normalized attributes.
     """
-    try:
-        stock = stock_manager.get(stock_id)
-        matches = stock.filter(archetypes=archetypes, vintages=vintages,
-                               min_gfa_m2=min_gfa_m2, max_gfa_m2=max_gfa_m2)
-        buildings = []
-        for b in matches[:max(0, limit)]:
-            props = b.to_properties()
-            props.pop("source_properties", None)
-            buildings.append(props)
-        data = {
-            "stock_id": stock_id,
-            "stock_directory": str(stock_manager.stock_dir(stock_id)),
-            "summary": stock.summary(),
-            "sources": [{"name": src["name"], "license": src["license"]}
-                        for src in stock_manager.get_meta(stock_id).get("sources") or []],
-            "attribution": provenance.attribution_text(stock_manager.get_meta(stock_id).get("sources") or []),
-            "num_matching": len(matches),
-            "buildings": buildings,
-        }
-        return json.dumps(data, indent=2)
-    except (KeyError, ValueError) as e:
-        return f"Could not get building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error reading building stock {stock_id}: {str(e)}")
-        return f"Error reading building stock: {str(e)}"
+    stock = stock_manager.get(stock_id)
+    matches = stock.filter(archetypes=archetypes, vintages=vintages,
+                           min_gfa_m2=min_gfa_m2, max_gfa_m2=max_gfa_m2)
+    buildings = []
+    for b in matches[:max(0, limit)]:
+        props = b.to_properties()
+        props.pop("source_properties", None)
+        buildings.append(props)
+    data = {
+        "stock_id": stock_id,
+        "stock_directory": str(stock_manager.stock_dir(stock_id)),
+        "summary": stock.summary(),
+        "sources": [{"name": src["name"], "license": src["license"]}
+                    for src in stock_manager.get_meta(stock_id).get("sources") or []],
+        "attribution": provenance.attribution_text(stock_manager.get_meta(stock_id).get("sources") or []),
+        "num_matching": len(matches),
+        "buildings": buildings,
+    }
+    return data
 
 
-@mcp.tool()
+@ubem_tool(read_only=True)
 async def query_stock(
     stock_id: str,
     filters: Optional[Dict[str, Any]] = None,
@@ -1874,7 +1900,7 @@ async def query_stock(
     sample: int = 5,
     offset: int = 0,
     columns: Optional[List[str]] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Filter, group and summarize the buildings of a stock, with no model or simulation
 
@@ -1903,26 +1929,20 @@ async def query_stock(
         JSON with the number of matching buildings, overall metrics and data completeness,
         the groups (largest first), sample rows and next_offset when more rows exist.
     """
-    try:
-        result = stock_manager.query_stock(stock_id, filters=filters, group_by=group_by, metrics=metrics,
-                                           max_groups=max_groups, sample=sample, offset=offset,
-                                           columns=columns)
-        return json.dumps(result, indent=2, default=str)
-    except (KeyError, ValueError) as e:
-        return f"Could not query building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error querying building stock {stock_id}: {str(e)}")
-        return f"Error querying building stock: {str(e)}"
+    result = stock_manager.query_stock(stock_id, filters=filters, group_by=group_by, metrics=metrics,
+                                       max_groups=max_groups, sample=sample, offset=offset,
+                                       columns=columns)
+    return result
 
 
-@mcp.tool()
+@ubem_tool(idempotent=True)
 async def export_stock(
     stock_id: str,
     format: str = "csv",
     filters: Optional[Dict[str, Any]] = None,
     columns: Optional[List[str]] = None,
     name: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Export a stock's buildings to a CSV or GeoJSON file, with its data sources and licences
 
@@ -1942,24 +1962,18 @@ async def export_stock(
         JSON with the file path, row count, columns, metadata path, attribution and
         licence warnings.
     """
-    try:
-        result = stock_manager.export_stock(stock_id, fmt=format, filters=filters, columns=columns, name=name)
-        return json.dumps(result, indent=2)
-    except (KeyError, ValueError) as e:
-        return f"Could not export building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error exporting building stock {stock_id}: {str(e)}")
-        return f"Error exporting building stock: {str(e)}"
+    result = stock_manager.export_stock(stock_id, fmt=format, filters=filters, columns=columns, name=name)
+    return result
 
 
-@mcp.tool()
+@ubem_tool()
 async def assign_archetypes(
     stock_id: str,
     new_stock_id: Optional[str] = None,
     default_archetype: str = "single_family",
     default_year: int = 1980,
     min_footprint_m2: float = 20.0,
-) -> str:
+) -> Dict[str, Any]:
     """
     Turn a data-mode stock into a modeling stock ready for generate_building_models
 
@@ -1979,44 +1993,34 @@ async def assign_archetypes(
     Returns:
         JSON summary of the new stock, as for load_building_stock.
     """
-    try:
-        result = stock_manager.assign_archetypes(
-            stock_id, new_stock_id=new_stock_id, default_archetype=default_archetype,
-            default_year=default_year, min_footprint_m2=min_footprint_m2)
-        return f"Modeling stock created:\n{json.dumps(result, indent=2)}"
-    except (KeyError, ValueError) as e:
-        return f"Could not assign archetypes: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error assigning archetypes for {stock_id}: {str(e)}")
-        return f"Error assigning archetypes: {str(e)}"
+    result = stock_manager.assign_archetypes(
+        stock_id, new_stock_id=new_stock_id, default_archetype=default_archetype,
+        default_year=default_year, min_footprint_m2=min_footprint_m2)
+    return result
 
 
-@mcp.tool()
-async def list_building_stocks() -> str:
+@ubem_tool(read_only=True)
+async def list_building_stocks() -> Dict[str, Any]:
     """
     List building stocks loaded so far (persisted across server restarts)
 
     Returns:
         JSON list of stocks with stock_id, creation time, source and building count.
     """
-    try:
-        return json.dumps(stock_manager.list_stocks(), indent=2)
-    except Exception as e:
-        logger.error(f"Error listing building stocks: {str(e)}")
-        return f"Error listing building stocks: {str(e)}"
+    return stock_manager.list_stocks()
 
 
 # ============================================================================
 # Archetype model generation and stock simulation — new in UBEM-MCP
 # ============================================================================
 
-@mcp.tool()
+@ubem_tool(read_only=True, open_world=True)
 async def find_weather_stations(
     stock_id: Optional[str] = None,
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     n: int = 5,
-) -> str:
+) -> Dict[str, Any]:
     """
     List the weather stations nearest to a building stock or a point
 
@@ -2033,23 +2037,17 @@ async def find_weather_stations(
         typical-year datasets (e.g. "TMYx.2009-2023"); pass a station id to
         get_site_weather to use a station other than the nearest one.
     """
-    try:
-        result = await asyncio.to_thread(stock_manager.find_weather_stations, latitude, longitude, stock_id, n)
-        return f"Nearest weather stations:\n{json.dumps(result, indent=2)}"
-    except (KeyError, ValueError) as e:
-        return f"Could not find weather stations: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error finding weather stations: {str(e)}")
-        return f"Error finding weather stations: {str(e)}"
+    result = await asyncio.to_thread(stock_manager.find_weather_stations, latitude, longitude, stock_id, n)
+    return result
 
 
-@mcp.tool()
+@ubem_tool(open_world=True)
 async def get_site_weather(
     stock_id: str,
     station: Optional[str] = None,
     dataset: Optional[str] = None,
     weather_file: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Set the weather file and ASHRAE climate zone of a building stock
 
@@ -2070,18 +2068,12 @@ async def get_site_weather(
         JSON with the station and its distance, the EPW path, the ASHRAE climate
         zone, the archetype-library zone used for models, and any notes or warnings.
     """
-    try:
-        result = await asyncio.to_thread(stock_manager.resolve_weather, stock_id, station=station,
-                                         dataset=dataset, weather_file=weather_file)
-        return f"Site weather set:\n{json.dumps(result, indent=2)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not set site weather: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error resolving weather for stock {stock_id}: {str(e)}")
-        return f"Error setting site weather: {str(e)}"
+    result = await asyncio.to_thread(stock_manager.resolve_weather, stock_id, station=station,
+                                     dataset=dataset, weather_file=weather_file)
+    return result
 
 
-@mcp.tool()
+@ubem_tool()
 async def generate_building_models(
     stock_id: str,
     climate_zone: Optional[str] = None,
@@ -2092,7 +2084,7 @@ async def generate_building_models(
     building_ids: Optional[List[str]] = None,
     max_buildings: Optional[int] = None,
     model_set_id: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Generate an EnergyPlus archetype model (IDF) for each building of a stock
 
@@ -2123,21 +2115,15 @@ async def generate_building_models(
         JSON with the model set id and directory, counts by HVAC system and zoning,
         and any buildings that failed.
     """
-    try:
-        result = await asyncio.to_thread(
-            stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
-            archetypes=archetypes, vintages=vintages, building_ids=building_ids,
-            max_buildings=max_buildings, model_set_id=model_set_id,
-        )
-        return f"Building models generated:\n{json.dumps(result, indent=2)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not generate building models: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error generating models for stock {stock_id}: {str(e)}")
-        return f"Error generating building models: {str(e)}"
+    result = await asyncio.to_thread(
+        stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
+        archetypes=archetypes, vintages=vintages, building_ids=building_ids,
+        max_buildings=max_buildings, model_set_id=model_set_id,
+    )
+    return result
 
 
-@mcp.tool()
+@ubem_tool()
 async def simulate_building_stock(
     stock_id: str,
     climate_zone: Optional[str] = None,
@@ -2149,7 +2135,7 @@ async def simulate_building_stock(
     max_buildings: Optional[int] = None,
     max_workers: Optional[int] = None,
     model_set_id: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Generate archetype models for a building stock and simulate them all as a background batch
 
@@ -2171,40 +2157,34 @@ async def simulate_building_stock(
     Returns:
         JSON with the batch_id, the model set, and generation summary.
     """
-    try:
-        gen = await asyncio.to_thread(
-            stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
-            archetypes=archetypes, vintages=vintages, building_ids=building_ids,
-            max_buildings=max_buildings, model_set_id=model_set_id,
-        )
-        if not gen["weather_file"]:
-            return ("Could not simulate building stock: no weather file. Give weather_file, call "
-                    "get_site_weather, or omit climate_zone to resolve both from the nearest station.")
-        manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
-        models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
-        if not models:
-            return f"No models were generated:\n{json.dumps(gen, indent=2)}"
-        batch = batch_manager.submit_batch(
-            models=models, weather_file=gen["weather_file"], max_workers=max_workers,
-            output_directory=str(Path(gen["model_directory"]) / "runs"),
-            metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"]},
-        )
-        return f"Building stock simulation submitted:\n{json.dumps({'batch': batch, 'models': gen}, indent=2)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not simulate building stock: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error simulating stock {stock_id}: {str(e)}")
-        return f"Error simulating building stock: {str(e)}"
+    gen = await asyncio.to_thread(
+        stock_manager.generate_models, stock_id, climate_zone, weather_file=weather_file, hvac=hvac,
+        archetypes=archetypes, vintages=vintages, building_ids=building_ids,
+        max_buildings=max_buildings, model_set_id=model_set_id,
+    )
+    if not gen["weather_file"]:
+        raise ValueError("No weather file. Give weather_file, call get_site_weather, or omit climate_zone "
+                         "to resolve both from the nearest station.")
+    manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
+    models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+    if not models:
+        return {"batch": None, "models": gen, "warnings": ["no models were generated; see models.failures"]}
+    batch = batch_manager.submit_batch(
+        models=models, weather_file=gen["weather_file"], max_workers=max_workers,
+        output_directory=str(Path(gen["model_directory"]) / "runs"),
+        metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"]},
+    )
+    return {"batch": batch, "models": gen, "next_steps": _batch_next_steps(batch["batch_id"])}
 
 
-@mcp.tool()
+@ubem_tool(idempotent=True)
 async def aggregate_stock_results(
     batch_id: Optional[str] = None,
     stock_id: Optional[str] = None,
     model_set_id: Optional[str] = None,
     emission_factors: Optional[Dict[str, float]] = None,
     make_map: bool = True,
-) -> str:
+) -> Dict[str, Any]:
     """
     Aggregate the simulation results of a building stock into district results
 
@@ -2225,37 +2205,33 @@ async def aggregate_stock_results(
         JSON summary: coverage (buildings with/without results), district totals
         and EUI, peak demand and when it occurs, breakdowns, and output file paths.
     """
-    try:
-        outputs = None
-        results_id = None
-        if batch_id:
-            status = batch_manager.get_status(batch_id)
-            if not status["is_complete"]:
-                return f"Batch {batch_id} is still running ({status['counts']}); aggregate when it completes."
-            meta = status.get("metadata") or {}
-            stock_id = stock_id or meta.get("stock_id")
-            model_set_id = model_set_id or meta.get("model_set_id")
-            if not stock_id or not model_set_id:
-                return (f"Batch {batch_id} was not created by simulate_building_stock; "
-                        "pass stock_id and model_set_id as well.")
-            outputs = {m["label"]: m for m in batch_manager.get_results(batch_id)["models"]}
-            results_id = batch_id
+    outputs = None
+    results_id = None
+    if batch_id:
+        status = batch_manager.get_status(batch_id)
+        if not status["is_complete"]:
+            return {"is_complete": False, "batch_id": batch_id, "counts": status["counts"],
+                    "next_steps": [f"call aggregate_stock_results(batch_id={batch_id!r}) again when "
+                                   f"get_batch_status reports is_complete"]}
+        meta = status.get("metadata") or {}
+        stock_id = stock_id or meta.get("stock_id")
+        model_set_id = model_set_id or meta.get("model_set_id")
         if not stock_id or not model_set_id:
-            return "Provide batch_id, or stock_id and model_set_id."
-        summary = await asyncio.to_thread(
-            stock_manager.aggregate_results, stock_id, model_set_id, outputs=outputs, results_id=results_id,
-            emission_factors=emission_factors, make_map=make_map,
-        )
-        return f"Stock results aggregated:\n{json.dumps(summary, indent=2, default=str)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not aggregate results: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error aggregating results: {str(e)}")
-        return f"Error aggregating results: {str(e)}"
+            raise ValueError(f"Batch {batch_id} was not created by simulate_building_stock; "
+                             "pass stock_id and model_set_id as well.")
+        outputs = {m["label"]: m for m in batch_manager.get_results(batch_id)["models"]}
+        results_id = batch_id
+    if not stock_id or not model_set_id:
+        raise ValueError("Provide batch_id, or stock_id and model_set_id.")
+    summary = await asyncio.to_thread(
+        stock_manager.aggregate_results, stock_id, model_set_id, outputs=outputs, results_id=results_id,
+        emission_factors=emission_factors, make_map=make_map,
+    )
+    return summary
 
 
-@mcp.tool()
-async def list_retrofit_measures() -> str:
+@ubem_tool(read_only=True)
+async def list_retrofit_measures() -> Dict[str, Any]:
     """
     List the retrofit measures available for retrofit scenarios
 
@@ -2263,17 +2239,17 @@ async def list_retrofit_measures() -> str:
         JSON list of measure types with their parameters and descriptions.
     """
     from ubem_mcp_server.urban.retrofit import list_measures
-    return f"Retrofit measures:\n{json.dumps(list_measures(), indent=2)}"
+    return list_measures()
 
 
-@mcp.tool()
+@ubem_tool()
 async def simulate_retrofit_scenario(
     stock_id: str,
     baseline_model_set_id: str,
     scenario: Dict[str, Any],
     max_workers: Optional[int] = None,
     model_set_id: Optional[str] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Apply a retrofit scenario to a simulated stock and simulate it as a background batch
 
@@ -2298,37 +2274,34 @@ async def simulate_retrofit_scenario(
         JSON with the batch_id, the scenario model set and adoption counts. When the
         batch completes, run aggregate_stock_results on it and then compare_retrofit_scenario.
     """
-    try:
-        gen = await asyncio.to_thread(stock_manager.generate_scenario, stock_id, baseline_model_set_id,
-                                      scenario, model_set_id=model_set_id)
-        if not gen["weather_file"]:
-            return "Could not simulate scenario: the baseline model set has no weather file."
-        manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
-        models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
-        if not models:
-            return f"No scenario models were generated:\n{json.dumps(gen, indent=2)}"
-        batch = batch_manager.submit_batch(
-            models=models, weather_file=gen["weather_file"], max_workers=max_workers,
-            output_directory=str(Path(gen["model_directory"]) / "runs"),
-            metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"],
-                      "scenario": gen["scenario"]["name"], "baseline_model_set_id": baseline_model_set_id},
-        )
-        return f"Retrofit scenario submitted:\n{json.dumps({'batch': batch, 'models': gen}, indent=2)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not simulate retrofit scenario: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error simulating retrofit scenario for stock {stock_id}: {str(e)}")
-        return f"Error simulating retrofit scenario: {str(e)}"
+    gen = await asyncio.to_thread(stock_manager.generate_scenario, stock_id, baseline_model_set_id,
+                                  scenario, model_set_id=model_set_id)
+    if not gen["weather_file"]:
+        raise ValueError("The baseline model set has no weather file.")
+    manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
+    models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+    if not models:
+        return {"batch": None, "models": gen, "warnings": ["no scenario models were generated"]}
+    batch = batch_manager.submit_batch(
+        models=models, weather_file=gen["weather_file"], max_workers=max_workers,
+        output_directory=str(Path(gen["model_directory"]) / "runs"),
+        metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"],
+                  "scenario": gen["scenario"]["name"], "baseline_model_set_id": baseline_model_set_id},
+    )
+    return {"batch": batch, "models": gen,
+            "next_steps": _batch_next_steps(batch["batch_id"]) + [
+                f"then compare_retrofit_scenario(stock_id={stock_id!r}, "
+                f"scenario_model_set_id={gen['model_set_id']!r})"]}
 
 
-@mcp.tool()
+@ubem_tool(idempotent=True)
 async def compare_retrofit_scenario(
     stock_id: str,
     scenario_model_set_id: str,
     baseline_results_id: Optional[str] = None,
     scenario_results_id: Optional[str] = None,
     emission_factors: Optional[Dict[str, float]] = None,
-) -> str:
+) -> Dict[str, Any]:
     """
     Compare a retrofit scenario's results with its baseline, building by building
 
@@ -2348,17 +2321,11 @@ async def compare_retrofit_scenario(
         distribution, retrofitted buildings whose use went up, and the path of a
         per-building comparison CSV.
     """
-    try:
-        result = await asyncio.to_thread(
-            stock_manager.compare_scenario, stock_id, scenario_model_set_id,
-            baseline_results_id=baseline_results_id, scenario_results_id=scenario_results_id,
-            emission_factors=emission_factors)
-        return f"Retrofit scenario comparison:\n{json.dumps(result, indent=2, default=str)}"
-    except (KeyError, ValueError, FileNotFoundError) as e:
-        return f"Could not compare scenario: {str(e)}"
-    except Exception as e:
-        logger.error(f"Error comparing scenario {scenario_model_set_id}: {str(e)}")
-        return f"Error comparing retrofit scenario: {str(e)}"
+    result = await asyncio.to_thread(
+        stock_manager.compare_scenario, stock_id, scenario_model_set_id,
+        baseline_results_id=baseline_results_id, scenario_results_id=scenario_results_id,
+        emission_factors=emission_factors)
+    return result
 
 
 if __name__ == "__main__":
