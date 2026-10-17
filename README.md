@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **51 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
+A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **52 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, to **district results** (per-building EUI, hourly district demand, GIS layers and maps), alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -28,6 +28,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [Urban Building Stock](#urban-building-stock)
 - [Site Weather](#site-weather)
 - [Archetype Models](#archetype-models)
+- [District Results](#district-results)
 - [Batch Simulation](#batch-simulation)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -345,7 +346,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **51 tools** organized into **9 categories**:
+The server provides **52 tools** organized into **10 categories**:
 
 ### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
@@ -362,6 +363,9 @@ The server provides **51 tools** organized into **9 categories**:
 ### 🏗️ Archetype Models (2 tools) — new in UBEM-MCP
 - `generate_building_models` - Generate an archetype EnergyPlus model for each building of a stock
 - `simulate_building_stock` - Generate models for a stock and simulate them all as one background batch
+
+### 📊 District Results (1 tool) — new in UBEM-MCP
+- `aggregate_stock_results` - Aggregate a simulated stock into per-building results, hourly district demand, a GeoJSON results layer and an EUI map
 
 ### 🏙️ Batch Simulation (6 tools) — new in UBEM-MCP
 - `discover_idf_files` - Glob a directory for IDF files to build a batch's model list
@@ -536,7 +540,7 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
 {"tool": "simulate_building_stock", "arguments": {"stock_id": "sam_hughes_enriched"}}
 ```
 
-Without `climate_zone` or `weather_file`, the stock's site weather is used (see [Site Weather](#site-weather)). This returns a `batch_id`; poll it with `get_batch_status`. Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
+Without `climate_zone` or `weather_file`, the stock's site weather is used (see [Site Weather](#site-weather)). This returns a `batch_id`; poll it with `get_batch_status`, then aggregate the results (see [District Results](#district-results)). Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
 
 **Validation.** `scripts/validate_archetypes.py` generates models with the reference buildings' own dimensions and compares their simulated site energy with the DOE reference results for the same climate zone. With Phoenix TMY3 weather (climate zone 2B, which covers Tucson), small and medium offices, stand-alone retail, the mid-rise apartment and the single-family house are within about ±11% of the reference EUI.
 
@@ -544,6 +548,27 @@ Known differences:
 - Warehouses run higher (+31% in 2B), because the whole floor is cooled while the reference cools only office and fine-storage areas.
 - The single-family infiltration model overstates heating in windy, heating-dominated climates.
 - Elevators, commercial refrigeration and kitchen exhaust are not modeled.
+
+## District Results
+
+Once a stock's batch completes, aggregate it:
+
+```json
+{"tool": "aggregate_stock_results",
+ "arguments": {"batch_id": "<batch_id>", "emission_factors": {"electricity": 0.4, "natural_gas": 0.18}}}
+```
+
+This reads each building's EnergyPlus SQLite output and writes, under `outputs/stocks/<stock_id>/models/<model_set_id>/results/<batch_id>/`:
+
+| File | Contents |
+|---|---|
+| `buildings.csv` | One row per building: floor area, annual energy by fuel and end use, site EUI, peak demand by fuel, inferred attributes, and emissions when factors are given |
+| `results.geojson` | The stock's footprints with their results and result status, ready for QGIS or a web map |
+| `district_hourly.csv` | Hourly district demand by fuel (8,760 rows): the sum over all buildings with results |
+| `summary.json` | District totals and EUI, EUI distribution, peak demand and when it occurs, load factors, breakdowns by archetype and vintage, the highest-EUI buildings, and coverage |
+| `map.html` | Interactive map of site EUI. The base map loads when it is viewed online |
+
+The coverage block states how many buildings of the stock and of the model set have results. Every building without results is listed with the reason: the simulation failed, or the model could not be generated. District totals cover only buildings with results, and the summary says so. Emission factors are inputs in kg CO2e per kWh by fuel, since grid factors depend on the region and year studied.
 
 ## Batch Simulation
 
@@ -603,7 +628,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  51 tools organized into 9 categories
+│     Tools Layer         │  52 tools organized into 10 categories
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
@@ -619,7 +644,7 @@ ubem-mcp-server/
 │   ├── server.py              # FastMCP server with tools
 │   ├── energyplus_tools.py    # Core EnergyPlus integration (single model)
 │   ├── batch_manager.py       # Batch/portfolio orchestration (new in UBEM-MCP)
-│   ├── urban/                 # Building stock, archetype library, model generation (new in UBEM-MCP)
+│   ├── urban/                 # Building stock, weather, archetype models, results aggregation (new in UBEM-MCP)
 │   ├── config.py              # Configuration management
 │   └── utils/                 # Specialized utilities
 ├── scripts/                    # Archetype-library builders and validation
