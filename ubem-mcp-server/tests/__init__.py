@@ -1,19 +1,14 @@
 """
-Test suite for EnergyPlus MCP Server
+Test suite for UBEM-MCP.
 
-This package contains comprehensive unit tests for the EnergyPlus MCP Server,
-organized by functionality:
+- test_batch_manager.py: batch orchestration logic, with the worker mocked
+  (fast, no EnergyPlus needed)
+- test_integration_energyplus.py: real EnergyPlus simulations through the
+  batch manager's worker processes (marker ``energyplus``; skipped when
+  EnergyPlus is not installed)
+- test_auth.py, test_config_transport.py: streamable-HTTP transport and auth
 
-[TODO: Implement the following tests]
-- test_energyplus_manager_config.py: Model configuration and modification tests
-- test_energyplus_manager_inspection.py: Model inspection and data extraction tests  
-- test_energyplus_manager_hvac.py: HVAC analysis and visualization tests
-- test_energyplus_manager_simulation.py: Simulation management and output processing tests
-- test_energyplus_manager_utils.py: Utility functions and helper method tests
-- test_config.py: Configuration management tests
-- test_server.py: MCP server and tool endpoint tests
-
-Test fixtures and shared utilities are in conftest.py.
+Run only the fast tests with ``pytest -m "not energyplus"``.
 """
 
 __version__ = "0.1.0"

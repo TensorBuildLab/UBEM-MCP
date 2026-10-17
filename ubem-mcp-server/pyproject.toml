@@ -10,7 +10,7 @@ authors = [{name = "TensorBuildLab"}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "mcp[cli]>=1.10",
+    "mcp[cli]>=1.10,<2",
     "eppy",
     "matplotlib",
     "networkx",
@@ -42,6 +42,9 @@ include = ["ubem_mcp_server*"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "energyplus: runs the real EnergyPlus engine (skipped when EnergyPlus is not installed)",
+]
 
 [project.optional-dependencies]
 dev = [
