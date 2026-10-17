@@ -159,3 +159,10 @@ async def test_stock_to_models_to_batch(tmp_path):
         res = annual_end_uses(find_sql(m["output_directory"]))
         eui = res["total_mj"] / res["conditioned_area_m2"]
         assert 200 < eui < 1500, (m["label"], eui)
+
+    outputs = {m["label"]: m for m in manager.get_results(submitted["batch_id"])["models"]}
+    summary = sm.aggregate_results("demo", "t", outputs=outputs, results_id=submitted["batch_id"], make_map=False)
+    assert summary["coverage"]["buildings_with_results"] == 2
+    assert summary["district"]["peak_kw"]["electricity"]["kw"] > 0
+    assert summary["district"]["total_kwh"] == pytest.approx(
+        sum(g["total_kwh"] for g in summary["by_archetype"].values()))

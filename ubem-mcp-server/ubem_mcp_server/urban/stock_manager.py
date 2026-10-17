@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
 from . import osm, weather
+from .aggregate import aggregate
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
 from .stock import BuildingStock, load_geojson, stock_from_geojson
@@ -245,6 +246,35 @@ class StockManager:
                    "notes": info.get("notes", []) + info.get("warnings", [])}
         return info["epw"], info["library_climate_zone"], climate
 
+    def aggregate_results(
+        self,
+        stock_id: str,
+        model_set_id: str,
+        outputs: Optional[Dict[str, Dict[str, Any]]] = None,
+        results_id: Optional[str] = None,
+        emission_factors: Optional[Dict[str, float]] = None,
+        make_map: bool = True,
+    ) -> Dict[str, Any]:
+        """Aggregate a model set's simulation results into
+        <model set>/results/<results_id>/.
+
+        `outputs` maps building_id -> {"status", "output_directory", "error"}
+        (from a batch); without it, the model set's runs/ directory is scanned.
+        """
+        manifest = self.model_manifest(stock_id, model_set_id)
+        model_dir = self.stock_dir(stock_id) / "models" / model_set_id
+        if outputs is None:
+            outputs = scan_runs(model_dir / "runs", [m["building_id"] for m in manifest["models"]])
+        results_id = results_id or "latest"
+        self._check_id(results_id)
+        if emission_factors:
+            bad = {k: v for k, v in emission_factors.items() if not isinstance(v, (int, float)) or v < 0}
+            if bad:
+                raise ValueError(f"Emission factors must be non-negative numbers (kg CO2e/kWh): {bad}")
+        summary = aggregate(self.get(stock_id), manifest, outputs, str(model_dir / "results" / results_id),
+                            emission_factors=emission_factors, make_map=make_map)
+        return summary
+
     def model_manifest(self, stock_id: str, model_set_id: str) -> Dict[str, Any]:
         self._check_id(model_set_id)
         path = self.stock_dir(stock_id) / "models" / model_set_id / "manifest.json"
@@ -361,3 +391,21 @@ def _epw_header_location(epw_path: str):
     with open(epw_path, encoding="latin-1") as f:
         header = f.readline().split(",")
     return float(header[6]), float(header[7])
+
+
+def scan_runs(runs_dir: Path, building_ids: Sequence[str]) -> Dict[str, Dict[str, Any]]:
+    """Find each building's most recent run under runs/<NNNN>_<building_id>/."""
+    out: Dict[str, Dict[str, Any]] = {}
+    if not runs_dir.is_dir():
+        return out
+    wanted = set(building_ids)
+    for d in sorted(runs_dir.iterdir()):
+        bid = d.name.split("_", 1)[1] if "_" in d.name else d.name
+        if not d.is_dir() or bid not in wanted:
+            continue
+        errs = list(d.glob("*.err"))
+        text = errs[0].read_text(errors="replace") if errs else ""
+        ok = "EnergyPlus Completed Successfully" in text and any(d.glob("*.sql"))
+        out[bid] = {"status": "success" if ok else "failed", "output_directory": str(d),
+                    "error": None if ok else "simulation did not complete successfully"}
+    return out

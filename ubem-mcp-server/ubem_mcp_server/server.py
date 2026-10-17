@@ -2036,6 +2036,63 @@ async def simulate_building_stock(
         return f"Error simulating building stock: {str(e)}"
 
 
+@mcp.tool()
+async def aggregate_stock_results(
+    batch_id: Optional[str] = None,
+    stock_id: Optional[str] = None,
+    model_set_id: Optional[str] = None,
+    emission_factors: Optional[Dict[str, float]] = None,
+    make_map: bool = True,
+) -> str:
+    """
+    Aggregate the simulation results of a building stock into district results
+
+    Reads every building's EnergyPlus output and writes, under the model set's
+    results/ folder: buildings.csv (annual energy by fuel and end use, site
+    EUI, peak demand per building), results.geojson (footprints with results,
+    for GIS), district_hourly.csv (hourly district demand by fuel),
+    summary.json (totals, breakdowns by archetype and vintage, peaks, load
+    factors, coverage) and map.html (interactive EUI map).
+
+    Args:
+        batch_id: Batch from simulate_building_stock (preferred; it names the stock and model set)
+        stock_id / model_set_id: Or name the model set directly; its runs/ folder is scanned
+        emission_factors: Optional kg CO2e per kWh by fuel, e.g. {"electricity": 0.4, "natural_gas": 0.18}
+        make_map: Write map.html (default true)
+
+    Returns:
+        JSON summary: coverage (buildings with/without results), district totals
+        and EUI, peak demand and when it occurs, breakdowns, and output file paths.
+    """
+    try:
+        outputs = None
+        results_id = None
+        if batch_id:
+            status = batch_manager.get_status(batch_id)
+            if not status["is_complete"]:
+                return f"Batch {batch_id} is still running ({status['counts']}); aggregate when it completes."
+            meta = status.get("metadata") or {}
+            stock_id = stock_id or meta.get("stock_id")
+            model_set_id = model_set_id or meta.get("model_set_id")
+            if not stock_id or not model_set_id:
+                return (f"Batch {batch_id} was not created by simulate_building_stock; "
+                        "pass stock_id and model_set_id as well.")
+            outputs = {m["label"]: m for m in batch_manager.get_results(batch_id)["models"]}
+            results_id = batch_id
+        if not stock_id or not model_set_id:
+            return "Provide batch_id, or stock_id and model_set_id."
+        summary = await asyncio.to_thread(
+            stock_manager.aggregate_results, stock_id, model_set_id, outputs=outputs, results_id=results_id,
+            emission_factors=emission_factors, make_map=make_map,
+        )
+        return f"Stock results aggregated:\n{json.dumps(summary, indent=2, default=str)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not aggregate results: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error aggregating results: {str(e)}")
+        return f"Error aggregating results: {str(e)}"
+
+
 if __name__ == "__main__":
     logger.info(f"Starting {config.server.name} v{config.server.version}")
     logger.info(f"EnergyPlus version: {config.energyplus.version}")
