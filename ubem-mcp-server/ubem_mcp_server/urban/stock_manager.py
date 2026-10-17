@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm
+from . import osm, weather
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
 from .stock import BuildingStock, load_geojson, stock_from_geojson
@@ -30,10 +30,16 @@ class StockManager:
     def __init__(self, config: Config):
         self.config = config
         self._stocks: Dict[str, BuildingStock] = {}
+        self._station_index: Optional[weather.StationIndex] = None
+        self.fetch = weather.http_get  # replaced in tests
 
     @property
     def root(self) -> Path:
         return Path(self.config.paths.output_dir) / "stocks"
+
+    @property
+    def weather_dir(self) -> Path:
+        return Path(self.config.paths.output_dir) / "weather"
 
     # ------------------------------------------------------------------ #
     # Creation
@@ -113,10 +119,74 @@ class StockManager:
         result = self._register(enriched, new_id, extra_meta=meta)
         return {"enrichment": report, **result}
 
+    # ------------------------------------------------------------------ #
+    # Weather and climate
+    # ------------------------------------------------------------------ #
+
+    def station_index(self, refresh: bool = False) -> weather.StationIndex:
+        if self._station_index is None or refresh:
+            self._station_index = weather.StationIndex.load(str(self.weather_dir), refresh=refresh, fetch=self.fetch)
+        return self._station_index
+
+    def site_location(self, stock_id: str) -> Dict[str, float]:
+        frame = self.get(stock_id).frame
+        return {"latitude": frame.lat0, "longitude": frame.lon0}
+
+    def find_weather_stations(self, latitude: Optional[float] = None, longitude: Optional[float] = None,
+                              stock_id: Optional[str] = None, n: int = 5) -> Dict[str, Any]:
+        if stock_id:
+            loc = self.site_location(stock_id)
+            latitude, longitude = loc["latitude"], loc["longitude"]
+        if latitude is None or longitude is None:
+            raise ValueError("Provide stock_id, or latitude and longitude")
+        index = self.station_index()
+        return {
+            "site": {"latitude": latitude, "longitude": longitude},
+            "index_retrieved_at": index.retrieved_at,
+            "stations": [_station_summary(st, d) for st, d in index.nearest(latitude, longitude, n)],
+        }
+
+    def resolve_weather(self, stock_id: str, station: Optional[str] = None, dataset: Optional[str] = None,
+                        weather_file: Optional[str] = None) -> Dict[str, Any]:
+        """Pick weather for a stock (the nearest station, a named `station`, or a
+        local `weather_file`), download it if needed, determine the climate
+        zone, and record both in the stock's meta.json for model generation."""
+        site = self.site_location(stock_id)
+        warnings: List[str] = []
+        if weather_file:
+            epw = resolve_weather_file_path(self.config, weather_file)
+            stat = str(Path(epw).with_suffix(".stat"))
+            files = {"epw": epw, "stat": stat if os.path.exists(stat) else None}
+            lat, lon = _epw_header_location(epw)
+            distance = weather.haversine_km(site["latitude"], site["longitude"], lat, lon)
+            info: Dict[str, Any] = {"source": "local file", "epw": epw, "stat": files["stat"]}
+        else:
+            index = self.station_index()
+            if station:
+                matches = [s for s in index.stations if station in (s.file_stem, s.base_url)]
+                if not matches:
+                    raise KeyError(f"Unknown weather station {station!r}; use find_weather_stations")
+                st = matches[0]
+                distance = weather.haversine_km(site["latitude"], site["longitude"], st.latitude, st.longitude)
+            else:
+                st, distance = index.nearest(site["latitude"], site["longitude"], 1)[0]
+            files = weather.download_weather(st, dataset, str(self.weather_dir / "files"), fetch=self.fetch)
+            info = {"source": "climate.onebuilding.org", "station": _station_summary(st, distance),
+                    "dataset": files["dataset"], "url": files["url"], "epw": files["epw"],
+                    "stat": files.get("stat"), "ddy": files.get("ddy")}
+        info["distance_km"] = round(distance, 1)
+        if distance > 50:
+            warnings.append(f"the weather station is {distance:.0f} km from the site")
+        info.update(weather.site_climate(files))
+        info["warnings"] = warnings
+        info["resolved_at"] = datetime.now().isoformat(timespec="seconds")
+        self._update_meta(stock_id, {"weather": info})
+        return {"stock_id": stock_id, "site": site, **info}
+
     def generate_models(
         self,
         stock_id: str,
-        climate_zone: str,
+        climate_zone: Optional[str] = None,
         weather_file: Optional[str] = None,
         hvac: str = "template",
         archetypes: Optional[Sequence[str]] = None,
@@ -137,7 +207,7 @@ class StockManager:
             selected = selected[:max(0, max_buildings)]
         if not selected:
             raise ValueError("No buildings match the selection")
-        epw = resolve_weather_file_path(self.config, weather_file) if weather_file else None
+        epw, climate_zone, climate = self._weather_for_models(stock_id, climate_zone, weather_file)
 
         set_id = model_set_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self._check_id(set_id)
@@ -148,10 +218,32 @@ class StockManager:
                                    self.config.energyplus.idd_path, weather_file=epw, hvac=hvac)
         manifest["stock_id"] = stock_id
         manifest["model_set_id"] = set_id
+        manifest["climate"] = climate
         with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=1, default=str)
         return {"stock_id": stock_id, "model_set_id": set_id, "weather_file": epw,
-                **summarize_manifest(manifest, str(out_dir))}
+                "climate": climate, **summarize_manifest(manifest, str(out_dir))}
+
+    def _weather_for_models(self, stock_id: str, climate_zone: Optional[str],
+                            weather_file: Optional[str]):
+        """(EPW path or None, climate zone, provenance) for model generation.
+
+        An explicit climate_zone always wins. Otherwise the zone comes from the
+        given weather file, or from the stock's resolved weather (resolved
+        now, from the nearest station, if it has not been yet)."""
+        if weather_file:
+            epw = resolve_weather_file_path(self.config, weather_file)
+            if climate_zone:
+                return epw, climate_zone, {"climate_zone": climate_zone, "source": "given", "weather_file": epw}
+            info = self.resolve_weather(stock_id, weather_file=epw)
+        elif climate_zone:
+            return None, climate_zone, {"climate_zone": climate_zone, "source": "given", "weather_file": None}
+        else:
+            info = self.get_meta(stock_id).get("weather") or self.resolve_weather(stock_id)
+        climate = {"climate_zone": info["library_climate_zone"], "ashrae_climate_zone": info["ashrae_climate_zone"],
+                   "source": info["climate_zone_source"], "weather_file": info["epw"],
+                   "notes": info.get("notes", []) + info.get("warnings", [])}
+        return info["epw"], info["library_climate_zone"], climate
 
     def model_manifest(self, stock_id: str, model_set_id: str) -> Dict[str, Any]:
         self._check_id(model_set_id)
@@ -231,6 +323,12 @@ class StockManager:
         logger.info("Registered stock %s: %d buildings", stock_id, len(stock))
         return {"stock_id": stock_id, "stock_directory": str(stock_dir), **summary}
 
+    def _update_meta(self, stock_id: str, updates: Dict[str, Any]) -> None:
+        meta = self.get_meta(stock_id)
+        meta.update(updates)
+        with open(self.stock_dir(stock_id) / "meta.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2, default=str)
+
     def _new_id(self, requested: Optional[str]) -> str:
         if requested:
             self._check_id(requested)
@@ -250,3 +348,16 @@ class StockManager:
         if os.path.isabs(path) and os.path.exists(path):
             return path
         return resolve_path(self.config, path, file_types=[".geojson", ".json"], description="GeoJSON file")
+
+
+def _station_summary(st: "weather.Station", distance_km: float) -> Dict[str, Any]:
+    return {"station": st.file_stem, "name": st.name, "country": st.country, "state": st.state, "wmo": st.wmo,
+            "latitude": st.latitude, "longitude": st.longitude, "elevation_m": st.elevation_m,
+            "distance_km": round(distance_km, 1), "datasets": st.datasets,
+            "default_dataset": st.default_dataset()}
+
+
+def _epw_header_location(epw_path: str):
+    with open(epw_path, encoding="latin-1") as f:
+        header = f.readline().split(",")
+    return float(header[6]), float(header[7])

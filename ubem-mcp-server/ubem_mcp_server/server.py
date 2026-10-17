@@ -1850,9 +1850,80 @@ async def list_building_stocks() -> str:
 # ============================================================================
 
 @mcp.tool()
+async def find_weather_stations(
+    stock_id: Optional[str] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    n: int = 5,
+) -> str:
+    """
+    List the weather stations nearest to a building stock or a point
+
+    Stations come from the Climate.OneBuilding.Org TMYx index (about 17,000
+    stations worldwide), downloaded and cached on first use.
+
+    Args:
+        stock_id: Use the center of this stock as the site
+        latitude / longitude: Or give the site directly (decimal degrees)
+        n: Number of stations to return (default 5)
+
+    Returns:
+        JSON with each station's id, name, distance, elevation and available
+        typical-year datasets (e.g. "TMYx.2009-2023"); pass a station id to
+        get_site_weather to use a station other than the nearest one.
+    """
+    try:
+        result = await asyncio.to_thread(stock_manager.find_weather_stations, latitude, longitude, stock_id, n)
+        return f"Nearest weather stations:\n{json.dumps(result, indent=2)}"
+    except (KeyError, ValueError) as e:
+        return f"Could not find weather stations: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error finding weather stations: {str(e)}")
+        return f"Error finding weather stations: {str(e)}"
+
+
+@mcp.tool()
+async def get_site_weather(
+    stock_id: str,
+    station: Optional[str] = None,
+    dataset: Optional[str] = None,
+    weather_file: Optional[str] = None,
+) -> str:
+    """
+    Set the weather file and ASHRAE climate zone of a building stock
+
+    By default downloads the typical-year weather (EPW, STAT, DDY) of the
+    station nearest to the stock from Climate.OneBuilding.Org. The ASHRAE 169
+    climate zone is read from the station's .stat file, or estimated from the
+    EPW if there is none. Both are saved with the stock and used by
+    generate_building_models and simulate_building_stock when they are not
+    given explicitly.
+
+    Args:
+        stock_id: Stock to set the weather for
+        station: Station id from find_weather_stations (default: nearest)
+        dataset: Typical-year dataset, e.g. "TMYx.2009-2023" (default: most recent 15-year TMYx)
+        weather_file: Use this local EPW instead of downloading one
+
+    Returns:
+        JSON with the station and its distance, the EPW path, the ASHRAE climate
+        zone, the archetype-library zone used for models, and any notes or warnings.
+    """
+    try:
+        result = await asyncio.to_thread(stock_manager.resolve_weather, stock_id, station=station,
+                                         dataset=dataset, weather_file=weather_file)
+        return f"Site weather set:\n{json.dumps(result, indent=2)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not set site weather: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error resolving weather for stock {stock_id}: {str(e)}")
+        return f"Error setting site weather: {str(e)}"
+
+
+@mcp.tool()
 async def generate_building_models(
     stock_id: str,
-    climate_zone: str,
+    climate_zone: Optional[str] = None,
     weather_file: Optional[str] = None,
     hvac: str = "template",
     archetypes: Optional[List[str]] = None,
@@ -1876,8 +1947,11 @@ async def generate_building_models(
     Args:
         stock_id: Stock from load_building_stock / fetch_osm_buildings / enrich_building_stock
         climate_zone: ASHRAE climate zone of the site, e.g. "2B" for Tucson or Phoenix
-                      (1A, 2A, 2B, 3A, 3B, 3B-CA, 3C, 4A, 4B, 4C, 5A, 5B, 6A, 6B, 7, 8)
-        weather_file: EPW used later for simulation; sets the model's site location (optional)
+                      (1A, 2A, 2B, 3A, 3B, 3B-CA, 3C, 4A, 4B, 4C, 5A, 5B, 6A, 6B, 7, 8).
+                      Default: the stock's zone from get_site_weather, resolved
+                      automatically from the nearest weather station if not set yet
+        weather_file: EPW used later for simulation; sets the model's site location.
+                      Default: the stock's weather from get_site_weather
         hvac: "template" (reference-building HVAC systems, autosized) or "ideal"
               (ideal loads; faster, reports loads rather than equipment energy)
         archetypes / vintages / building_ids: Only generate models for these buildings
@@ -1905,8 +1979,8 @@ async def generate_building_models(
 @mcp.tool()
 async def simulate_building_stock(
     stock_id: str,
-    climate_zone: str,
-    weather_file: str,
+    climate_zone: Optional[str] = None,
+    weather_file: Optional[str] = None,
     hvac: str = "template",
     archetypes: Optional[List[str]] = None,
     vintages: Optional[List[str]] = None,
@@ -1924,8 +1998,9 @@ async def simulate_building_stock(
 
     Args:
         stock_id: Stock to simulate
-        climate_zone: ASHRAE climate zone of the site, e.g. "2B"
-        weather_file: EPW weather file for the site
+        climate_zone: ASHRAE climate zone of the site, e.g. "2B" (default: from the site weather)
+        weather_file: EPW weather file for the site (default: the stock's weather from
+                      get_site_weather, downloaded from the nearest station if not set yet)
         hvac: "template" (default) or "ideal"
         archetypes / vintages / building_ids: Only simulate these buildings
         max_buildings: Cap on the number of buildings (useful for a quick test)
@@ -1941,6 +2016,9 @@ async def simulate_building_stock(
             archetypes=archetypes, vintages=vintages, building_ids=building_ids,
             max_buildings=max_buildings, model_set_id=model_set_id,
         )
+        if not gen["weather_file"]:
+            return ("Could not simulate building stock: no weather file. Give weather_file, call "
+                    "get_site_weather, or omit climate_zone to resolve both from the nearest station.")
         manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
         models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
         if not models:

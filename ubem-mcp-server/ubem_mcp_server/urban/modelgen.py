@@ -20,6 +20,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from shapely import affinity
 from shapely.geometry import LineString, Polygon
 from shapely.geometry.polygon import orient
 
@@ -39,7 +40,7 @@ MIN_SHADING_EDGE_M = 2.0
 MAX_FOOTPRINT_VERTICES = 30
 # Simplification tolerances (m) tried for detailed footprints, and the largest
 # area change accepted.
-SIMPLIFY_TOLERANCES = (0.25, 0.5, 1.0, 2.0, 3.0)
+SIMPLIFY_TOLERANCES = (0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0)
 MAX_SIMPLIFY_AREA_CHANGE = 0.05
 SLAB_F_FACTOR = 1.264  # W/m-K, uninsulated slab-on-grade (0.73 Btu/h-ft-F)
 
@@ -131,13 +132,22 @@ def _simplified(poly: Polygon, tolerance: float) -> Optional[Polygon]:
     return s
 
 
+def equal_area_rectangle(poly: Polygon) -> Polygon:
+    """The polygon's minimum rotated rectangle, scaled about its centroid to the polygon's area."""
+    mrr = poly.minimum_rotated_rectangle
+    k = math.sqrt(poly.area / mrr.area)
+    return orient(affinity.scale(mrr, k, k, origin=mrr.centroid), 1.0)
+
+
 def model_footprint(footprint: Polygon, commercial: bool):
     """(footprint to model, core/perimeter zones or None, note or None).
 
     Detailed outlines (e.g. from OpenStreetMap) are simplified until they have
     at most MAX_FOOTPRINT_VERTICES vertices; commercial footprints are further
     simplified, if needed, until core/perimeter zoning succeeds. No accepted
-    simplification changes the area by more than 5%.
+    simplification changes the area by more than 5%. An outline that cannot
+    be simplified that far is replaced by an oriented rectangle of the same
+    area, so every building still gets a model.
     """
     footprint = orient(footprint, 1.0)
     n0 = len(footprint.exterior.coords) - 1
@@ -145,8 +155,10 @@ def model_footprint(footprint: Polygon, commercial: bool):
     candidates = [(t, p) for t, p in candidates if p is not None]
     fitting = [(t, p) for t, p in candidates if len(p.exterior.coords) - 1 <= MAX_FOOTPRINT_VERTICES]
     if not fitting:
-        raise ValueError(f"footprint with {n0} vertices cannot be simplified to {MAX_FOOTPRINT_VERTICES} "
-                         f"vertices within {MAX_SIMPLIFY_AREA_CHANGE:.0%} area change")
+        rect = equal_area_rectangle(footprint)
+        note = (f"footprint with {n0} vertices could not be simplified to {MAX_FOOTPRINT_VERTICES} vertices "
+                f"within {MAX_SIMPLIFY_AREA_CHANGE:.0%} area change; modeled as an oriented rectangle of the same area")
+        return rect, (core_perimeter(rect) if commercial else None), note
     chosen_t, chosen = fitting[0]
     zones = None
     if commercial:

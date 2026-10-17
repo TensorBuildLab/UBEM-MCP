@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **49 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
+A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **51 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -26,6 +26,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [Available Tools](#available-tools)
 - [Usage Examples](#usage-examples)
 - [Urban Building Stock](#urban-building-stock)
+- [Site Weather](#site-weather)
 - [Archetype Models](#archetype-models)
 - [Batch Simulation](#batch-simulation)
 - [Architecture](#architecture)
@@ -344,7 +345,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **49 tools** organized into **8 categories**:
+The server provides **51 tools** organized into **9 categories**:
 
 ### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
@@ -353,6 +354,10 @@ The server provides **49 tools** organized into **8 categories**:
 - `enrich_building_stock` - Fill guessed attributes (year built, use, floors, height) from a parcel/assessor layer by spatial join
 - `get_building_stock` - Summarize a stock and list/filter its buildings
 - `list_building_stocks` - List loaded stocks (persisted across restarts)
+
+### 🌦️ Site Weather (2 tools) — new in UBEM-MCP
+- `find_weather_stations` - List the weather stations nearest to a stock or a point
+- `get_site_weather` - Download a stock's typical-year weather and set its ASHRAE climate zone
 
 ### 🏗️ Archetype Models (2 tools) — new in UBEM-MCP
 - `generate_building_models` - Generate an archetype EnergyPlus model for each building of a stock
@@ -497,6 +502,20 @@ Stocks are saved under `outputs/stocks/<stock_id>/` as `buildings.geojson` (norm
 
 Archetypes follow the U.S. DOE commercial prototype buildings and the DOE single-family prototype; vintages follow the DOE reference buildings (pre-1980, 1980–2004, 2004+). Run `list_archetypes` for the full list.
 
+## Site Weather
+
+A stock's location determines its weather file and climate zone, so they do not have to be looked up by hand:
+
+```json
+{"tool": "get_site_weather", "arguments": {"stock_id": "sam_hughes"}}
+```
+
+- **Station**: the station nearest to the stock's center, from the [Climate.OneBuilding.Org](https://climate.onebuilding.org) TMYx index of about 17,000 stations worldwide. The index is downloaded on first use and cached under `outputs/weather/`. Use `find_weather_stations` to see the alternatives and pass `station` to pick another one.
+- **Weather data**: the station's most recent 15-year typical meteorological year (e.g. `TMYx.2009-2023`), with its STAT and DDY files. Pass `dataset` for another period, or `weather_file` to use a local EPW instead.
+- **Climate zone**: the ASHRAE 169 zone recorded in the station's .stat file. Without one, the zone is estimated from the EPW with the ASHRAE 169 degree-day and moisture criteria, and the result says so. Zones without a DOE reference location (0A, 0B, 1B, 5C) use the closest one, with a note.
+
+The result is saved in the stock's `meta.json`, recorded in every model set's manifest, and comes with a warning when the station is more than 50 km from the site. `generate_building_models` and `simulate_building_stock` resolve it automatically if it has not been set, and an explicit `climate_zone` or `weather_file` always wins.
+
 ## Archetype Models
 
 Each building in a stock becomes an EnergyPlus model built from its footprint and its archetype, vintage and climate zone:
@@ -504,7 +523,7 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
 - **Geometry**:
   - The footprint is extruded floor by floor. Buildings above three floors are modeled as ground, middle and top floors, with the middle floor multiplied.
   - Commercial floors get core/perimeter zoning (4.57 m perimeter zones, as in the DOE prototypes) when the footprint allows it.
-  - Detailed outlines are simplified to at most 30 vertices, never changing the area by more than 5%.
+  - Detailed outlines are simplified to at most 30 vertices, never changing the area by more than 5%. An outline that cannot be simplified that far is modeled as an oriented rectangle of the same area, and the manifest says so.
   - Walls shared with an adjacent building are adiabatic party walls. The nearest walls of surrounding buildings are added as shading.
 - **Constructions, loads and schedules**:
   - Commercial buildings use the DOE Commercial Reference Buildings: 16 types × 3 vintages × 16 climate zones.
@@ -514,12 +533,10 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
   - Or use `hvac="ideal"` for ideal loads.
 
 ```json
-{"tool": "simulate_building_stock",
- "arguments": {"stock_id": "sam_hughes_enriched", "climate_zone": "2B",
-               "weather_file": "USA_AZ_Tucson.Intl.AP.722740_TMY3.epw"}}
+{"tool": "simulate_building_stock", "arguments": {"stock_id": "sam_hughes_enriched"}}
 ```
 
-This returns a `batch_id`; poll it with `get_batch_status`. Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
+Without `climate_zone` or `weather_file`, the stock's site weather is used (see [Site Weather](#site-weather)). This returns a `batch_id`; poll it with `get_batch_status`. Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
 
 **Validation.** `scripts/validate_archetypes.py` generates models with the reference buildings' own dimensions and compares their simulated site energy with the DOE reference results for the same climate zone. With Phoenix TMY3 weather (climate zone 2B, which covers Tucson), small and medium offices, stand-alone retail, the mid-rise apartment and the single-family house are within about ±11% of the reference EUI.
 
@@ -586,7 +603,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  49 tools organized into 8 categories
+│     Tools Layer         │  51 tools organized into 9 categories
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
