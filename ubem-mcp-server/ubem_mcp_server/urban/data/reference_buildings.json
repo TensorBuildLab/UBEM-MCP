@@ -1240,7 +1240,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5336.3
       },
       "3A": {
@@ -1356,7 +1356,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5234.71
       },
       "4A": {
@@ -1443,7 +1443,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5928.3
       },
       "5A": {
@@ -1472,7 +1472,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6771.36
       },
       "5B": {
@@ -1530,7 +1530,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7338.14
       },
       "6B": {
@@ -1588,7 +1588,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 8037.11
       },
       "8": {
@@ -1617,7 +1617,7 @@
        },
        "cooling_cop": 3.4,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 10088.6
       }
      }
@@ -2783,7 +2783,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 4980.22
       },
       "3A": {
@@ -2899,7 +2899,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5037.83
       },
       "4A": {
@@ -2957,7 +2957,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5474.11
       },
       "4C": {
@@ -2986,7 +2986,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5631.15
       },
       "5A": {
@@ -3015,7 +3015,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6289.21
       },
       "5B": {
@@ -3044,7 +3044,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5784.43
       },
       "6A": {
@@ -3073,7 +3073,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6782.16
       },
       "6B": {
@@ -3102,7 +3102,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6370.67
       },
       "7": {
@@ -3131,7 +3131,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7333.7
       },
       "8": {
@@ -3160,7 +3160,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 9041.06
       }
      }
@@ -4326,7 +4326,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 4757.72
       },
       "3A": {
@@ -4384,7 +4384,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 4392.08
       },
       "3B": {
@@ -4413,7 +4413,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 4877.96
       },
       "3C": {
@@ -4442,7 +4442,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 4856.69
       },
       "4A": {
@@ -4500,7 +4500,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5196.26
       },
       "4C": {
@@ -4529,7 +4529,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5431.07
       },
       "5A": {
@@ -4558,7 +4558,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6061.88
       },
       "5B": {
@@ -4587,7 +4587,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5580.87
       },
       "6A": {
@@ -4616,7 +4616,7 @@
        },
        "cooling_cop": 3.45,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6534.95
       },
       "6B": {
@@ -4645,7 +4645,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6141.21
       },
       "7": {
@@ -4674,7 +4674,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7056.26
       },
       "8": {
@@ -4703,7 +4703,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 8603.87
       }
      }
@@ -9548,6 +9548,7 @@
       "hvac_operation": "HVACOperationSchd",
       "activity": "ACTIVITY_SCH",
       "infiltration": "INFIL_QUARTER_ON_SCH",
+      "hot_water": "GuestRoom_SWH_Sch",
       "gas_equipment": "Kitchen_Gas_Equip_SCH"
      },
      "schedules": {
@@ -9995,6 +9996,75 @@
           1.0,
           1.0,
           1.0
+         ]
+        }
+       ]
+      },
+      "GuestRoom_SWH_Sch": {
+       "type": "Fraction",
+       "rules": [
+        {
+         "through": "12/31",
+         "days": [
+          "WD"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.3,
+          0.55,
+          0.4,
+          0.4,
+          0.6,
+          0.45,
+          0.25
+         ]
+        },
+        {
+         "through": "12/31",
+         "days": [
+          "Other"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.25,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.25,
+          0.3,
+          0.4,
+          0.4,
+          0.4,
+          0.6,
+          0.35
          ]
         }
        ]
@@ -10834,6 +10904,7 @@
       "hvac_operation": "HVACOperationSchd",
       "activity": "ACTIVITY_SCH",
       "infiltration": "INFIL_QUARTER_ON_SCH",
+      "hot_water": "GuestRoom_SWH_Sch",
       "gas_equipment": "Kitchen_Gas_Equip_SCH"
      },
      "schedules": {
@@ -11281,6 +11352,75 @@
           1.0,
           1.0,
           1.0
+         ]
+        }
+       ]
+      },
+      "GuestRoom_SWH_Sch": {
+       "type": "Fraction",
+       "rules": [
+        {
+         "through": "12/31",
+         "days": [
+          "WD"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.3,
+          0.55,
+          0.4,
+          0.4,
+          0.6,
+          0.45,
+          0.25
+         ]
+        },
+        {
+         "through": "12/31",
+         "days": [
+          "Other"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.25,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.25,
+          0.3,
+          0.4,
+          0.4,
+          0.4,
+          0.6,
+          0.35
          ]
         }
        ]
@@ -12125,6 +12265,7 @@
       "hvac_operation": "HVACOperationSchd",
       "activity": "ACTIVITY_SCH",
       "infiltration": "INFIL_QUARTER_ON_SCH",
+      "hot_water": "GuestRoom_SWH_Sch",
       "gas_equipment": "Kitchen_Gas_Equip_SCH"
      },
      "schedules": {
@@ -12572,6 +12713,75 @@
           1.0,
           1.0,
           1.0
+         ]
+        }
+       ]
+      },
+      "GuestRoom_SWH_Sch": {
+       "type": "Fraction",
+       "rules": [
+        {
+         "through": "12/31",
+         "days": [
+          "WD"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.3,
+          0.55,
+          0.4,
+          0.4,
+          0.6,
+          0.45,
+          0.25
+         ]
+        },
+        {
+         "through": "12/31",
+         "days": [
+          "Other"
+         ],
+         "values": [
+          0.2,
+          0.15,
+          0.15,
+          0.15,
+          0.2,
+          0.25,
+          0.35,
+          0.6,
+          0.8,
+          0.55,
+          0.4,
+          0.3,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.25,
+          0.3,
+          0.4,
+          0.4,
+          0.4,
+          0.6,
+          0.35
          ]
         }
        ]
@@ -37656,7 +37866,7 @@
        },
        "cooling_cop": 3.4,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6844.19
       },
       "3A": {
@@ -37714,7 +37924,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6218.34
       },
       "3B": {
@@ -37743,7 +37953,7 @@
        },
        "cooling_cop": 3.485,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6956.23
       },
       "3C": {
@@ -37772,7 +37982,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6606.4
       },
       "4A": {
@@ -37830,7 +38040,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7328.91
       },
       "4C": {
@@ -37859,7 +38069,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.78,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7420.46
       },
       "5A": {
@@ -39191,7 +39401,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5856.55
       },
       "3B": {
@@ -39220,7 +39430,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6383.32
       },
       "3C": {
@@ -39249,7 +39459,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6201.43
       },
       "4A": {
@@ -39307,7 +39517,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6674.27
       },
       "4C": {
@@ -39336,7 +39546,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6808.04
       },
       "5A": {
@@ -39394,7 +39604,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7127.06
       },
       "6A": {
@@ -39452,7 +39662,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7846.95
       },
       "7": {
@@ -40668,7 +40878,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 5757.56
       },
       "3B": {
@@ -40697,7 +40907,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6256.65
       },
       "3C": {
@@ -40726,7 +40936,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6072.57
       },
       "4A": {
@@ -40784,7 +40994,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6536.89
       },
       "4C": {
@@ -40813,7 +41023,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6626.62
       },
       "5A": {
@@ -40871,7 +41081,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.8,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 6942.76
       },
       "6A": {
@@ -40929,7 +41139,7 @@
        },
        "cooling_cop": 3.585,
        "heating_efficiency": 0.79,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 7565.72
       },
       "7": {
@@ -57471,7 +57681,7 @@
        },
        "cooling_cop": 3.357,
        "heating_efficiency": 0.824,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 1134.61
       },
       "3A": {
@@ -57687,7 +57897,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.824,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 1566.28
       },
       "5B": {
@@ -59208,7 +59418,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.832,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 1478.39
       },
       "5B": {
@@ -59343,7 +59553,7 @@
        },
        "cooling_cop": 3.365,
        "heating_efficiency": 0.824,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 2667.64
       }
      }
@@ -60675,7 +60885,7 @@
        },
        "cooling_cop": 3.518,
        "heating_efficiency": 0.836,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 727.14
       },
       "4C": {
@@ -60756,7 +60966,7 @@
        },
        "cooling_cop": 3.518,
        "heating_efficiency": 0.836,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 817.31
       },
       "6A": {
@@ -60810,7 +61020,7 @@
        },
        "cooling_cop": 3.535,
        "heating_efficiency": 0.836,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 982.54
       },
       "7": {
@@ -60837,7 +61047,7 @@
        },
        "cooling_cop": 3.467,
        "heating_efficiency": 0.836,
-       "economizer": "NoEconomizer",
+       "economizer": "DifferentialDryBulb",
        "reference_eui_mj_m2_total": 1214.46
       },
       "8": {

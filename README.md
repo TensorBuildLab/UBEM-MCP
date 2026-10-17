@@ -522,7 +522,7 @@ A stock's location determines its weather file and climate zone, so they do not 
 
 - **Station**: the station nearest to the stock's center, from the [Climate.OneBuilding.Org](https://climate.onebuilding.org) TMYx index of about 17,000 stations worldwide. The index is downloaded on first use and cached under `outputs/weather/`. Use `find_weather_stations` to see the alternatives and pass `station` to pick another one.
 - **Weather data**: the station's most recent 15-year typical meteorological year (e.g. `TMYx.2009-2023`), with its STAT and DDY files. Pass `dataset` for another period, or `weather_file` to use a local EPW instead.
-- **Climate zone**: the ASHRAE 169 zone recorded in the station's .stat file. Without one, the zone is estimated from the EPW with the ASHRAE 169 degree-day and moisture criteria, and the result says so. Zones without a DOE reference location (0A, 0B, 1B, 5C) use the closest one, with a note.
+- **Climate zone**: the ASHRAE 169 zone recorded in the station's .stat file. Without one, the zone is estimated from the EPW with the ASHRAE 169 degree-day and moisture criteria, and the result says so. Zones without a DOE reference location use the closest one, with a note: 0A uses 1A, the hot-dry 0B and 1B use 2B (Phoenix, which is itself 1B under ASHRAE 169-2021), and 5C uses 4C.
 
 The result is saved in the stock's `meta.json`, recorded in every model set's manifest, and comes with a warning when the station is more than 50 km from the site. `generate_building_models` and `simulate_building_stock` resolve it automatically if it has not been set, and an explicit `climate_zone` or `weather_file` always wins.
 
@@ -632,7 +632,7 @@ It also writes a per-building `buildings_comparison.csv`.
 
 This is the key difference from single-model EnergyPlus MCP servers: **run a whole portfolio of buildings and poll for results**, instead of one blocking call per building.
 
-**Why polling, not a single blocking call:** eppy's `IDF` class holds module-level global state, so concurrent simulations run as separate worker processes rather than in-process threads. And a portfolio of many buildings can take minutes to hours — far longer than an MCP client should have a single tool call block for. `run_batch_simulation` returns a `batch_id` immediately; you poll `get_batch_status`/`get_batch_results` until it's done.
+**Why polling, not a single blocking call:** a portfolio of many buildings can take minutes to hours — far longer than an MCP client should have a single tool call block for. Each model runs in its own worker process, which calls the EnergyPlus command line directly; going through eppy, as the single-model `run_simulation` tool does, made each batch run about three times slower. `run_batch_simulation` returns a `batch_id` immediately; you poll `get_batch_status`/`get_batch_results` until it's done.
 
 1. **Discover models in a directory**:
    ```json
@@ -705,7 +705,7 @@ ubem-mcp-server/
 │   ├── urban/                 # Building stock, weather, archetype models, results, retrofits (new in UBEM-MCP)
 │   ├── config.py              # Configuration management
 │   └── utils/                 # Specialized utilities
-├── scripts/                    # Archetype-library builders and validation
+├── scripts/                    # Archetype-library builders, validation and scaling benchmarks
 ├── sample_files/               # Sample IDF and weather files
 ├── tests/                      # Unit tests
 └── pyproject.toml              # Dependencies

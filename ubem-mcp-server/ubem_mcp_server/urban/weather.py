@@ -355,8 +355,10 @@ def _latitude(epw_path: str) -> float:
 # ASHRAE zones without a DOE reference-building location use the closest one.
 _LIBRARY_PROXY = {
     "0A": ("1A", "zone 0A (extremely hot) uses the 1A reference buildings"),
-    "0B": ("1A", "zone 0B (extremely hot, dry) uses the 1A reference buildings"),
-    "1B": ("1A", "zone 1B (very hot, dry) uses the 1A reference buildings"),
+    # Hot-dry zones use 2B (Phoenix), the dry reference location: Phoenix itself
+    # is 1B under ASHRAE 169-2021, while 1A (Miami) is humid.
+    "0B": ("2B", "zone 0B (extremely hot, dry) uses the 2B (Phoenix) reference buildings"),
+    "1B": ("2B", "zone 1B (very hot, dry) uses the 2B (Phoenix) reference buildings"),
     "5C": ("4C", "zone 5C (cool marine) uses the 4C reference buildings"),
 }
 
