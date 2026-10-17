@@ -31,6 +31,9 @@ See the header of each source file for a pointer back to this notice.
   `find_weather_stations` / `get_site_weather` tools.
 - Results aggregation (`urban/aggregate.py`) and the `aggregate_stock_results`
   tool.
+- Data-only work on building stocks (`urban/query.py`, data mode in
+  `urban/stock.py`) and the `query_stock`, `export_stock` and
+  `assign_archetypes` tools.
 - Data provenance and privacy (`urban/provenance.py`): data sources, licences
   and required attribution for every stock, model set and result, and removal
   of personal columns (owner names, mailing addresses) when data are loaded.

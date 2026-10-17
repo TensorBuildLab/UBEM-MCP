@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, provenance, retrofit, weather
+from . import osm, provenance, query, retrofit, weather
 from .aggregate import aggregate, compare_results
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
@@ -130,6 +130,64 @@ class StockManager:
         result = self._register(enriched, new_id, extra_meta=meta, sources=sources)
         return {"enrichment": report, **result}
 
+    def assign_archetypes(self, stock_id: str, new_stock_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Derive a model-mode stock from a data-mode one: classify every
+        building into an archetype, fill unknown values with defaults (recorded
+        as inferred) and exclude unconditioned or tiny structures. `kwargs` are
+        the model-mode loader options (default_archetype, default_year, ...)."""
+        base = self.get(stock_id)
+        if base.mode != "data":
+            raise ValueError(f"Stock {stock_id!r} is already a modeling stock")
+        saved = json.loads((self.stock_dir(stock_id) / "buildings.geojson").read_text(encoding="utf-8"))
+        feats = []
+        for ft in saved["features"]:
+            p = ft["properties"]
+            # Re-read the original columns plus anything joined later (enrich).
+            flat = dict(p.get("source_properties") or {})
+            flat.update({k: p[k] for k in ("archetype", "year_built", "num_floors", "height_m")
+                         if p.get(k) not in (None, "")})
+            if p.get("use"):
+                flat["use"] = p["use"]
+            flat["building_id"] = p["building_id"]
+            feats.append({"type": "Feature", "id": p["building_id"], "geometry": ft["geometry"],
+                          "properties": flat})
+        data = {"type": "FeatureCollection", "ubem_mcp": saved.get("ubem_mcp"), "features": feats}
+        base_opts = self.get_meta(stock_id).get("loader_options") or {}
+        opts = {k: v for k, v in base_opts.items()
+                if k in ("keep_personal_fields", "height_unit")}
+        opts.update({k: v for k, v in kwargs.items() if v is not None})
+        opts["mode"] = "model"
+        stock = stock_from_geojson(data, source=base.source, **opts)
+        stock.personal_fields_removed = list(base.personal_fields_removed)
+        new_id = self._new_id(new_stock_id)
+        meta = {"derived_from": stock_id, "derivation": "assign_archetypes", "loader_options": opts}
+        return self._register(stock, new_id, extra_meta=meta,
+                              sources=self.get_meta(stock_id).get("sources") or [])
+
+    def query_stock(self, stock_id: str, **kwargs) -> Dict[str, Any]:
+        """Filter, group and summarize a stock's buildings (see urban/query.py)."""
+        return {"stock_id": stock_id, **query.query(self.get(stock_id), **kwargs)}
+
+    def export_stock(self, stock_id: str, fmt: str = "csv", filters: Optional[Dict[str, Any]] = None,
+                     columns: Optional[Sequence[str]] = None, name: Optional[str] = None) -> Dict[str, Any]:
+        """Write a stock (or a filtered part of it) to <stock_directory>/exports/,
+        with a metadata file recording its sources, licences and attribution."""
+        if fmt not in ("csv", "geojson"):
+            raise ValueError("format must be 'csv' or 'geojson'")
+        stem = name or f"{stock_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self._check_id(stem)
+        out_dir = self.stock_dir(stock_id) / "exports"
+        info = query.export(self.get(stock_id), out_dir / f"{stem}.{fmt}", fmt, filters=filters, columns=columns)
+        sources = self.get_meta(stock_id).get("sources") or []
+        meta = {"stock_id": stock_id, "exported_at": datetime.now().isoformat(timespec="seconds"),
+                "filters": filters or {}, **info, "sources": sources,
+                "attribution": provenance.attribution_text(sources),
+                "warnings": provenance.licence_warnings(sources)}
+        meta_path = out_dir / f"{stem}.metadata.json"
+        meta_path.write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
+        return {**info, "metadata_path": str(meta_path), "attribution": meta["attribution"],
+                "warnings": meta["warnings"]}
+
     # ------------------------------------------------------------------ #
     # Weather and climate
     # ------------------------------------------------------------------ #
@@ -216,6 +274,9 @@ class StockManager:
         """Write one archetype IDF per selected building under
         <stock_directory>/models/<model_set_id>/."""
         stock = self.get(stock_id)
+        if stock.mode != "model":
+            raise ValueError(f"Stock {stock_id!r} holds data only (mode 'data'); derive a modeling stock "
+                             f"with assign_archetypes first")
         selected = stock.filter(archetypes=archetypes, vintages=vintages, building_ids=building_ids)
         if building_ids:
             missing = set(building_ids) - {b.building_id for b in selected}
@@ -388,8 +449,9 @@ class StockManager:
         if not path.exists():
             raise KeyError(f"Unknown stock_id: {stock_id}")
         meta = self.get_meta(stock_id)
-        keep = bool((meta.get("loader_options") or {}).get("keep_personal_fields"))
-        stock = load_geojson(str(path), min_footprint_m2=0.0, keep_personal_fields=keep)
+        opts = meta.get("loader_options") or {}
+        stock = load_geojson(str(path), min_footprint_m2=0.0, mode=opts.get("mode", "model"),
+                             keep_personal_fields=bool(opts.get("keep_personal_fields")))
         stock.source = meta.get("source", stock.source)
         stock.personal_fields_removed = list((meta.get("summary") or {}).get("personal_fields_removed") or [])
         self._stocks[stock_id] = stock

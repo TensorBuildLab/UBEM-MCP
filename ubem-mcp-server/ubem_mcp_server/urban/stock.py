@@ -2,6 +2,13 @@
 Building stock: a set of building footprints with normalized attributes,
 ready for archetype model generation.
 
+A stock is loaded in one of two modes. "model" mode (the default) prepares
+buildings for simulation: every building gets an archetype, year, floor count
+and height, guessed when the data lack them, and sheds and tiny footprints are
+excluded. "data" mode keeps the inventory as the data describe it: every
+structure, its full geometry and its raw use, with unknown values left empty;
+assign_archetypes later derives a model-mode stock from it.
+
 Footprints come in as GeoJSON (any CRS pyproj understands; RFC 7946 WGS84 by
 default) and are projected to a local azimuthal-equidistant frame centered on
 the stock, so geometry is in metres with the origin near the site. Every
@@ -41,35 +48,41 @@ _FT_TO_M = 0.3048
 class Building:
     building_id: str
     footprint: Polygon  # local metric frame, counter-clockwise exterior, no holes
-    archetype: str
+    # In data mode the next six may be None (unknown in the data).
+    archetype: Optional[str]
     year_built: Optional[int]
-    vintage: str
-    num_floors: int
-    floor_to_floor_m: float
-    height_m: float
+    vintage: Optional[str]
+    num_floors: Optional[int]
+    floor_to_floor_m: Optional[float]
+    height_m: Optional[float]
     inferred_fields: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
     source_properties: Dict[str, Any] = field(default_factory=dict)
+    use: Optional[str] = None  # raw use value from the data, before classification
+    # Data mode only: the full footprint (all parts, courtyards kept), local frame.
+    full_geometry: Optional[Any] = None
 
     @property
     def footprint_area_m2(self) -> float:
-        return self.footprint.area
+        return (self.full_geometry if self.full_geometry is not None else self.footprint).area
 
     @property
-    def gross_floor_area_m2(self) -> float:
-        return self.footprint.area * self.num_floors
+    def gross_floor_area_m2(self) -> Optional[float]:
+        return None if self.num_floors is None else self.footprint_area_m2 * self.num_floors
 
     def to_properties(self) -> Dict[str, Any]:
+        gfa = self.gross_floor_area_m2
         return {
             "building_id": self.building_id,
             "archetype": self.archetype,
+            "use": self.use,
             "year_built": self.year_built,
             "vintage": self.vintage,
             "num_floors": self.num_floors,
-            "floor_to_floor_m": round(self.floor_to_floor_m, 3),
-            "height_m": round(self.height_m, 2),
+            "floor_to_floor_m": None if self.floor_to_floor_m is None else round(self.floor_to_floor_m, 3),
+            "height_m": None if self.height_m is None else round(self.height_m, 2),
             "footprint_area_m2": round(self.footprint_area_m2, 1),
-            "gross_floor_area_m2": round(self.gross_floor_area_m2, 1),
+            "gross_floor_area_m2": None if gfa is None else round(gfa, 1),
             "inferred_fields": list(self.inferred_fields),
             "notes": list(self.notes),
             "source_properties": self.source_properties,
@@ -105,8 +118,9 @@ class LocalFrame:
 
 class BuildingStock:
     def __init__(self, buildings: List[Building], frame: LocalFrame,
-                 excluded: Optional[List[ExcludedFeature]] = None, source: str = ""):
+                 excluded: Optional[List[ExcludedFeature]] = None, source: str = "", mode: str = "model"):
         self.buildings = buildings
+        self.mode = mode
         self.frame = frame
         self.excluded = excluded or []
         self.source = source
@@ -132,9 +146,10 @@ class BuildingStock:
                 continue
             if vintages and b.vintage not in vintages:
                 continue
-            if min_gfa_m2 is not None and b.gross_floor_area_m2 < min_gfa_m2:
+            gfa = b.gross_floor_area_m2
+            if min_gfa_m2 is not None and (gfa is None or gfa < min_gfa_m2):
                 continue
-            if max_gfa_m2 is not None and b.gross_floor_area_m2 > max_gfa_m2:
+            if max_gfa_m2 is not None and (gfa is None or gfa > max_gfa_m2):
                 continue
             if ids is not None and b.building_id not in ids:
                 continue
@@ -151,17 +166,23 @@ class BuildingStock:
             maxx = max(b.footprint.bounds[2] for b in self.buildings)
             maxy = max(b.footprint.bounds[3] for b in self.buildings)
             bounds = {"width_m": round(maxx - minx, 1), "depth_m": round(maxy - miny, 1)}
+        known = {attr: sum(1 for b in self.buildings if getattr(b, attr) is not None)
+                 for attr in ("archetype", "use", "year_built", "num_floors", "height_m")}
+        gfa_known = [b.gross_floor_area_m2 for b in self.buildings if b.gross_floor_area_m2 is not None]
         return {
+            "mode": self.mode,
             "source": self.source,
             "origin_lon_lat": [round(self.frame.lon0, 6), round(self.frame.lat0, 6)],
             "num_buildings": n,
             "num_excluded": len(self.excluded),
             "excluded_by_reason": dict(Counter(_reason_class(e.reason) for e in self.excluded)),
-            "by_archetype": dict(Counter(b.archetype for b in self.buildings).most_common()),
-            "by_vintage": dict(Counter(b.vintage for b in self.buildings).most_common()),
+            "by_archetype": dict(Counter(b.archetype or "unclassified" for b in self.buildings).most_common()),
+            "by_vintage": dict(Counter(b.vintage or "unknown" for b in self.buildings).most_common()),
             "total_footprint_area_m2": round(sum(b.footprint_area_m2 for b in self.buildings), 1),
-            "total_gross_floor_area_m2": round(sum(b.gross_floor_area_m2 for b in self.buildings), 1),
+            "total_gross_floor_area_m2": round(sum(gfa_known), 1),
+            "gross_floor_area_known_for": len(gfa_known),
             "inferred_share": {k: round(v / n, 3) for k, v in sorted(inferred.items())} if n else {},
+            "known_share": {k: round(v / n, 3) for k, v in known.items()} if n else {},
             "notes_by_type": dict(Counter(_note_class(note) for b in self.buildings for note in b.notes).most_common()),
             "extent": bounds,
             "personal_fields_removed": list(self.personal_fields_removed),
@@ -173,12 +194,14 @@ class BuildingStock:
             features.append({
                 "type": "Feature",
                 "id": b.building_id,
-                "geometry": mapping(self.frame.to_wgs84(b.footprint)),
+                "geometry": mapping(self.frame.to_wgs84(
+                    b.full_geometry if b.full_geometry is not None else b.footprint)),
                 "properties": b.to_properties(),
             })
         return {
             "type": "FeatureCollection",
-            "ubem_mcp": {"origin_lon_lat": [self.frame.lon0, self.frame.lat0], "source": self.source},
+            "ubem_mcp": {"origin_lon_lat": [self.frame.lon0, self.frame.lat0], "source": self.source,
+                         "mode": self.mode},
             "features": features,
         }
 
@@ -215,8 +238,9 @@ def stock_from_geojson(
     height_unit: str = "m",
     default_archetype: str = "single_family",
     default_year: int = 1980,
-    min_footprint_m2: float = DEFAULT_MIN_FOOTPRINT_M2,
+    min_footprint_m2: Optional[float] = None,
     keep_personal_fields: bool = False,
+    mode: str = "model",
 ) -> BuildingStock:
     """Build a BuildingStock from a GeoJSON FeatureCollection.
 
@@ -225,7 +249,13 @@ def stock_from_geojson(
     can't be determined (and are recorded in `inferred_fields`).
     Columns about people (owner, mailing address, phone, ...) are dropped
     unless `keep_personal_fields` is True; the names removed are reported.
+    `mode` is "model" (default) or "data" (see the module docstring); the
+    minimum footprint defaults to 20 m2 in model mode and 0 in data mode.
     """
+    if mode not in ("model", "data"):
+        raise ValueError("mode must be 'model' or 'data'")
+    if min_footprint_m2 is None:
+        min_footprint_m2 = DEFAULT_MIN_FOOTPRINT_M2 if mode == "model" else 0.0
     if resolve_archetype_key(default_archetype) is None:
         raise ValueError(f"Unknown default_archetype {default_archetype!r}; valid: {sorted(ARCHETYPES)}")
     default_archetype = resolve_archetype_key(default_archetype)
@@ -242,7 +272,7 @@ def stock_from_geojson(
         to_wgs84 = Transformer.from_crs(crs_name, "EPSG:4326", always_xy=True).transform
 
     excluded: List[ExcludedFeature] = []
-    parsed: List[Tuple[str, Polygon, Dict[str, Any], List[str]]] = []
+    parsed: List[Tuple[str, Polygon, Dict[str, Any], List[str], Any]] = []
     personal_removed: Counter = Counter()
     for i, feat in enumerate(features):
         props = feat.get("properties") or {}
@@ -265,7 +295,11 @@ def stock_from_geojson(
         if poly is None:
             excluded.append(ExcludedFeature(fid, f"not_a_polygon: {geom.geom_type}"))
             continue
-        parsed.append((fid, poly, props, notes))
+        full = None
+        if mode == "data":
+            notes = []  # nothing is simplified in data mode; the full geometry is kept
+            full = geom if geom.is_valid else make_valid(geom)
+        parsed.append((fid, poly, props, notes, full))
 
     if not parsed:
         raise ValueError(f"No usable building polygons in {source or 'input'} ({len(excluded)} excluded)")
@@ -273,23 +307,33 @@ def stock_from_geojson(
     # A stock saved by to_geojson() records its origin; reuse it so local
     # coordinates are identical after a round trip.
     saved_origin = (data.get("ubem_mcp") or {}).get("origin_lon_lat")
-    lon0, lat0 = saved_origin if saved_origin else _centroid_lon_lat(p for _, p, _, _ in parsed)
+    lon0, lat0 = saved_origin if saved_origin else _centroid_lon_lat(p for _, p, _, _, _ in parsed)
     frame = LocalFrame(lon0, lat0)
 
     buildings: List[Building] = []
     seen_ids: Counter = Counter()
-    for fid, poly_ll, props, notes in parsed:
+    for fid, poly_ll, props, notes, full_ll in parsed:
         poly = _clean_local(frame.to_local(poly_ll))
-        if poly is None or poly.area < min_footprint_m2:
-            area = 0.0 if poly is None else poly.area
-            excluded.append(ExcludedFeature(fid, f"too_small: {area:.1f} m2 < {min_footprint_m2} m2"))
-            continue
-        b = _normalize_attributes(
-            fid, poly, props, notes,
-            height_field=height_field, floors_field=floors_field, use_field=use_field,
-            year_field=year_field, height_unit=height_unit,
-            default_archetype=default_archetype, default_year=default_year,
-        )
+        if mode == "data":
+            if poly is None:  # degenerate after cleaning; keep the raw outline for the inventory
+                poly = orient(frame.to_local(poly_ll), sign=1.0)
+            full = frame.to_local(full_ll)
+            if full.area < min_footprint_m2:
+                excluded.append(ExcludedFeature(fid, f"too_small: {full.area:.1f} m2 < {min_footprint_m2} m2"))
+                continue
+            b = _data_attributes(fid, poly, full, props, height_field=height_field, floors_field=floors_field,
+                                 use_field=use_field, year_field=year_field, height_unit=height_unit)
+        else:
+            if poly is None or poly.area < min_footprint_m2:
+                area = 0.0 if poly is None else poly.area
+                excluded.append(ExcludedFeature(fid, f"too_small: {area:.1f} m2 < {min_footprint_m2} m2"))
+                continue
+            b = _normalize_attributes(
+                fid, poly, props, notes,
+                height_field=height_field, floors_field=floors_field, use_field=use_field,
+                year_field=year_field, height_unit=height_unit,
+                default_archetype=default_archetype, default_year=default_year,
+            )
         if isinstance(b, ExcludedFeature):
             excluded.append(b)
             continue
@@ -298,7 +342,7 @@ def stock_from_geojson(
             b.building_id = f"{b.building_id}_{seen_ids[b.building_id]}"
         buildings.append(b)
 
-    stock = BuildingStock(buildings, frame, excluded, source=source)
+    stock = BuildingStock(buildings, frame, excluded, source=source, mode=mode)
     stock.personal_fields_removed = sorted(personal_removed)
     return stock
 
@@ -431,6 +475,7 @@ def _normalize_attributes(fid, poly, props, notes, *, height_field, floors_field
     if use_field is None:
         lower = {k.lower(): v for k, v in props.items()}
         use_candidates.extend(lower.get(k) for k in OSM_USE_FIELDS)
+    raw_use = _raw_use(use_candidates, poly.area, provisional_floors)
     archetype, use_reason = classify_use(use_candidates, poly.area, provisional_floors)
     if archetype == "_unconditioned":
         return ExcludedFeature(fid, f"unconditioned: {use_reason}")
@@ -480,6 +525,58 @@ def _normalize_attributes(fid, poly, props, notes, *, height_field, floors_field
         inferred_fields=inferred,
         notes=notes,
         source_properties=source_props,
+        use=props["use"] if isinstance(props.get("use"), str) else raw_use,
+    )
+
+
+def _raw_use(candidates, area: float, floors) -> Optional[str]:
+    """The raw use value that determines the archetype (an unrecognized code in
+    an earlier column does not hide a recognized one later), else the first
+    non-empty value."""
+    present = [str(c) for c in candidates if c not in (None, "")]
+    for c in present:
+        if classify_use([c], area, floors)[0] is not None:
+            return c
+    return present[0] if present else None
+
+
+# Normalized attributes a saved stock writes at the top level of each feature.
+_NORMALIZED_KEYS = ("archetype", "year_built", "num_floors", "height_m")
+
+
+def _data_attributes(fid, poly, full, props, *, height_field, floors_field, use_field, year_field,
+                     height_unit) -> "Building":
+    """Data mode: read what the data say and leave the rest unknown."""
+    src = props.get("source_properties") if isinstance(props.get("source_properties"), dict) else props
+    # A saved stock keeps the raw columns in source_properties and values joined
+    # later (enrich) at the top level; read both, top level first.
+    view = {**src, **{k: props[k] for k in _NORMALIZED_KEYS if props.get(k) not in (None, "")}}
+    notes: List[str] = []
+
+    _, raw_height = _lookup(view, height_field, HEIGHT_FIELDS)
+    height = _parse_length(raw_height, height_unit)
+    _, raw_floors = _lookup(view, floors_field, FLOORS_FIELDS)
+    floors = _parse_int(raw_floors)
+    _, raw_year = _lookup(view, year_field, YEAR_FIELDS)
+    year = parse_year(raw_year)
+
+    use_candidates = [_lookup(view, use_field, USE_FIELDS)[1]]
+    if use_field is None:
+        lower = {k.lower(): v for k, v in view.items()}
+        use_candidates.extend(lower.get(k) for k in OSM_USE_FIELDS)
+    raw_use = props["use"] if isinstance(props.get("use"), str) else _raw_use(use_candidates, full.area, floors)
+    archetype, reason = classify_use(use_candidates, full.area, floors)
+    if archetype == "_unconditioned":
+        archetype = None
+        notes.append(reason)
+    elif archetype is not None and "approximated" in reason:
+        notes.append(reason)
+
+    f2f = height / floors if height and floors else None
+    return Building(
+        building_id=_safe_id(fid), footprint=poly, archetype=archetype, year_built=year,
+        vintage=vintage_for_year(year), num_floors=floors, floor_to_floor_m=f2f, height_m=height,
+        inferred_fields=[], notes=notes, source_properties=src, use=raw_use, full_geometry=full,
     )
 
 
