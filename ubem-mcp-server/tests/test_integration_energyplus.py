@@ -166,3 +166,44 @@ async def test_stock_to_models_to_batch(tmp_path):
     assert summary["district"]["peak_kw"]["electricity"]["kw"] > 0
     assert summary["district"]["total_kwh"] == pytest.approx(
         sum(g["total_kwh"] for g in summary["by_archetype"].values()))
+
+
+async def test_retrofit_scenario_end_to_end(tmp_path):
+    """Baseline -> retrofit scenario -> both simulated -> aggregated -> compared."""
+    import json
+
+    from ubem_mcp_server.urban.stock_manager import StockManager
+
+    lon0, lat0 = -122.39, 37.62
+    d = 0.00012
+    src = tmp_path / "s.geojson"
+    src.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {"id": "house", "building": "house", "building:levels": 1,
+                                           "start_date": 1970},
+         "geometry": {"type": "Polygon", "coordinates": [[[lon0, lat0], [lon0 + d, lat0], [lon0 + d, lat0 + d * 0.8],
+                                                          [lon0, lat0 + d * 0.8], [lon0, lat0]]]}}]}))
+    cfg = _make_config(tmp_path)
+    sm = StockManager(cfg)
+    sm.load_from_file(str(src), stock_id="r")
+    sm.generate_models("r", "3C", weather_file=EPW, model_set_id="base")
+    scen = sm.generate_scenario("r", "base", {"name": "electrify", "measures": [
+        {"type": "heat_pump", "heating_cop": 3.3}, {"type": "lighting", "reduction": 0.5}]})
+    assert scen["scenario"]["buildings_retrofitted"] == 1
+    assert scen["model_set_id"] == "base__electrify"
+
+    manager = BatchManager(cfg)
+    for set_id in ("base", "base__electrify"):
+        manifest = sm.model_manifest("r", set_id)
+        sub = manager.submit_batch([{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]],
+                                   weather_file=EPW)
+        status = await _wait_until_complete(manager, sub["batch_id"], timeout=900)
+        assert status["counts"] == {"success": 1}
+        outputs = {m["label"]: m for m in manager.get_results(sub["batch_id"])["models"]}
+        assert " 0 Severe Errors" in _err_summary(outputs["house"]["output_directory"], "house")
+        sm.aggregate_results("r", set_id, outputs=outputs, make_map=False)
+
+    cmp = sm.compare_scenario("r", "base__electrify")
+    gas = cmp["district"]["by_fuel"]["natural_gas"]
+    # Space heating moves to electricity; the gas water heater remains.
+    assert gas["scenario_kwh"] < 0.6 * gas["baseline_kwh"]
+    assert cmp["district"]["savings_kwh"] > 0

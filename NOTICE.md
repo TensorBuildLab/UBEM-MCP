@@ -31,6 +31,9 @@ See the header of each source file for a pointer back to this notice.
   `find_weather_stations` / `get_site_weather` tools.
 - Results aggregation (`urban/aggregate.py`) and the `aggregate_stock_results`
   tool.
+- Retrofit scenarios (`urban/retrofit.py`, scenario comparison in
+  `urban/aggregate.py`) and the `list_retrofit_measures` /
+  `simulate_retrofit_scenario` / `compare_retrofit_scenario` tools.
 
 The archetype data in `ubem_mcp_server/urban/data/` are derived from U.S.
 Department of Energy datasets (DOE Commercial Reference Buildings, CC BY 4.0;

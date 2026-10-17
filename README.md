@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **52 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, to **district results** (per-building EUI, hourly district demand, GIS layers and maps), alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
+A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **55 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, to **district results** (per-building EUI, hourly district demand, GIS layers and maps) and **retrofit scenarios** compared against the baseline, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -29,6 +29,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [Site Weather](#site-weather)
 - [Archetype Models](#archetype-models)
 - [District Results](#district-results)
+- [Retrofit Scenarios](#retrofit-scenarios)
 - [Batch Simulation](#batch-simulation)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -346,7 +347,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **52 tools** organized into **10 categories**:
+The server provides **55 tools** organized into **11 categories**:
 
 ### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
@@ -366,6 +367,11 @@ The server provides **52 tools** organized into **10 categories**:
 
 ### 📊 District Results (1 tool) — new in UBEM-MCP
 - `aggregate_stock_results` - Aggregate a simulated stock into per-building results, hourly district demand, a GeoJSON results layer and an EUI map
+
+### 🔧 Retrofit Scenarios (3 tools) — new in UBEM-MCP
+- `list_retrofit_measures` - List the available retrofit measures and their parameters
+- `simulate_retrofit_scenario` - Apply a scenario of measures to a simulated stock and simulate it
+- `compare_retrofit_scenario` - Compare a scenario with its baseline: savings by fuel, peaks, emissions, per building
 
 ### 🏙️ Batch Simulation (6 tools) — new in UBEM-MCP
 - `discover_idf_files` - Glob a directory for IDF files to build a batch's model list
@@ -570,6 +576,58 @@ This reads each building's EnergyPlus SQLite output and writes, under `outputs/s
 
 The coverage block states how many buildings of the stock and of the model set have results. Every building without results is listed with the reason: the simulation failed, or the model could not be generated. District totals cover only buildings with results, and the summary says so. Emission factors are inputs in kg CO2e per kWh by fuel, since grid factors depend on the region and year studied.
 
+## Retrofit Scenarios
+
+A scenario applies measures to the archetype parameters of the buildings it targets and regenerates their models. Everything else stays identical to the baseline model set: geometry, neighbors, weather, schedules and HVAC option. So the difference in results is the effect of the measures.
+
+```json
+{"tool": "simulate_retrofit_scenario",
+ "arguments": {
+   "stock_id": "sam_hughes", "baseline_model_set_id": "baseline",
+   "scenario": {
+     "name": "electrify",
+     "measures": [
+       {"type": "heat_pump", "heating_cop": 3.3},
+       {"type": "heat_pump_water_heater", "archetypes": ["single_family"]},
+       {"type": "lighting", "target_w_m2": 6.5}],
+     "vintages": ["pre1980", "1980_2004"],
+     "adoption_rate": 0.5, "seed": 1}}}
+```
+
+| Measure | Parameters | Effect |
+|---|---|---|
+| `lighting` | `target_w_m2` or `reduction` | Lower interior lighting power density |
+| `plug_loads` | `reduction` | Lower plug and process loads |
+| `wall_insulation`, `roof_insulation` | `target_r` or `added_r` (m²K/W) | Raise the assembly R-value |
+| `windows` | `u_factor`, optional `shgc`, `vt` | Replace windows where the new U-factor is lower |
+| `air_sealing` | `reduction` | Lower design infiltration, or the effective leakage area for houses |
+| `cool_roof` | optional `solar_absorptance` (default 0.3) | Reflective roof membrane |
+| `hvac_efficiency` | `cooling_cop`, `heating_efficiency` | Higher-efficiency like-for-like equipment |
+| `heat_pump` | optional `heating_cop` (default 3.3), `cooling_cop` | Replace packaged single-zone or PTAC heating with an air-source heat pump with electric backup. Central VAV systems are left unchanged |
+| `heat_pump_water_heater` | optional `cop` (default 3.0) | Electric hot water at a constant COP. Ambient-temperature effects are not modeled |
+
+How measures are applied:
+- A measure applies only where it improves on the building's existing value, and each measure can carry its own `archetypes` / `vintages` filters.
+- `adoption_rate` retrofits a reproducible random share of the targeted buildings, set by `seed`.
+- The scenario's manifest lists, per building, every change made, such as `lighting 10.76 -> 6.46 W/m2`.
+
+After the scenario's batch completes, aggregate it with `aggregate_stock_results`, then compare:
+
+```json
+{"tool": "compare_retrofit_scenario",
+ "arguments": {"stock_id": "sam_hughes", "scenario_model_set_id": "baseline__electrify",
+               "emission_factors": {"electricity": 0.4, "natural_gas": 0.18}}}
+```
+
+The comparison reports, over the buildings with results in both runs:
+- District savings in total and by fuel, which shows fuel switching
+- The change in peak demand
+- Avoided emissions
+- Savings by archetype and the spread of savings across retrofitted buildings
+- Any retrofitted building whose energy use went up
+
+It also writes a per-building `buildings_comparison.csv`.
+
 ## Batch Simulation
 
 This is the key difference from single-model EnergyPlus MCP servers: **run a whole portfolio of buildings and poll for results**, instead of one blocking call per building.
@@ -628,7 +686,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  52 tools organized into 10 categories
+│     Tools Layer         │  55 tools organized into 11 categories
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
@@ -644,7 +702,7 @@ ubem-mcp-server/
 │   ├── server.py              # FastMCP server with tools
 │   ├── energyplus_tools.py    # Core EnergyPlus integration (single model)
 │   ├── batch_manager.py       # Batch/portfolio orchestration (new in UBEM-MCP)
-│   ├── urban/                 # Building stock, weather, archetype models, results aggregation (new in UBEM-MCP)
+│   ├── urban/                 # Building stock, weather, archetype models, results, retrofits (new in UBEM-MCP)
 │   ├── config.py              # Configuration management
 │   └── utils/                 # Specialized utilities
 ├── scripts/                    # Archetype-library builders and validation

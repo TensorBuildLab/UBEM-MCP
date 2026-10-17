@@ -2093,6 +2093,113 @@ async def aggregate_stock_results(
         return f"Error aggregating results: {str(e)}"
 
 
+@mcp.tool()
+async def list_retrofit_measures() -> str:
+    """
+    List the retrofit measures available for retrofit scenarios
+
+    Returns:
+        JSON list of measure types with their parameters and descriptions.
+    """
+    from ubem_mcp_server.urban.retrofit import list_measures
+    return f"Retrofit measures:\n{json.dumps(list_measures(), indent=2)}"
+
+
+@mcp.tool()
+async def simulate_retrofit_scenario(
+    stock_id: str,
+    baseline_model_set_id: str,
+    scenario: Dict[str, Any],
+    max_workers: Optional[int] = None,
+    model_set_id: Optional[str] = None,
+) -> str:
+    """
+    Apply a retrofit scenario to a simulated stock and simulate it as a background batch
+
+    The scenario's models use the baseline model set's buildings, climate,
+    weather and HVAC option, so the only differences from the baseline are
+    the measures. Each model's manifest entry lists the measures it received.
+
+    Args:
+        stock_id: The stock
+        baseline_model_set_id: The baseline model set (from simulate_building_stock)
+        scenario: Scenario specification, e.g.
+            {"name": "led_and_heat_pumps",
+             "measures": [{"type": "lighting", "target_w_m2": 6.5},
+                          {"type": "heat_pump", "heating_cop": 3.3, "archetypes": ["single_family"]}],
+             "vintages": ["pre1980"],          # optional: buildings targeted
+             "adoption_rate": 0.5, "seed": 1}  # optional: share of targeted buildings retrofitted
+            Use list_retrofit_measures for measure types and parameters.
+        max_workers: Parallel EnergyPlus processes (default: server setting)
+        model_set_id: Name for the scenario's model set (default: <baseline>__<scenario name>)
+
+    Returns:
+        JSON with the batch_id, the scenario model set and adoption counts. When the
+        batch completes, run aggregate_stock_results on it and then compare_retrofit_scenario.
+    """
+    try:
+        gen = await asyncio.to_thread(stock_manager.generate_scenario, stock_id, baseline_model_set_id,
+                                      scenario, model_set_id=model_set_id)
+        if not gen["weather_file"]:
+            return "Could not simulate scenario: the baseline model set has no weather file."
+        manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
+        models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+        if not models:
+            return f"No scenario models were generated:\n{json.dumps(gen, indent=2)}"
+        batch = batch_manager.submit_batch(
+            models=models, weather_file=gen["weather_file"], max_workers=max_workers,
+            output_directory=str(Path(gen["model_directory"]) / "runs"),
+            metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"],
+                      "scenario": gen["scenario"]["name"], "baseline_model_set_id": baseline_model_set_id},
+        )
+        return f"Retrofit scenario submitted:\n{json.dumps({'batch': batch, 'models': gen}, indent=2)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not simulate retrofit scenario: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error simulating retrofit scenario for stock {stock_id}: {str(e)}")
+        return f"Error simulating retrofit scenario: {str(e)}"
+
+
+@mcp.tool()
+async def compare_retrofit_scenario(
+    stock_id: str,
+    scenario_model_set_id: str,
+    baseline_results_id: Optional[str] = None,
+    scenario_results_id: Optional[str] = None,
+    emission_factors: Optional[Dict[str, float]] = None,
+) -> str:
+    """
+    Compare a retrofit scenario's results with its baseline, building by building
+
+    Both the baseline and the scenario must have been aggregated with
+    aggregate_stock_results. Only buildings with results in both are compared.
+
+    Args:
+        stock_id: The stock
+        scenario_model_set_id: The scenario's model set
+        baseline_results_id / scenario_results_id: Aggregated results to use (the
+            batch_id they were aggregated from); default: the most recent of each
+        emission_factors: Optional kg CO2e per kWh by fuel, e.g. {"electricity": 0.4, "natural_gas": 0.18}
+
+    Returns:
+        JSON with district savings (total and by fuel, including fuel switching),
+        peak demand change, avoided emissions, savings by archetype, the savings
+        distribution, retrofitted buildings whose use went up, and the path of a
+        per-building comparison CSV.
+    """
+    try:
+        result = await asyncio.to_thread(
+            stock_manager.compare_scenario, stock_id, scenario_model_set_id,
+            baseline_results_id=baseline_results_id, scenario_results_id=scenario_results_id,
+            emission_factors=emission_factors)
+        return f"Retrofit scenario comparison:\n{json.dumps(result, indent=2, default=str)}"
+    except (KeyError, ValueError, FileNotFoundError) as e:
+        return f"Could not compare scenario: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error comparing scenario {scenario_model_set_id}: {str(e)}")
+        return f"Error comparing retrofit scenario: {str(e)}"
+
+
 if __name__ == "__main__":
     logger.info(f"Starting {config.server.name} v{config.server.version}")
     logger.info(f"EnergyPlus version: {config.energyplus.version}")
