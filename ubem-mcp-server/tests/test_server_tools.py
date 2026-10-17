@@ -1,9 +1,22 @@
 """Smoke test: the MCP server module imports and registers its tools.
 
 Guards against dependency breaks (e.g. an incompatible `mcp` major version)
-that unit tests of the individual managers would not notice.
+that unit tests of the individual managers would not notice. Importing the
+server builds an EnergyPlusManager, which needs an EnergyPlus install, so this
+runs with the integration tests.
 """
 import asyncio
+import os
+
+import pytest
+
+from ubem_mcp_server.config import Config
+
+_idd = Config().energyplus.idd_path
+pytestmark = [
+    pytest.mark.energyplus,
+    pytest.mark.skipif(not os.path.exists(_idd), reason=f"EnergyPlus not installed (IDD not found at {_idd!r})"),
+]
 
 
 def test_server_imports_and_registers_tools():
