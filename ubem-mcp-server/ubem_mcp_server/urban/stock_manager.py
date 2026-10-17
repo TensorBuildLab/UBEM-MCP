@@ -15,9 +15,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
-from ..utils.path_utils import resolve_path
+from ..utils.path_utils import resolve_path, resolve_weather_file_path
 from . import osm
 from .enrich import enrich_stock
+from .generate import generate_models, summarize_manifest
 from .stock import BuildingStock, load_geojson, stock_from_geojson
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,54 @@ class StockManager:
         }
         result = self._register(enriched, new_id, extra_meta=meta)
         return {"enrichment": report, **result}
+
+    def generate_models(
+        self,
+        stock_id: str,
+        climate_zone: str,
+        weather_file: Optional[str] = None,
+        hvac: str = "template",
+        archetypes: Optional[Sequence[str]] = None,
+        vintages: Optional[Sequence[str]] = None,
+        building_ids: Optional[Sequence[str]] = None,
+        max_buildings: Optional[int] = None,
+        model_set_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Write one archetype IDF per selected building under
+        <stock_directory>/models/<model_set_id>/."""
+        stock = self.get(stock_id)
+        selected = stock.filter(archetypes=archetypes, vintages=vintages, building_ids=building_ids)
+        if building_ids:
+            missing = set(building_ids) - {b.building_id for b in selected}
+            if missing:
+                raise KeyError(f"Unknown building_id(s): {sorted(missing)[:10]}")
+        if max_buildings is not None:
+            selected = selected[:max(0, max_buildings)]
+        if not selected:
+            raise ValueError("No buildings match the selection")
+        epw = resolve_weather_file_path(self.config, weather_file) if weather_file else None
+
+        set_id = model_set_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+        self._check_id(set_id)
+        out_dir = self.stock_dir(stock_id) / "models" / set_id
+        if (out_dir / "manifest.json").exists():
+            raise ValueError(f"Model set {set_id!r} already exists for stock {stock_id!r}")
+        manifest = generate_models(stock, selected, climate_zone, str(out_dir),
+                                   self.config.energyplus.idd_path, weather_file=epw, hvac=hvac)
+        manifest["stock_id"] = stock_id
+        manifest["model_set_id"] = set_id
+        with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=1, default=str)
+        return {"stock_id": stock_id, "model_set_id": set_id, "weather_file": epw,
+                **summarize_manifest(manifest, str(out_dir))}
+
+    def model_manifest(self, stock_id: str, model_set_id: str) -> Dict[str, Any]:
+        self._check_id(model_set_id)
+        path = self.stock_dir(stock_id) / "models" / model_set_id / "manifest.json"
+        if not path.exists():
+            raise KeyError(f"Unknown model set {model_set_id!r} for stock {stock_id!r}")
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
 
     # ------------------------------------------------------------------ #
     # Access

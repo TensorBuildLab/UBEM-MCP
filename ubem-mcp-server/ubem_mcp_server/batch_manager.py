@@ -74,6 +74,7 @@ class BatchJob:
     sim_kwargs: Dict[str, Any] = field(default_factory=dict)
     cancel_requested: bool = False
     error: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 def _run_single_model_worker(
@@ -153,9 +154,12 @@ class BatchManager:
         design_day: bool = False,
         readvars: bool = True,
         expandobjects: bool = True,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Validate and register a batch, then schedule it to run in the
         background. Returns immediately with a batch_id and initial status.
+        `metadata` is stored with the batch (e.g. the stock and model set it
+        simulates).
         """
         normalized = self._normalize_models(models)
         if not normalized:
@@ -204,6 +208,7 @@ class BatchManager:
                 "readvars": readvars,
                 "expandobjects": expandobjects,
             },
+            metadata=dict(metadata or {}),
         )
         self._jobs[batch_id] = job
         self._save_manifest(job)
@@ -377,6 +382,7 @@ class BatchManager:
             "max_workers": job.max_workers,
             "continue_on_error": job.continue_on_error,
             "output_directory": job.output_directory,
+            "metadata": job.metadata,
         }
 
     # ------------------------------------------------------------------ #

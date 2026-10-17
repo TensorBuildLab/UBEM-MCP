@@ -112,3 +112,50 @@ async def test_real_batch_leaves_no_temp_files_in_input_directory(tmp_path):
 
     assert status["counts"] == {"success": 3}
     assert sorted(p.name for p in src.iterdir()) == ["1ZoneUncontrolled.idf"]
+
+
+async def test_stock_to_models_to_batch(tmp_path):
+    """GeoJSON stock -> archetype models -> parallel EnergyPlus runs."""
+    import json
+
+    from ubem_mcp_server.urban.results import annual_end_uses, find_sql
+    from ubem_mcp_server.urban.stock_manager import StockManager
+
+    lon0, lat0 = -122.39, 37.62
+    m_lat, m_lon = 111_320.0, 111_320.0 * 0.7934
+
+    def rect(x, y, w, d):
+        ll = lambda a, b: [lon0 + a / m_lon, lat0 + b / m_lat]  # noqa: E731
+        return {"type": "Polygon", "coordinates": [[ll(x, y), ll(x + w, y), ll(x + w, y + d), ll(x, y + d), ll(x, y)]]}
+
+    src = tmp_path / "blocks.geojson"
+    src.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": rect(0, 0, 12, 9), "properties": {"id": "house", "building": "house",
+                                                                           "building:levels": 2, "start_date": 1975}},
+        {"type": "Feature", "geometry": rect(12, 0, 12, 9), "properties": {"id": "twin", "building": "house",
+                                                                            "building:levels": 2}},
+        {"type": "Feature", "geometry": rect(40, 0, 27.7, 18.5), "properties": {"id": "office", "building": "office",
+                                                                                 "start_date": 2008}},
+    ]}))
+    cfg = _make_config(tmp_path)
+    cfg.paths.workspace_root = str(tmp_path)
+    sm = StockManager(cfg)
+    sm.load_from_file(str(src), stock_id="demo")
+    gen = sm.generate_models("demo", "3C", weather_file=EPW, building_ids=["house", "office"], model_set_id="t")
+    assert gen["num_models"] == 2 and gen["num_failed"] == 0
+    manifest = sm.model_manifest("demo", "t")
+    house = next(m for m in manifest["models"] if m["building_id"] == "house")
+    assert house["party_walls"] == 1  # shares a wall with "twin"
+
+    manager = BatchManager(cfg)
+    submitted = manager.submit_batch(
+        models=[{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]],
+        weather_file=EPW, metadata={"stock_id": "demo", "model_set_id": "t"})
+    status = await _wait_until_complete(manager, submitted["batch_id"], timeout=900)
+    assert status["counts"] == {"success": 2}
+    assert status["metadata"] == {"stock_id": "demo", "model_set_id": "t"}
+    for m in manager.get_results(submitted["batch_id"])["models"]:
+        assert " 0 Severe Errors" in _err_summary(m["output_directory"], m["label"])
+        res = annual_end_uses(find_sql(m["output_directory"]))
+        eui = res["total_mj"] / res["conditioned_area_m2"]
+        assert 200 < eui < 1500, (m["label"], eui)

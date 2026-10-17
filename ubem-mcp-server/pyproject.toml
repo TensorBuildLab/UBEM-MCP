@@ -41,6 +41,9 @@ repository = "https://github.com/TensorBuildLab/UBEM-MCP"
 where = ["."]
 include = ["ubem_mcp_server*"]
 
+[tool.setuptools.package-data]
+ubem_mcp_server = ["urban/data/*.json", "urban/data/README.md"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
