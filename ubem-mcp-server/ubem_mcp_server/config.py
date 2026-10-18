@@ -105,6 +105,7 @@ class Config:
         """Set up configuration after initialization"""
         self._setup_transport()
         self._setup_auth()
+        self._setup_paths()
         self._setup_energyplus_paths()
         self._setup_batch()
         self._setup_logging()
@@ -177,6 +178,20 @@ class Config:
                 "streamable-http transport requires non-empty MCP_TOKENS"
             )
         self.auth.tokens = tokens
+
+    def _setup_paths(self):
+        """Workspace and output folders from UBEM_WORKSPACE_ROOT and
+        UBEM_OUTPUT_DIR, for use outside the container (library, CLI)."""
+        root = os.getenv("UBEM_WORKSPACE_ROOT")
+        if root:
+            self.paths.workspace_root = os.path.abspath(root)
+            self.paths.output_dir = os.path.join(self.paths.workspace_root, "outputs")
+            bundled = Path(__file__).resolve().parent.parent / "sample_files"
+            self.paths.sample_files_path = str(bundled) if bundled.is_dir() else os.path.join(
+                self.paths.workspace_root, "sample_files")
+        out = os.getenv("UBEM_OUTPUT_DIR")
+        if out:
+            self.paths.output_dir = os.path.abspath(out)
 
     def _setup_energyplus_paths(self):
         """Set up EnergyPlus paths from environment variables or defaults"""
@@ -289,6 +304,8 @@ class Config:
         """Set up logging configuration with both console and file handlers"""
         import logging.handlers
         from pathlib import Path
+
+        self.server.log_level = os.getenv("UBEM_LOG_LEVEL", self.server.log_level).upper()
 
         logger = logging.getLogger(__name__)
 

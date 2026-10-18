@@ -37,6 +37,7 @@ See the header of each source file for a pointer back to this notice.
 - Data-only work on building stocks (`urban/query.py`, data mode in
   `urban/stock.py`) and the `query_stock`, `export_stock` and
   `assign_archetypes` tools.
+- The Python library (`api.py`) and command line (`cli.py`, `__main__.py`).
 - Users' own models in a model set (`urban/own_models.py`) and the
   `set_building_models` / `simulate_model_set` tools.
 - Batch failure diagnosis and progress (`utils/err_parser.py`, `batch_manager.py`).

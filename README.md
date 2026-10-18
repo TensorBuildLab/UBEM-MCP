@@ -52,6 +52,41 @@ UBEM-MCP makes EnergyPlus building energy simulation — for a single building o
 - 📈 **Smart Output Management**: Auto-discover and configure output variables/meters
 - 📊 **Advanced Visualization**: Create interactive plots and HVAC system diagrams
 
+## Three ways to use it
+
+UBEM-MCP is built for agents first, not for agents only. The same tools, with the same arguments and the same results, are available three ways; all three run the same server code.
+
+**1. As an MCP server**, for any MCP client and any model (see [Installation](#installation)).
+
+**2. As a Python library**, for scripts, notebooks and pipelines:
+
+```python
+from ubem_mcp_server.api import UBEM
+
+with UBEM(workspace="my_project", max_workers=4) as ubem:
+    ubem.load_building_stock(geojson_path="campus.geojson", stock_id="campus")
+    run = ubem.simulate_building_stock(stock_id="campus")
+    ubem.wait(run["batch"]["batch_id"], progress=print)
+    summary = ubem.aggregate_stock_results(batch_id=run["batch"]["batch_id"])
+    print(summary["district"]["total_kwh"])
+```
+
+Every tool is a method (`ubem.tools()` lists them, `help(ubem.query_stock)` shows the description). A tool that answers `ok: false` raises `UBEMError` with its `error_type`; pass `raise_on_error=False` to get the result instead.
+
+**3. On the command line**, with options built from each tool's arguments:
+
+```bash
+ubem-mcp tools                                   # list tools
+ubem-mcp help simulate_building_stock            # options of one tool
+ubem-mcp guide stock-to-district                 # a workflow guide
+ubem-mcp load_building_stock --geojson-path campus.geojson --stock-id campus
+ubem-mcp simulate_building_stock --stock-id campus --max-workers 4   # waits, showing progress
+ubem-mcp aggregate_stock_results --batch-id <id> --output summary.json
+ubem-mcp serve                                   # run the MCP server
+```
+
+Results print as JSON; the exit code is 1 when a tool answers `ok: false`. Lists and objects are given as JSON (`--field-map '{"year_built": "YR"}'`) and lists of names also as `a,b,c`. `python -m ubem_mcp_server` works the same way.
+
 ## Installation
 
 ### Using the MCP Server
@@ -759,8 +794,9 @@ ubem-mcp-server/
 The server auto-detects EnergyPlus installation and uses sensible defaults. Configuration can be customized via environment variables:
 
 - `EPLUS_IDD_PATH`: Path to EnergyPlus IDD file
-- `EPLUS_SAMPLE_PATH`: Custom sample files directory
-- `EPLUS_OUTPUT_PATH`: Output directory for results
+- `UBEM_WORKSPACE_ROOT`: Folder that relative input paths are resolved against (default in the container: `/workspace/ubem-mcp-server`); outputs go to `<workspace>/outputs`
+- `UBEM_OUTPUT_DIR`: Where stocks, models, batches and results are written, if not under the workspace
+- `UBEM_LOG_LEVEL`: Logging level (default `INFO`; the command line uses `WARNING` unless `--verbose`)
 - `UBEM_BATCH_MAX_WORKERS`: Max concurrent simulation processes for batch jobs (default: CPU count)
 - `MCP_TRANSPORT`, `MCP_HTTP_HOST`, `MCP_HTTP_PORT`, `MCP_HTTP_PATH`, `MCP_TOKENS`: streamable-HTTP transport settings (see [Streamable HTTP Transport](#streamable-http-transport-local-testing))
 

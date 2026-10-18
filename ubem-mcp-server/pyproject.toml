@@ -34,6 +34,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+ubem-mcp = "ubem_mcp_server.cli:main"
+
 [project.urls]
 homepage = "https://github.com/TensorBuildLab/UBEM-MCP"
 repository = "https://github.com/TensorBuildLab/UBEM-MCP"
