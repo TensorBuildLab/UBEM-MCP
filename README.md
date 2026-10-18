@@ -347,7 +347,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **59 tools** organized into **12 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
+The server provides **61 tools** organized into **13 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
 
 **Responses.** The 23 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
 
@@ -357,6 +357,8 @@ The server provides **59 tools** organized into **12 categories**. It uses only 
 ```
 
 Responses are summaries kept under 20,000 characters (lists are paged with `limit`/`offset`, groups are capped), with full detail written to files. Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so a client can tell which tools only read, which discard work, and which reach the internet. The single-model tools carried over from EnergyPlus-MCP keep their original text responses.
+
+**Reproducible by record.** Every step that creates a stock or a model set stores its arguments and the SHA-256 of each input file; every generated model is hashed. `export_project_record` collects these for a stock's whole lineage, together with the weather file, results and software versions (UBEM-MCP, EnergyPlus version and build, the bundled archetype library and Python packages), in `project_record.json`. `rerun_project_record` repeats the steps from the same files under new ids and reports, model by model, whether the regenerated models match; it warns when an input file, the EnergyPlus version or the archetype library has changed.
 
 **Guides for any client.** Step-by-step workflow guides ship inside the server, not in any one client's skill system. Each guide is offered three ways: through the `get_workflow_guide` tool (works in every MCP client), as an MCP prompt, and as an MCP resource under `ubem://guides/`. Current guides: `stock-to-district` (model a district from footprints), `retrofit-scenario` (compare a retrofit or decarbonisation scenario), `data-only` (work with building data without a model) and `own-models` (run your own EnergyPlus models as a batch). Reference data are resources too: `ubem://archetypes`, `ubem://retrofit-measures` and `ubem://scenario-schema`, generated from the code. On connection, every client receives short server instructions on how the tools fit together.
 
@@ -389,6 +391,10 @@ Responses are summaries kept under 20,000 characters (lists are paged with `limi
 - `list_retrofit_measures` - List the available retrofit measures and their parameters
 - `simulate_retrofit_scenario` - Apply a scenario of measures to a simulated stock and simulate it
 - `compare_retrofit_scenario` - Compare a scenario with its baseline: savings by fuel, peaks, emissions, per building
+
+### 🧾 Project Records (2 tools) — new in UBEM-MCP
+- `export_project_record` - Write a record of every step, input file hash, model hash, result and software version behind a stock
+- `rerun_project_record` - Repeat a recorded analysis from its input files and check that every model is identical
 
 ### 🏙️ Batch Simulation (6 tools) — new in UBEM-MCP
 - `discover_idf_files` - Glob a directory for IDF files to build a batch's model list

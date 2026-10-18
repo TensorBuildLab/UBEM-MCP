@@ -2358,6 +2358,83 @@ async def compare_retrofit_scenario(
 
 
 # ============================================================================
+# Project records (reproducibility) — new in UBEM-MCP
+# ============================================================================
+
+@ubem_tool(idempotent=True)
+async def export_project_record(stock_id: str) -> Dict[str, Any]:
+    """
+    Write a project record: everything needed to repeat a stock's analysis
+
+    The record (<stock_directory>/project_record.json) lists every step from
+    the original footprints to this stock (load or fetch, enrich, assign
+    archetypes) with its arguments and the SHA-256 of each input file; the
+    weather file and its hash; every model set with how it was generated and
+    a hash of each model; the aggregated results; and the software versions
+    (UBEM-MCP, EnergyPlus version and build, archetype library, Python
+    packages). Share it with the results so others can check or repeat them.
+
+    Args:
+        stock_id: Stock whose analysis to record
+
+    Returns:
+        JSON with the record path, the steps, model sets and results it covers,
+        software versions and attribution.
+    """
+    return await asyncio.to_thread(stock_manager.project_record, stock_id)
+
+
+@ubem_tool()
+async def rerun_project_record(
+    record_path: str,
+    id_suffix: str = "_rerun",
+    simulate: bool = False,
+    max_workers: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Repeat the analysis in a project record and check that it reproduces
+
+    Rebuilds every stock in the record from the recorded input files (warning
+    if a file has changed), under new ids (old id + id_suffix), regenerates
+    every model set and compares each model with its recorded hash. Also warns
+    when the EnergyPlus version or archetype library differ from the record.
+    With simulate=true the regenerated model sets are also simulated as
+    background batches; aggregate them and compare with recorded_results.
+
+    Args:
+        record_path: Path to project_record.json (or the stock folder holding it)
+        id_suffix: Appended to every stock id for the rerun (letters, digits, _ or -)
+        simulate: Also run the regenerated model sets
+        max_workers: Parallel EnergyPlus processes when simulating
+
+    Returns:
+        JSON with the new stock ids, for each model set how many models are
+        identical to the record, the recorded district results, batches if
+        simulating, and warnings.
+    """
+    result = await asyncio.to_thread(stock_manager.rerun_record, record_path, id_suffix)
+    if simulate:
+        batches = []
+        for ms in result["model_sets"]:
+            manifest = stock_manager.model_manifest(result["stock_id"], ms["model_set_id"])
+            models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+            if not models or not manifest.get("weather_file"):
+                result["warnings"].append(f"model set {ms['model_set_id']!r} was not simulated (no models or weather)")
+                continue
+            batch = batch_manager.submit_batch(
+                models=models, weather_file=manifest["weather_file"], max_workers=max_workers,
+                output_directory=str(Path(manifest["models"][0]["idf_path"]).parent / "runs"),
+                metadata={"stock_id": result["stock_id"], "model_set_id": ms["model_set_id"]},
+            )
+            batches.append({"model_set_id": ms["model_set_id"], "batch_id": batch["batch_id"]})
+        result["batches"] = batches
+        result["next_steps"] = [s for b in batches for s in _batch_next_steps(b["batch_id"])]
+    else:
+        result["next_steps"] = ["call again with simulate=true to also run the models, or aggregate later"]
+    return result
+
+
+# ============================================================================
 # Workflow guides and reference data for any MCP client — new in UBEM-MCP
 # ============================================================================
 # The same guides are offered as a tool (works in every client), as MCP prompts

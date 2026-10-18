@@ -37,6 +37,8 @@ See the header of each source file for a pointer back to this notice.
 - Data-only work on building stocks (`urban/query.py`, data mode in
   `urban/stock.py`) and the `query_stock`, `export_stock` and
   `assign_archetypes` tools.
+- Project records (`urban/record.py`, recipes in `urban/stock_manager.py`)
+  and the `export_project_record` / `rerun_project_record` tools.
 - Data provenance and privacy (`urban/provenance.py`): data sources, licences
   and required attribution for every stock, model set and result, and removal
   of personal columns (owner names, mailing addresses) when data are loaded.
