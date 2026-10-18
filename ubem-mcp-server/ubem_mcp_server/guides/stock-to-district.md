@@ -30,7 +30,7 @@ If the user has an assessor or parcel layer: `enrich_building_stock(stock_id="di
 
 `simulate_building_stock(stock_id="district", max_workers=4)` generates one model per building and starts a background batch; it returns at once with a `batch_id`. For a quick check first, add `max_buildings=10`. Use `hvac="ideal"` only when the user wants loads rather than equipment energy.
 
-Then poll `get_batch_status(batch_id="...")` every one to two minutes until `is_complete` is true. Do not poll in a tight loop, and do not write your own simulation scripts: the batch handles parallel runs, failures and restarts.
+Then call `get_batch_status(batch_id="...", wait_seconds=50)`, which waits up to 50 seconds for the batch, and repeat until `is_complete` is true. Do not poll in a tight loop, and do not write your own simulation scripts: the batch handles parallel runs, failures and restarts.
 
 ## 5. Aggregate and report
 

@@ -134,3 +134,28 @@ async def test_real_failure_is_diagnosed(tmp_path):
     ok = by_label["1ZoneUncontrolled"]
     assert ok["result"]["err_summary"]["completed"] is True
     assert 0 < ok["duration_seconds"] < status["progress"]["elapsed_seconds"] + 5
+
+
+@pytest.mark.asyncio
+async def test_get_batch_status_can_wait_for_completion(tmp_path, monkeypatch):
+    from ubem_mcp_server import server
+
+    cfg = _make_config(tmp_path)
+    release = threading.Event()
+
+    def fake_worker(config, idf_path, weather_file, output_directory, sim_kwargs):
+        release.wait(5)
+        return {"success": True, "simulation_seconds": 1.0}
+
+    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
+    monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
+    manager = bm.BatchManager(cfg)
+    monkeypatch.setattr(server, "batch_manager", manager)
+    batch = manager.submit_batch(models=[str(SAMPLE_DIR / "1ZoneUncontrolled.idf")], max_workers=1)
+
+    _, quick = await server.mcp.call_tool("get_batch_status", {"batch_id": batch["batch_id"], "wait_seconds": 1})
+    assert quick["is_complete"] is False and "wait_seconds" in quick["next_steps"][0]
+    threading.Timer(0.5, release.set).start()
+    start = time.monotonic()
+    _, done = await server.mcp.call_tool("get_batch_status", {"batch_id": batch["batch_id"], "wait_seconds": 30})
+    assert done["is_complete"] and time.monotonic() - start < 10

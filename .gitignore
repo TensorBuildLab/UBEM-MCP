@@ -232,3 +232,6 @@ ubem-mcp-server/logs/
 # Downloaded DOE Reference Building workbooks (scripts/build_reference_library.py)
 ubem-mcp-server/.refbldg_cache/
 ubem-mcp-server/.resstd_cache/
+
+# agent-test run folders (transcripts and outputs); summaries are kept
+ubem-mcp-server/agent_tests/results/runs/

@@ -86,8 +86,9 @@ How the tools fit together:
 - Nothing is overwritten: enrichment, archetype assignment and scenarios create
   new objects, so earlier work stays available.
 - Long simulations run in the background. After simulate_building_stock,
-  simulate_retrofit_scenario or run_batch_simulation, poll get_batch_status every
-  one to two minutes until is_complete, then aggregate. Follow next_steps.
+  simulate_retrofit_scenario, simulate_model_set or run_batch_simulation, call
+  get_batch_status with wait_seconds=50 (it waits for the batch) until
+  is_complete, then aggregate. Follow next_steps.
 - Use the tools rather than writing your own scripts for what they already do.
 - Data-only questions need no model: load with mode="data", then query_stock and
   export_stock.
@@ -1516,8 +1517,12 @@ def _submit_model_set(stock_id: str, model_set_id: str, max_workers: Optional[in
     )
 
 
+MAX_WAIT_SECONDS = 50  # below common MCP client tool-call timeouts
+
+
 def _batch_next_steps(batch_id: str) -> List[str]:
-    return [f"poll get_batch_status(batch_id={batch_id!r}) every minute or two until is_complete is true",
+    return [f"wait with get_batch_status(batch_id={batch_id!r}, wait_seconds={MAX_WAIT_SECONDS}), repeating "
+            f"until is_complete is true",
             f"then aggregate_stock_results(batch_id={batch_id!r})"]
 
 
@@ -1606,17 +1611,19 @@ async def run_batch_simulation(
         readvars=readvars,
         expandobjects=expandobjects,
     )
-    return {**result, "next_steps": [f"poll get_batch_status(batch_id={result['batch_id']!r}) until is_complete, "
-                                     f"then get_batch_results"]}
+    return {**result, "next_steps": [f"wait with get_batch_status(batch_id={result['batch_id']!r}, "
+                                     f"wait_seconds={MAX_WAIT_SECONDS}) until is_complete, then get_batch_results"]}
 
 
 @ubem_tool(read_only=True)
-async def get_batch_status(batch_id: str) -> Dict[str, Any]:
+async def get_batch_status(batch_id: str, wait_seconds: int = 0) -> Dict[str, Any]:
     """
     Get the current status of a batch simulation job
 
     Args:
         batch_id: Batch ID returned by run_batch_simulation
+        wait_seconds: Wait up to this many seconds (at most 50) for the batch to
+                      finish before answering, instead of polling repeatedly
 
     Returns:
         JSON with overall status, per-status counts (only as many models are
@@ -1627,6 +1634,13 @@ async def get_batch_status(batch_id: str) -> Dict[str, Any]:
         "is_complete" is true, then call get_batch_results.
     """
     result = batch_manager.get_status(batch_id)
+    deadline = asyncio.get_running_loop().time() + max(0, min(int(wait_seconds or 0), MAX_WAIT_SECONDS))
+    while not result["is_complete"] and asyncio.get_running_loop().time() < deadline:
+        await asyncio.sleep(min(2.0, max(0.1, deadline - asyncio.get_running_loop().time())))
+        result = batch_manager.get_status(batch_id)
+    if not result["is_complete"]:
+        result["next_steps"] = [f"call get_batch_status(batch_id={batch_id!r}, wait_seconds={MAX_WAIT_SECONDS}) "
+                                f"again to keep waiting"]
     return result
 
 
@@ -2193,7 +2207,7 @@ async def simulate_building_stock(
 
     Combines generate_building_models and run_batch_simulation: every selected
     building gets a model, and the models run in parallel worker processes.
-    Returns immediately with a batch_id; poll get_batch_status until complete.
+    Returns immediately with a batch_id; wait with get_batch_status(wait_seconds=50) until complete.
 
     Args:
         stock_id: Stock to simulate
