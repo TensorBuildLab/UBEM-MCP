@@ -1600,8 +1600,12 @@ async def get_batch_status(batch_id: str) -> Dict[str, Any]:
         batch_id: Batch ID returned by run_batch_simulation
 
     Returns:
-        JSON string with overall status, per-status counts, and completion flag.
-        Poll this until "is_complete" is true, then call get_batch_results.
+        JSON with overall status, per-status counts (only as many models are
+        "running" as there are workers), the completion flag, progress (elapsed
+        time, mean EnergyPlus run time, estimated time left) and, when models
+        fail, a diagnosis: failures grouped by cause from the EnergyPlus .err
+        files, with example buildings and a suggested fix. Poll this until
+        "is_complete" is true, then call get_batch_results.
     """
     result = batch_manager.get_status(batch_id)
     return result
