@@ -2440,6 +2440,110 @@ async def compare_retrofit_scenario(
 
 
 # ============================================================================
+# ComStock / ResStock reference data — new in UBEM-MCP
+# ============================================================================
+
+@ubem_tool(open_world=True, idempotent=True)
+async def fetch_comstock_resstock(
+    dataset: str,
+    state: str,
+    county: Optional[str] = None,
+    upgrade: int = 0,
+    release: Optional[str] = None,
+    dataset_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Download NREL ComStock (commercial) or ResStock (residential) annual results for a county or state
+
+    Fetches the sample of simulated buildings, with their characteristics,
+    annual energy by fuel and weights (how many real buildings each sample
+    stands for), from the Open Energy Data Initiative, and keeps a compact
+    copy for query_comstock_resstock. Use it to characterise a region's stock
+    without modeling, to see what an upgrade saves, or to benchmark your own
+    models. Data are CC BY 4.0; the attribution is returned.
+
+    Args:
+        dataset: "comstock" or "resstock"
+        state: Two-letter state code, e.g. "AZ"
+        county: 5-digit county FIPS code, e.g. "04019" for Pima County AZ (required
+                for ComStock; for ResStock it narrows the state file to the county)
+        upgrade: 0 for the baseline, or an upgrade number (listed in upgrades_available)
+        release: Data release (default: the latest supported)
+        dataset_id: Name for the downloaded data (default from dataset, area and upgrade)
+
+    Returns:
+        JSON with the dataset_id, samples, buildings represented, building types,
+        available upgrades, the data dictionary link and attribution.
+    """
+    return await asyncio.to_thread(stock_manager.fetch_reference, dataset, state, county=county, upgrade=upgrade,
+                                   release=release, dataset_id=dataset_id)
+
+
+@ubem_tool(read_only=True)
+async def query_comstock_resstock(
+    dataset_id: str,
+    group_by: Optional[List[str]] = None,
+    filters: Optional[Dict[str, Any]] = None,
+    baseline_dataset_id: Optional[str] = None,
+    min_samples: int = 30,
+    max_groups: int = 30,
+) -> Dict[str, Any]:
+    """
+    Weighted summaries of ComStock/ResStock data: building counts, floor area, energy, EUI, upgrade savings
+
+    Every number is weighted by how many real buildings each sample stands
+    for, and every group reports its number of samples; groups with fewer
+    than min_samples are flagged as uncertain. With baseline_dataset_id (the
+    upgrade-0 data of the same area), returns the upgrade's savings for the
+    buildings it applies to.
+
+    Args:
+        dataset_id: From fetch_comstock_resstock
+        group_by: Fields to group by: building_type, vintage, climate_zone, county,
+                  or any characteristic, e.g. "in.heating_fuel", "in.hvac_system_type"
+        filters: Field -> value, list of values, or {"min": x, "max": y},
+                 e.g. {"building_type": ["SmallOffice", "MediumOffice"]}
+        baseline_dataset_id: Baseline data to compute an upgrade's savings against
+        min_samples: Groups with fewer samples are flagged (default 30)
+        max_groups: Largest groups to return
+
+    Returns:
+        JSON with overall and per-group weighted statistics (or savings), sample
+        counts, warnings about small samples, and attribution.
+    """
+    return await asyncio.to_thread(stock_manager.query_reference, dataset_id, filters=filters, group_by=group_by,
+                                   baseline_dataset_id=baseline_dataset_id, min_samples=min_samples,
+                                   max_groups=max_groups)
+
+
+@ubem_tool(read_only=True)
+async def benchmark_with_comstock_resstock(stock_id: str, model_set_id: str, dataset_ids: List[str],
+                                           results_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Compare your modeled EUI by archetype with ComStock/ResStock for the same area
+
+    For each archetype in an aggregated model set, places the median modeled
+    site EUI within the weighted EUI distribution (25th, 50th, 75th
+    percentile) of the matching ComStock or ResStock building type. Both are
+    models: this shows whether your models are in a plausible range for the
+    area, not which is right; use compare_to_measured for measurements.
+
+    Args:
+        stock_id: Stock
+        model_set_id: Aggregated model set (run aggregate_stock_results first)
+        dataset_ids: Baseline (upgrade 0) datasets from fetch_comstock_resstock, e.g. one
+                     ComStock and one ResStock dataset for the same county
+        results_id: Aggregated results to use (default: the latest)
+
+    Returns:
+        JSON with, per archetype, the modeled median EUI, the reference distribution
+        and sample count, and the modeled median's percentile in the reference.
+    """
+    return await asyncio.to_thread(stock_manager.benchmark_reference, stock_id, model_set_id, dataset_ids,
+                                   results_id=results_id)
+
+
+# ============================================================================
 # Measured energy and validation — new in UBEM-MCP
 # ============================================================================
 

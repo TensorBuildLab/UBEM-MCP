@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import measured, osm, own_models, provenance, query, record, retrofit, weather
+from . import buildstock, measured, osm, own_models, provenance, query, record, retrofit, weather
 from .aggregate import aggregate, compare_results, hourly_meters
 from .results import annual_end_uses, find_sql
 from .enrich import enrich_stock
@@ -34,6 +34,7 @@ class StockManager:
         self.config = config
         self._stocks: Dict[str, BuildingStock] = {}
         self._station_index: Optional[weather.StationIndex] = None
+        self._reference_cache: Dict[str, Any] = {}
         self.fetch = weather.http_get  # replaced in tests
 
     @property
@@ -568,6 +569,98 @@ class StockManager:
             raise KeyError(f"Unknown model set {model_set_id!r} for stock {stock_id!r}")
         with open(path, encoding="utf-8") as f:
             return json.load(f)
+
+    # ------------------------------------------------------------------ #
+    # ComStock / ResStock reference data
+    # ------------------------------------------------------------------ #
+
+    @property
+    def reference_root(self) -> Path:
+        return Path(self.config.paths.output_dir) / "reference_data"
+
+    def fetch_reference(self, dataset: str, state: str, county: Optional[str] = None, upgrade: int = 0,
+                        release: Optional[str] = None, dataset_id: Optional[str] = None) -> Dict[str, Any]:
+        """Download ComStock or ResStock annual results for a state or county
+        from OEDI and keep a compact copy under reference_data/<dataset_id>/."""
+        info = buildstock.release_info(dataset, release)
+        url = buildstock.file_url(info, state, county, upgrade)
+        g = buildstock.county_gisjoin(state, county) if county else None
+        did = dataset_id or f"{dataset}_{state}_{g or 'all'}_upgrade{int(upgrade)}".lower()
+        self._check_id(did)
+        out_dir = self.reference_root / did
+        if (out_dir / "meta.json").exists():
+            return {**self.reference_meta(did), "reused": True}
+        raw = self.fetch(url)
+        df = buildstock.normalize(raw, info, county=None if info["needs_county"] else g)
+        if df.empty:
+            raise ValueError(f"No {info['title']} samples for state {state}" + (f", county {g}" if g else ""))
+        buildstock.save_table(df, out_dir / "table.csv.gz")
+        upgrades = buildstock.upgrades_lookup(info, self.fetch)
+        src = provenance.source_record(f"{dataset}:{info['release']}", info["title"], "reference data",
+                                       license="CC-BY-4.0", attribution=buildstock.attribution(info), url=url)
+        import hashlib
+        meta = {"dataset_id": did, "dataset": dataset, "release": info["release"], "title": info["title"],
+                "url": url, "state": state.upper(), "county": g, "upgrade": int(upgrade),
+                "upgrade_name": upgrades.get(str(int(upgrade))), "retrieved_at": record.now(),
+                "sha256": hashlib.sha256(raw).hexdigest(), "samples": int(len(df)),
+                "buildings_represented": round(float(df["weight"].sum()), 1),
+                "building_types": {k: int(v) for k, v in df["building_type"].value_counts().items()},
+                "data_dictionary": f"{info['root']}/data_dictionary.tsv",
+                "upgrades_available": upgrades, "source": src, "attribution": src["attribution"]}
+        (out_dir / "meta.json").write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
+        self._reference_cache[did] = df
+        return meta
+
+    def reference_meta(self, dataset_id: str) -> Dict[str, Any]:
+        self._check_id(dataset_id)
+        path = self.reference_root / dataset_id / "meta.json"
+        if not path.exists():
+            known = sorted(p.parent.name for p in self.reference_root.glob("*/meta.json"))                 if self.reference_root.is_dir() else []
+            raise KeyError(f"Unknown reference dataset {dataset_id!r}; fetched so far: {known or 'none'}")
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def reference_table(self, dataset_id: str):
+        if dataset_id not in self._reference_cache:
+            self.reference_meta(dataset_id)
+            self._reference_cache[dataset_id] = buildstock.load_table(self.reference_root / dataset_id / "table.csv.gz")
+        return self._reference_cache[dataset_id]
+
+    def query_reference(self, dataset_id: str, filters: Optional[Dict[str, Any]] = None,
+                        group_by: Optional[Sequence[str]] = None, baseline_dataset_id: Optional[str] = None,
+                        min_samples: int = buildstock.DEFAULT_MIN_SAMPLES, max_groups: int = 30) -> Dict[str, Any]:
+        """Weighted summaries of a reference dataset, or an upgrade's savings
+        over its baseline (baseline_dataset_id)."""
+        meta = self.reference_meta(dataset_id)
+        df = buildstock.apply_filters(self.reference_table(dataset_id), filters)
+        head = {"dataset_id": dataset_id, "title": meta["title"], "upgrade": meta["upgrade"],
+                "upgrade_name": meta.get("upgrade_name"), "filters": filters or {},
+                "attribution": meta["attribution"]}
+        if baseline_dataset_id:
+            bmeta = self.reference_meta(baseline_dataset_id)
+            if (bmeta["dataset"], bmeta["release"], bmeta["state"], bmeta["county"]) !=                     (meta["dataset"], meta["release"], meta["state"], meta["county"]):
+                raise ValueError("The baseline must be the same dataset, release and area as the upgrade")
+            base = buildstock.apply_filters(self.reference_table(baseline_dataset_id), filters)
+            return {**head, "baseline_dataset_id": baseline_dataset_id,
+                    **buildstock.upgrade_savings(base, df, group_by, min_samples, max_groups)}
+        return {**head, **buildstock.summarize(df, group_by, min_samples, max_groups)}
+
+    def benchmark_reference(self, stock_id: str, model_set_id: str, dataset_ids: Sequence[str],
+                            results_id: Optional[str] = None) -> Dict[str, Any]:
+        """Modeled EUI by archetype against ComStock/ResStock for the same area."""
+        import csv as _csv
+        res_dir = self._results_dir(stock_id, model_set_id, results_id)
+        with open(res_dir / "buildings.csv", newline="", encoding="utf-8") as f:
+            modeled = list(_csv.DictReader(f))
+        refs, attributions = {}, []
+        for did in dataset_ids:
+            meta = self.reference_meta(did)
+            if meta["upgrade"] != 0:
+                raise ValueError(f"{did} is an upgrade; benchmark against baseline data (upgrade 0)")
+            refs[meta["dataset"]] = self.reference_table(did)
+            attributions.append(meta["attribution"])
+        out = buildstock.benchmark(modeled, refs)
+        return {"stock_id": stock_id, "model_set_id": model_set_id, "results": str(res_dir),
+                "reference_datasets": list(dataset_ids), **out, "attribution": "; ".join(attributions)}
 
     # ------------------------------------------------------------------ #
     # Measured energy (validation)

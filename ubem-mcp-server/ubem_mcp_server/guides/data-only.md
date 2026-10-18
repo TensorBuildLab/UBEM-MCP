@@ -38,3 +38,14 @@ Report counts together with how complete the data are; a sum of floor area over 
 ## 5. Modeling later
 
 When the user wants simulations after all, `assign_archetypes(stock_id="inventory", new_stock_id="inventory_model", default_year=1960)` derives a modeling stock, then follow the guide `stock-to-district` from step 3.
+
+## 6. National reference data (ComStock and ResStock)
+
+When the user has no inventory, or wants context for one, NREL's ComStock (commercial) and ResStock (residential) samples describe every US county:
+
+1. `fetch_comstock_resstock(dataset="resstock", state="AZ", county="04019")` and `fetch_comstock_resstock(dataset="comstock", state="AZ", county="04019")`. The county is a 5-digit FIPS code (ComStock requires it).
+2. `query_comstock_resstock(dataset_id="resstock_az_g0400190_upgrade0", group_by=["building_type", "vintage"])` for weighted building counts, floor area, energy and EUI. Any characteristic works as a group, e.g. `group_by=["in.heating_fuel"]`.
+3. What an upgrade would save: fetch it (`upgrade=4`; the list is in `upgrades_available`), then `query_comstock_resstock(dataset_id="resstock_az_g0400190_upgrade4", baseline_dataset_id="resstock_az_g0400190_upgrade0", group_by=["building_type"])`.
+4. To check modeled results against them: `benchmark_with_comstock_resstock(stock_id="campus", model_set_id="baseline", dataset_ids=["comstock_az_g0400190_upgrade0", "resstock_az_g0400190_upgrade0"])`.
+
+Each sample stands for many real buildings (`weight`). Always give the number of samples with a weighted figure, and say when a group is flagged `few_samples`. Both datasets are models, not measurements. Credit them with the returned attribution (CC BY 4.0).

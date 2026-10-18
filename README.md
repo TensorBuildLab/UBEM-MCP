@@ -382,7 +382,7 @@ docker build \
 
 ## Available Tools
 
-The server provides **65 tools** organized into **14 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
+The server provides **68 tools** organized into **15 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
 
 **Responses.** The 23 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
 
@@ -394,6 +394,8 @@ The server provides **65 tools** organized into **14 categories**. It uses only 
 Responses are summaries kept under 20,000 characters (lists are paged with `limit`/`offset`, groups are capped), with full detail written to files. Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so a client can tell which tools only read, which discard work, and which reach the internet. The single-model tools carried over from EnergyPlus-MCP keep their original text responses.
 
 **Your models, not only ours.** Archetype models are a starting point. `set_building_models` puts the user's own EnergyPlus models (from OpenStudio, a consultant, a calibration study or another UBEM tool) in place of archetype models for chosen buildings, in a new model set. The files are copied unchanged except for the outputs district results need, and each addition is reported, together with any EnergyPlus version mismatch. Results, scenarios (which leave supplied models unchanged), provenance and project records all treat supplied models like the others.
+
+**National reference data, weighted honestly.** `fetch_comstock_resstock` downloads NREL's ComStock or ResStock annual results for a county from the Open Energy Data Initiative (no extra packages; a compact copy is kept). `query_comstock_resstock` answers weighted questions (building counts, floor area, energy and EUI by any characteristic, and an upgrade's savings over the baseline) and reports the number of samples behind every figure, flagging small groups. `benchmark_with_comstock_resstock` places the modeled EUI of each archetype within the distribution for the same building type and county. The data are CC BY 4.0 and the attribution comes with every answer.
 
 **Checked against measurements.** `load_measured_energy` reads utility bills, benchmarking disclosures (such as NYC Local Law 84 or Seattle's benchmarking data) or meter data, annual or monthly, in any common unit. Rows are matched to buildings by a shared identifier or by location, and a meter that covers several buildings is compared with their sum. Only the mapped columns are kept. `compare_to_measured` reports district totals, the spread of building-level errors, median error by archetype, the largest differences and ASHRAE Guideline 14 NMBE and CV(RMSE), together with caveats such as a weather-year mismatch.
 
@@ -434,6 +436,11 @@ Responses are summaries kept under 20,000 characters (lists are paged with `limi
 - `list_retrofit_measures` - List the available retrofit measures and their parameters
 - `simulate_retrofit_scenario` - Apply a scenario of measures to a simulated stock and simulate it
 - `compare_retrofit_scenario` - Compare a scenario with its baseline: savings by fuel, peaks, emissions, per building
+
+### 🇺🇸 ComStock / ResStock (3 tools) — new in UBEM-MCP
+- `fetch_comstock_resstock` - Download NREL ComStock or ResStock annual results for a county or state from OEDI
+- `query_comstock_resstock` - Weighted building counts, floor area, energy, EUI and upgrade savings, with sample counts
+- `benchmark_with_comstock_resstock` - Place modeled EUI by archetype within ComStock/ResStock for the same area
 
 ### 📏 Validation (2 tools) — new in UBEM-MCP
 - `load_measured_energy` - Load bills, benchmarking disclosures or meter data and match them to buildings by id or location

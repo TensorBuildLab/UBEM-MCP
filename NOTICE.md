@@ -37,6 +37,9 @@ See the header of each source file for a pointer back to this notice.
 - Data-only work on building stocks (`urban/query.py`, data mode in
   `urban/stock.py`) and the `query_stock`, `export_stock` and
   `assign_archetypes` tools.
+- ComStock/ResStock reference data (`urban/buildstock.py`) and the
+  `fetch_comstock_resstock` / `query_comstock_resstock` /
+  `benchmark_with_comstock_resstock` tools.
 - Measured energy and validation (`urban/measured.py`) and the
   `load_measured_energy` / `compare_to_measured` tools.
 - The Python library (`api.py`) and command line (`cli.py`, `__main__.py`).
