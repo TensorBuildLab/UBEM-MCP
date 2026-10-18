@@ -214,6 +214,10 @@ class BatchManager:
     def __init__(self, config: Config):
         self.config = config
         self._jobs: Dict[str, BatchJob] = {}
+        # Batches run one at a time, so the server never runs more than
+        # config.batch.max_workers EnergyPlus processes however many batches
+        # an agent submits. Created on first use, inside the event loop.
+        self._run_lock: Optional[asyncio.Lock] = None
 
     # ------------------------------------------------------------------ #
     # Submission
@@ -270,11 +274,14 @@ class BatchManager:
 
             model_specs.append(spec)
 
+        limit = self.config.batch.max_workers
+        if max_workers and max_workers > limit:
+            logger.info("Batch %s asked for %d workers; the server allows %d", batch_id, max_workers, limit)
         job = BatchJob(
             batch_id=batch_id,
             created_at=created_at,
             status="queued",
-            max_workers=max_workers or self.config.batch.max_workers,
+            max_workers=min(max_workers or limit, limit),
             continue_on_error=continue_on_error,
             output_directory=batch_root,
             models=model_specs,
@@ -286,6 +293,9 @@ class BatchManager:
             },
             metadata=dict(metadata or {}),
         )
+        if max_workers and max_workers > limit:
+            job.metadata["workers_capped"] = (f"asked for {max_workers} parallel simulations; the server allows "
+                                              f"{limit} (UBEM_BATCH_MAX_WORKERS)")
         self._jobs[batch_id] = job
         self._save_manifest(job)
 
@@ -314,7 +324,16 @@ class BatchManager:
     # ------------------------------------------------------------------ #
 
     async def _run_batch(self, batch_id: str) -> None:
-        job = self._jobs[batch_id]
+        if self._run_lock is None:
+            self._run_lock = asyncio.Lock()
+        async with self._run_lock:
+            job = self._jobs[batch_id]
+            if job.status in _TERMINAL_JOB_STATUSES:  # cancelled while it waited
+                return
+            await self._run_batch_now(job)
+
+    async def _run_batch_now(self, job: BatchJob) -> None:
+        batch_id = job.batch_id
         job.status = "running"
         self._save_manifest(job)
 
@@ -471,6 +490,12 @@ class BatchManager:
             "output_directory": job.output_directory,
             "metadata": job.metadata,
         }
+        if job.status == "queued":
+            ahead = sum(1 for j in self._jobs.values()
+                        if j.status in ("queued", "running") and j.created_at < job.created_at)
+            if ahead:
+                out["note"] = (f"waiting for {ahead} earlier batch(es); the server runs one batch at a time "
+                               f"so simulations do not compete for memory")
         progress = self._progress(job, counts)
         if progress:
             out["progress"] = progress

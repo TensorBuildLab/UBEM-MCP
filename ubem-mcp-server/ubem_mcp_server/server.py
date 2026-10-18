@@ -1579,7 +1579,7 @@ async def run_batch_simulation(
                 - A plain IDF path string: "sample_files/1ZoneUncontrolled.idf"
                 - A dict with overrides: {"idf_path": "...", "weather_file": "...", "label": "..."}
         weather_file: Default weather file for models that don't specify their own (optional)
-        max_workers: Max concurrent simulation processes (default: server config, usually CPU count)
+        max_workers: Max concurrent simulation processes (default and upper limit: the server setting). Batches run one at a time; a later batch waits in status 'queued'
         continue_on_error: If True (default), one model's failure doesn't stop the rest.
                            If False, remaining not-yet-finished models are cancelled on first failure.
         output_directory: Root directory for this batch's outputs (default: auto-generated under outputs/batches/)
@@ -2225,7 +2225,7 @@ async def simulate_building_stock(
         hvac: "template" (default) or "ideal"
         archetypes / vintages / building_ids: Only simulate these buildings
         max_buildings: Cap on the number of buildings (useful for a quick test)
-        max_workers: Parallel EnergyPlus processes (default: server setting)
+        max_workers: Parallel EnergyPlus processes (default and upper limit: the server setting; batches run one at a time)
         model_set_id: Name for the generated model set
 
     Returns:
@@ -2258,7 +2258,7 @@ async def simulate_model_set(stock_id: str, model_set_id: str, max_workers: Opti
     Args:
         stock_id: Stock the model set belongs to
         model_set_id: Model set to simulate
-        max_workers: Parallel EnergyPlus processes (default: server setting)
+        max_workers: Parallel EnergyPlus processes (default and upper limit: the server setting; batches run one at a time)
 
     Returns:
         JSON with the batch_id and next steps.
@@ -2400,7 +2400,7 @@ async def simulate_retrofit_scenario(
              "vintages": ["pre1980"],          # optional: buildings targeted
              "adoption_rate": 0.5, "seed": 1}  # optional: share of targeted buildings retrofitted
             Use list_retrofit_measures for measure types and parameters.
-        max_workers: Parallel EnergyPlus processes (default: server setting)
+        max_workers: Parallel EnergyPlus processes (default and upper limit: the server setting; batches run one at a time)
         model_set_id: Name for the scenario's model set (default: <baseline>__<scenario name>)
 
     Returns:

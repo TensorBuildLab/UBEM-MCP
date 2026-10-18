@@ -117,6 +117,41 @@ async def test_continue_on_error_false_stops_after_first_failure(tmp_path, monke
 
 
 @pytest.mark.asyncio
+async def test_batches_queue_and_workers_are_capped(tmp_path, monkeypatch):
+    """Two batches submitted together never run more simulations at once
+    than the server allows; a request for more workers is capped."""
+    import threading
+    import time
+
+    cfg = _make_config(tmp_path)  # max_workers = 2
+    lock, state = threading.Lock(), {"now": 0, "peak": 0}
+
+    def fake_worker(config, idf_path, weather_file, output_directory, sim_kwargs):
+        with lock:
+            state["now"] += 1
+            state["peak"] = max(state["peak"], state["now"])
+        time.sleep(0.05)
+        with lock:
+            state["now"] -= 1
+        return {"success": True, "input_idf": idf_path, "output_directory": output_directory}
+
+    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
+    monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
+    manager = bm.BatchManager(cfg)
+    idf = str(SAMPLE_DIR / "1ZoneUncontrolled.idf")
+    a = manager.submit_batch(models=[idf] * 4, max_workers=8)
+    b = manager.submit_batch(models=[idf] * 4)
+    assert a["max_workers"] == 2 and "workers_capped" in a["metadata"]
+    await asyncio.sleep(0.02)
+    assert manager.get_status(b["batch_id"])["status"] == "queued"
+    assert "one batch at a time" in manager.get_status(b["batch_id"])["note"]
+    await _wait_until_complete(manager, a["batch_id"], attempts=100)
+    status_b = await _wait_until_complete(manager, b["batch_id"], attempts=100)
+    assert status_b["status"] == "completed"
+    assert state["peak"] <= 2
+
+
+@pytest.mark.asyncio
 async def test_cancel_batch_before_start_cancels_all(tmp_path, monkeypatch):
     cfg = _make_config(tmp_path)
     monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
