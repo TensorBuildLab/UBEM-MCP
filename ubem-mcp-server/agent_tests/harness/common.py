@@ -257,7 +257,35 @@ def _c_answer_heat_pump_savings(out, ans):
     return ok, f"expected {e['savings_sfd']}% (all homes {e['savings_all']}%)"
 
 
+def _campus_expected():
+    return _json(ROOT / "fixtures" / "campus_section_4_1_expected.json")
+
+
+def _c_campus_reproduced(out, ans):
+    """The agent's comparison equals the published Section 4.1 run (to 0.1%)."""
+    c, e = comparison(out), _campus_expected()
+    if not c:
+        return False, "no comparison"
+    d = c["district"]
+    ok = all(abs(d[k] - e[k]) <= 0.001 * e[k] for k in ("baseline_kwh", "scenario_kwh"))
+    peaks = d["peak_kw"]["electricity"]
+    ok = ok and all(peaks[w]["hour_of_year"] == e["peak_electricity_kw"][w]["hour_of_year"]
+                    for w in ("baseline", "scenario"))
+    return ok, (f"baseline {d['baseline_kwh'] / 1e6:.3f} vs {e['baseline_kwh'] / 1e6:.3f} GWh, "
+                f"scenario {d['scenario_kwh'] / 1e6:.3f} vs {e['scenario_kwh'] / 1e6:.3f} GWh")
+
+
+def _c_answer_campus_numbers(out, ans):
+    e = _campus_expected()
+    wanted = {"baseline GWh": (e["baseline_kwh"] / 1e6, 0.02), "scenario GWh": (e["scenario_kwh"] / 1e6, 0.02),
+              "gas change %": (e["natural_gas_change_pct"], 0.02),
+              "scenario peak MW": (e["peak_electricity_kw"]["scenario"]["kw"] / 1e3, 0.03)}
+    missing = [k for k, (v, rel) in wanted.items() if not mentions(ans, v, rel=rel)]
+    return not missing, "missing: " + ", ".join(missing) if missing else "all stated"
+
+
 CHECKS: Dict[str, Callable[[Path, str], Any]] = {
+    "campus_reproduced": _c_campus_reproduced, "answer_campus_numbers": _c_answer_campus_numbers,
     "district_simulated": _c_district_simulated, "answer_district_total": _c_answer_district_total,
     "answer_peak_electricity": _c_answer_peak, "mentions_assumptions": _c_mentions_assumptions,
     "scenario_compared": _c_scenario_compared, "answer_scenario_savings": _c_answer_scenario_savings,

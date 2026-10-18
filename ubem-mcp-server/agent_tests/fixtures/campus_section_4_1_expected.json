@@ -1,0 +1,27 @@
+{
+ "about": "Paper Section 4.1 results (scripts/run_case_study.py, 2026-10-17), the reference the S41_campus task must reproduce.",
+ "baseline_kwh": 36488973.0,
+ "scenario_kwh": 28916027.45,
+ "savings_pct": 20.75406602975644,
+ "electricity_change_pct": -7.563621376394465,
+ "natural_gas_change_pct": -63.9876078094924,
+ "peak_electricity_kw": {
+  "baseline": {
+   "kw": 9003.331,
+   "hour_of_year": 4265,
+   "month": 6,
+   "day": 27,
+   "hour": 17
+  },
+  "scenario": {
+   "kw": 10835.901,
+   "hour_of_year": 871,
+   "month": 2,
+   "day": 6,
+   "hour": 7
+  }
+ },
+ "buildings": 106,
+ "weather": "TMYx.2011-2025",
+ "station": "USA_AZ_Tucson.722740"
+}

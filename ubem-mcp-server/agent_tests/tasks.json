@@ -4,37 +4,82 @@
     {
       "id": "U1_district",
       "use_case": "U1",
-      "files": ["campus_small.geojson"],
+      "files": [
+        "campus_small.geojson"
+      ],
       "prompt": "I have building footprints for part of the University of Arizona campus in Tucson in the file campus_small.geojson. Estimate the annual energy use of these buildings by simulation. Give me the district's total annual energy use in MWh, its peak electricity demand in kW, and the energy use intensity by building type, and tell me which inputs had to be assumed.",
-      "checks": ["district_simulated", "answer_district_total", "answer_peak_electricity", "mentions_assumptions"]
+      "checks": [
+        "district_simulated",
+        "answer_district_total",
+        "answer_peak_electricity",
+        "mentions_assumptions"
+      ]
     },
     {
       "id": "U2_retrofit",
       "use_case": "U2",
-      "files": ["campus_small.geojson"],
+      "files": [
+        "campus_small.geojson"
+      ],
       "prompt": "Using the building footprints in campus_small.geojson (University of Arizona campus, Tucson), simulate the current buildings and then a retrofit scenario in which every building gets LED lighting that cuts lighting energy by 40% and heat pumps (COP 3.3) replace gas heating. By how many percent does the district's total energy use change, and how much natural gas is saved?",
-      "checks": ["scenario_compared", "answer_scenario_savings"]
+      "checks": [
+        "scenario_compared",
+        "answer_scenario_savings"
+      ]
     },
     {
       "id": "U3_data",
       "use_case": "U3",
-      "files": ["parcels_inventory.geojson"],
+      "files": [
+        "parcels_inventory.geojson"
+      ],
       "prompt": "parcels_inventory.geojson is our building inventory. Without running any simulation, tell me how many structures there are by land use code and what share of them has a known year built, and export a CSV with the parcel numbers that I can open in GIS. Is there anything in the data I should be careful about sharing?",
-      "checks": ["no_simulation", "data_stock_complete", "export_with_parcel", "answer_structure_count", "answer_known_year_share", "mentions_personal_columns"]
+      "checks": [
+        "no_simulation",
+        "data_stock_complete",
+        "export_with_parcel",
+        "answer_structure_count",
+        "answer_known_year_share",
+        "mentions_personal_columns"
+      ]
     },
     {
       "id": "U4_validate",
       "use_case": "U4",
-      "files": ["campus_small.geojson", "bills_2023.csv"],
+      "files": [
+        "campus_small.geojson",
+        "bills_2023.csv"
+      ],
       "prompt": "campus_small.geojson has building footprints for part of the University of Arizona campus in Tucson, and bills_2023.csv has their metered energy use for 2023 (the OSM Id column identifies the building). Simulate these buildings and tell me how well the model matches the bills: the district-level difference in percent, and how far individual buildings are off.",
-      "checks": ["measured_compared", "answer_measured_district_error", "mentions_weather_year"]
+      "checks": [
+        "measured_compared",
+        "answer_measured_district_error",
+        "mentions_weather_year"
+      ]
     },
     {
       "id": "U3_resstock",
       "use_case": "U3",
       "files": [],
       "prompt": "Using NREL ResStock, how many single-family detached homes are there in Pima County, Arizona, what is their typical site energy use intensity, and how much site energy (in percent) would a cold-climate ducted air-source heat pump upgrade save for them?",
-      "checks": ["resstock_fetched", "answer_sfd_count", "answer_sfd_eui", "answer_heat_pump_savings"]
+      "checks": [
+        "resstock_fetched",
+        "answer_sfd_count",
+        "answer_sfd_eui",
+        "answer_heat_pump_savings"
+      ]
+    },
+    {
+      "id": "S41_campus",
+      "use_case": "U1+U2 (paper Section 4.1)",
+      "files": [
+        "campus.geojson"
+      ],
+      "prompt": "campus.geojson has OpenStreetMap footprints for the University of Arizona main campus and the adjacent housing in Tucson. Treat buildings with no year built as built in 1960. Simulate their current annual energy use, then an electrification scenario: heat pumps for space heating (COP 3.3), heat-pump water heaters (COP 3.0) in the single-family houses, and lighting power cut by 40%. Give the district's site energy, electricity and natural gas in GWh per year before and after, the percent change of each, and the electric peak in MW with its date and hour before and after.",
+      "checks": [
+        "campus_reproduced",
+        "answer_campus_numbers"
+      ]
     }
   ]
 }
