@@ -2440,6 +2440,89 @@ async def compare_retrofit_scenario(
 
 
 # ============================================================================
+# Measured energy and validation — new in UBEM-MCP
+# ============================================================================
+
+@ubem_tool()
+async def load_measured_energy(
+    stock_id: str,
+    csv_path: str,
+    columns: Dict[str, str],
+    units: Optional[Dict[str, str]] = None,
+    id_column: Optional[str] = None,
+    match_field: Optional[str] = None,
+    lat_column: Optional[str] = None,
+    lon_column: Optional[str] = None,
+    month_column: Optional[str] = None,
+    year: Optional[int] = None,
+    measured_id: Optional[str] = None,
+    license: Optional[str] = None,
+    attribution: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Load measured energy use (bills, benchmarking disclosures, meters) and match it to buildings
+
+    Reads a CSV with one row per meter or property, annual or monthly (with
+    month_column). Rows are matched to buildings by an identifier shared with
+    the stock (id_column in the table, match_field in the stock, e.g. a parcel
+    or property id) and/or by location (lat_column, lon_column: the building
+    containing or within 10 m of the point). A row that covers several
+    buildings is later compared with the sum of their models. Only the mapped
+    columns are read; other columns (names, addresses) are never stored.
+
+    Args:
+        stock_id: Stock the data describe
+        csv_path: CSV file
+        columns: Quantity -> column name. Quantities: electricity, natural_gas,
+                 district_heating, district_cooling, total, floor_area, e.g.
+                 {"electricity": "Electricity Use - Grid Purchase (kWh)",
+                  "natural_gas": "Natural Gas Use (therms)", "floor_area": "Property GFA (ft2)"}
+        units: Quantity -> unit, when the column name does not say it: kWh, MWh,
+               kBtu, MMBtu, therm, MJ, GJ; m2, ft2
+        id_column: Table column with the identifier
+        match_field: Stock attribute holding the same identifier (default building_id)
+        lat_column / lon_column: Table columns with each property's location
+        month_column: Column with the month (1-12, "2023-07" or "Jul") for monthly data
+        year: Year the data are from
+        measured_id: Name for this dataset (default measured_<year>)
+        license / attribution: Terms and credit of the data source
+
+    Returns:
+        JSON with how many rows matched buildings, meters covering several
+        buildings, unmatched examples and warnings.
+    """
+    return await asyncio.to_thread(
+        stock_manager.load_measured, stock_id, csv_path, columns, units=units, id_column=id_column,
+        match_field=match_field, lat_column=lat_column, lon_column=lon_column, month_column=month_column,
+        year=year, measured_id=measured_id, license=license, attribution=attribution)
+
+
+@ubem_tool(idempotent=True)
+async def compare_to_measured(stock_id: str, model_set_id: str, measured_id: str) -> Dict[str, Any]:
+    """
+    Compare simulated energy use with measured data, building by building and for the district
+
+    Needs a simulated model set and measured data from load_measured_energy.
+    Reports, for each quantity: district totals measured vs modeled; NMBE and
+    CV(RMSE) across meters (ASHRAE Guideline 14 formulas); the spread of
+    percent errors (median, share within 10/25/50%); median error by
+    archetype; the largest differences; EUI where floor areas are known; and,
+    for monthly data, Guideline 14 monthly NMBE and CV(RMSE) per meter. Also
+    lists caveats (weather year, floor area mismatch, meters not compared).
+
+    Args:
+        stock_id: Stock
+        model_set_id: Simulated model set to compare
+        measured_id: Measured dataset
+
+    Returns:
+        JSON summary with the statistics above and the paths of per-meter
+        tables (CSV and JSON).
+    """
+    return await asyncio.to_thread(stock_manager.compare_measured, stock_id, model_set_id, measured_id)
+
+
+# ============================================================================
 # Project records (reproducibility) — new in UBEM-MCP
 # ============================================================================
 
