@@ -417,13 +417,14 @@ class StockManager:
         resolved = {bid: self._resolve_model(path) for bid, path in building_models.items()}
 
         ep_version = record._idd_header(self.config.energyplus.idd_path)["version"]
+        transition_dir = str(Path(self.config.energyplus.idd_path).parent / "PreProcess" / "IDFVersionUpdater")
         warnings: List[str] = []
         inputs = []
         supplied: Dict[str, Dict[str, Any]] = {}
         out_dir.mkdir(parents=True, exist_ok=True)
         for bid, src in resolved.items():
             dst = out_dir / f"{bid}.idf"
-            info = own_models.prepare_supplied_model(src, str(dst), ep_version)
+            info = own_models.prepare_supplied_model(src, str(dst), ep_version, transition_dir=transition_dir)
             warnings += info["warnings"]
             entry = own_models.supplied_entry(stock.get(bid), str(dst), src, record.sha256_file(src), info, license)
             entry["idf_sha256"] = record.sha256_file(str(dst))
@@ -467,7 +468,7 @@ class StockManager:
                 "num_models": len(models), "num_supplied": manifest["num_supplied"],
                 "added_buildings": [m["building_id"] for m in added],
                 "supplied": [{"building_id": m["building_id"], "outputs_added": m["outputs_added"],
-                              "energyplus_version": m["energyplus_version"]}
+                              "energyplus_version": m["energyplus_version"], "upgraded": m.get("upgraded")}
                              for m in models if m.get("model_source") == "supplied"],
                 "attribution": manifest["attribution"], "warnings": warnings}
 

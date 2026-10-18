@@ -147,3 +147,36 @@ def _csv(path):
     import csv
     with open(path, newline="") as f:
         return list(csv.DictReader(f))
+
+
+def test_transition_chain_orders_steps_and_reports_gaps(tmp_path):
+    for name in ("Transition-V24-2-0-to-V25-1-0", "Transition-V25-1-0-to-V25-2-0", "Transition-V25-2-0-to-V26-1-0",
+                 "Rules25-1-0-to-25-2-0.md"):
+        (tmp_path / name).write_text("")
+    chain = own_models.transition_chain(str(tmp_path), "24.2", "26.1.0")
+    assert [p.name for p in chain] == ["Transition-V24-2-0-to-V25-1-0", "Transition-V25-1-0-to-V25-2-0",
+                                       "Transition-V25-2-0-to-V26-1-0"]
+    assert own_models.transition_chain(str(tmp_path), "26.1", "26.1") == []
+    with pytest.raises(ValueError, match="24.1"):
+        own_models.transition_chain(str(tmp_path), "24.1", "26.1")
+
+
+TRANSITIONS = Path(_cfg.energyplus.idd_path).parent / "PreProcess" / "IDFVersionUpdater"
+
+
+@pytest.mark.energyplus
+@pytest.mark.skipif(not TRANSITIONS.is_dir(), reason="EnergyPlus transition programs not installed")
+def test_older_model_is_upgraded_and_runs(tmp_path):
+    import subprocess
+
+    dst = tmp_path / "up.idf"
+    info = own_models.prepare_supplied_model(str(SAMPLE), str(dst), "26.1.0", transition_dir=str(TRANSITIONS))
+    assert info["upgraded"]["from"] == "25.1" and info["upgraded"]["to"] == "26.1"
+    assert info["upgraded"]["steps"] == ["Transition-V25-1-0-to-V26-1-0"] or len(info["upgraded"]["steps"]) == 2
+    text = dst.read_text()
+    assert "upgraded from EnergyPlus 25.1 to 26.1" in text.splitlines()[0]
+    assert own_models._VERSION.search(own_models._strip_comments(text))[1].startswith("26.1")
+    assert any("upgraded" in w for w in info["warnings"]) and not any("IDFVersionUpdater" in w for w in info["warnings"])
+    run = subprocess.run([_cfg.energyplus.executable_path, "-w", EPW, "-d", str(tmp_path / "run"), str(dst)],
+                         capture_output=True, text=True, timeout=600)
+    assert run.returncode == 0, run.stdout[-500:]
