@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, provenance, query, retrofit, weather
+from . import osm, provenance, query, record, retrofit, weather
 from .aggregate import aggregate, compare_results
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
@@ -53,8 +53,10 @@ class StockManager:
         stock = load_geojson(resolved, **kwargs)
         src = provenance.source_record(f"file:{Path(resolved).name}", Path(resolved).name, "footprints",
                                        license=license, attribution=attribution)
-        return self._register(stock, stock_id, extra_meta={"source_file": resolved, "loader_options": kwargs},
-                              sources=[src])
+        rec = record.recipe("load", {"path": resolved, "license": license, "attribution": attribution,
+                                     "loader_options": kwargs}, [record.input_entry("footprints", resolved)])
+        return self._register(stock, stock_id, extra_meta={"source_file": resolved, "loader_options": kwargs,
+                                                           "recipe": rec}, sources=[src])
 
     def fetch_osm(
         self,
@@ -73,13 +75,17 @@ class StockManager:
         bbox = osm.validate_bbox(bbox)
 
         stock_id = self._new_id(stock_id)
-        stock_dir = self.root / stock_id
-        stock_dir.mkdir(parents=True, exist_ok=True)
-
         query = osm.build_query(bbox)
         logger.info("Fetching OSM buildings for bbox=%s", bbox)
         raw = osm.fetch_overpass(query, url=overpass_url)
-        retrieved_at = datetime.now().isoformat()
+        return self._from_osm_raw(raw, stock_id, list(bbox), overpass_url, query, datetime.now().isoformat(), kwargs)
+
+    def _from_osm_raw(self, raw: Dict[str, Any], stock_id: str, bbox: List[float], overpass_url: str, query: str,
+                      retrieved_at: str, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """Register a stock from an Overpass response; the response is kept as
+        osm_raw.json so the stock can be rebuilt from exactly this snapshot."""
+        stock_dir = self.root / stock_id
+        stock_dir.mkdir(parents=True, exist_ok=True)
         with open(stock_dir / "osm_raw.json", "w", encoding="utf-8") as f:
             json.dump(raw, f)
         geojson = osm.overpass_to_geojson(raw)
@@ -97,6 +103,9 @@ class StockManager:
                 "num_features": len(geojson["features"]),
             },
             "loader_options": kwargs,
+            "recipe": record.recipe("fetch_osm", {"bbox": list(bbox), "overpass_url": overpass_url,
+                                                  "loader_options": kwargs},
+                                    [record.input_entry("OpenStreetMap snapshot", str(stock_dir / "osm_raw.json"))]),
         }
         src = provenance.osm_source(retrieved_at, meta["osm"]["osm_base_timestamp"])
         return self._register(stock, stock_id, extra_meta=meta, sources=[src])
@@ -123,6 +132,10 @@ class StockManager:
             "derived_from": stock_id,
             "enrichment": {"layer": resolved, "field_map": field_map, "options": kwargs, "report": report},
             "loader_options": loader_options,
+            "recipe": record.recipe("enrich", {"layer_path": resolved, "field_map": field_map, "options": kwargs,
+                                               "layer_license": layer_license,
+                                               "layer_attribution": layer_attribution},
+                                    [record.input_entry("attribute layer", resolved)], parent=stock_id),
         }
         layer_src = provenance.source_record(f"file:{Path(resolved).name}", Path(resolved).name, "attributes",
                                              license=layer_license, attribution=layer_attribution)
@@ -160,7 +173,9 @@ class StockManager:
         stock = stock_from_geojson(data, source=base.source, **opts)
         stock.personal_fields_removed = list(base.personal_fields_removed)
         new_id = self._new_id(new_stock_id)
-        meta = {"derived_from": stock_id, "derivation": "assign_archetypes", "loader_options": opts}
+        meta = {"derived_from": stock_id, "derivation": "assign_archetypes", "loader_options": opts,
+                "recipe": record.recipe("assign_archetypes",
+                                        {k: v for k, v in kwargs.items() if v is not None}, parent=stock_id)}
         return self._register(stock, new_id, extra_meta=meta,
                               sources=self.get_meta(stock_id).get("sources") or [])
 
@@ -249,6 +264,7 @@ class StockManager:
         info.update(weather.site_climate(files))
         info["warnings"] = warnings
         info["resolved_at"] = datetime.now().isoformat(timespec="seconds")
+        info["epw_sha256"] = record.sha256_file(info["epw"])
         if info["source"] == "climate.onebuilding.org":
             wsrc = provenance.weather_source(info.get("url"), info.get("dataset"))
         else:
@@ -299,6 +315,16 @@ class StockManager:
         manifest["stock_id"] = stock_id
         manifest["model_set_id"] = set_id
         manifest["climate"] = climate
+        hashes = {}
+        for m in manifest["models"]:
+            m["idf_sha256"] = hashes[m["building_id"]] = record.sha256_file(m["idf_path"])
+        manifest["models_sha256"] = record.combined_hash(hashes)
+        manifest["software"] = self.software_versions()
+        manifest["recipe"] = record.recipe(
+            "generate_models",
+            {"climate_zone": manifest["climate_zone"], "weather_file": epw, "hvac": hvac,
+             "building_ids": [b.building_id for b in selected]},
+            [record.input_entry("weather", epw)] if epw else [])
         sources = provenance.merge_sources(self.get_meta(stock_id).get("sources") or [],
                                            provenance.ARCHETYPE_SOURCES)
         self._update_meta(stock_id, {"sources": sources})
@@ -333,8 +359,10 @@ class StockManager:
         set_id = model_set_id or f"{baseline_model_set_id}__{spec['name']}"
 
         def extra(manifest):
+            rec = record.recipe("generate_scenario", {"baseline_model_set_id": baseline_model_set_id,
+                                                      "scenario": spec}, manifest["recipe"]["inputs"])
             return {"scenario": spec, "baseline_model_set_id": baseline_model_set_id,
-                    "adoption": retrofit.summarize_adoption(manifest["models"], targeted)}
+                    "adoption": retrofit.summarize_adoption(manifest["models"], targeted), "recipe": rec}
 
         return self.generate_models(
             stock_id, climate_zone=base["climate_zone"], weather_file=base.get("weather_file"),
@@ -436,6 +464,168 @@ class StockManager:
             raise KeyError(f"Unknown model set {model_set_id!r} for stock {stock_id!r}")
         with open(path, encoding="utf-8") as f:
             return json.load(f)
+
+    # ------------------------------------------------------------------ #
+    # Project records (reproducibility)
+    # ------------------------------------------------------------------ #
+
+    def software_versions(self) -> Dict[str, Any]:
+        return record.software_versions(self.config.energyplus.idd_path, self.config.energyplus.executable_path)
+
+    def lineage(self, stock_id: str) -> List[str]:
+        """Stock ids from the original stock to `stock_id`."""
+        chain = [stock_id]
+        while True:
+            parent = self.get_meta(chain[-1]).get("derived_from")
+            if not parent or parent in chain:
+                break
+            chain.append(parent)
+        return chain[::-1]
+
+    def model_set_ids(self, stock_id: str) -> List[str]:
+        root = self.stock_dir(stock_id) / "models"
+        return sorted(p.parent.name for p in root.glob("*/manifest.json")) if root.is_dir() else []
+
+    def project_record(self, stock_id: str) -> Dict[str, Any]:
+        """Write <stock_directory>/project_record.json: the steps, inputs (with
+        hashes), weather, model sets, results and software behind a stock."""
+        self.get(stock_id)
+        steps = []
+        for sid in self.lineage(stock_id):
+            meta = self.get_meta(sid)
+            weather_info = meta.get("weather")
+            steps.append({
+                "stock_id": sid, "created_at": meta.get("created_at"),
+                "recipe": meta.get("recipe"),
+                "num_buildings": (meta.get("summary") or {}).get("num_buildings"),
+                "mode": (meta.get("summary") or {}).get("mode"),
+                "weather": None if not weather_info else {
+                    "epw": weather_info.get("epw"), "epw_sha256": weather_info.get("epw_sha256"),
+                    "source": weather_info.get("source"), "dataset": weather_info.get("dataset"),
+                    "url": weather_info.get("url")},
+            })
+        model_sets = []
+        for set_id in self.model_set_ids(stock_id):
+            m = self.model_manifest(stock_id, set_id)
+            res_root = self.stock_dir(stock_id) / "models" / set_id / "results"
+            results = [record.results_entry(p.parent) for p in sorted(res_root.glob("*/summary.json"))] \
+                if res_root.is_dir() else []
+            model_sets.append({
+                "model_set_id": set_id, "created_at": m.get("created_at"), "recipe": m.get("recipe"),
+                "num_models": m.get("num_models"), "num_failed": m.get("num_failed"),
+                "models_sha256": m.get("models_sha256"),
+                "idf_sha256": {e["building_id"]: e.get("idf_sha256") for e in m["models"]},
+                "software": m.get("software"), "results": results,
+            })
+        sources = self.get_meta(stock_id).get("sources") or []
+        rec = {
+            "record_version": record.RECORD_VERSION, "created_at": record.now(), "stock_id": stock_id,
+            "software": self.software_versions(), "steps": steps, "model_sets": model_sets,
+            "sources": sources, "attribution": provenance.attribution_text(sources),
+        }
+        warnings = [f"stock {s['stock_id']!r} was created before project records; it cannot be rerun"
+                    for s in steps if not s["recipe"]]
+        warnings += [f"model set {m['model_set_id']!r} was created before project records; it cannot be rerun"
+                     for m in model_sets if not m["recipe"]]
+        rec["warnings"] = warnings
+        path = self.stock_dir(stock_id) / "project_record.json"
+        path.write_text(json.dumps(rec, indent=1, default=str), encoding="utf-8")
+        return {"stock_id": stock_id, "record_path": str(path), "steps": [s["stock_id"] for s in steps],
+                "model_sets": [{"model_set_id": m["model_set_id"], "num_models": m["num_models"],
+                                "results": [r["results_id"] for r in m["results"]]} for m in model_sets],
+                "software": {k: rec["software"][k] for k in ("ubem_mcp", "python")} | {
+                    "energyplus": rec["software"]["energyplus"]["idd_version"],
+                    "archetype_library_sha256": rec["software"]["archetype_library"]["sha256"]},
+                "attribution": rec["attribution"], "warnings": warnings}
+
+    def rerun_record(self, record_path: str, id_suffix: str = "_rerun") -> Dict[str, Any]:
+        """Repeat the steps in a project record under new ids (old id +
+        id_suffix): rebuild every stock from the recorded input files, then
+        regenerate every model set and compare each model with its recorded
+        hash. Simulation is left to the caller."""
+        path = Path(record_path)
+        if path.is_dir():
+            path = path / "project_record.json"
+        if not path.is_file():
+            raise FileNotFoundError(f"No project record at {record_path!r}")
+        rec = json.loads(path.read_text(encoding="utf-8"))
+        if rec.get("record_version") != record.RECORD_VERSION:
+            raise ValueError(f"Unsupported project record version {rec.get('record_version')!r}")
+        warnings = record.compare_software(rec.get("software") or {}, self.software_versions())
+        new_ids: Dict[str, str] = {}
+
+        def check_inputs(rcp):
+            for inp in rcp.get("inputs") or []:
+                current = record.sha256_file(inp["path"]) if inp.get("path") else None
+                if current is None:
+                    raise FileNotFoundError(f"Recorded input {inp['role']} not found: {inp.get('path')}")
+                if inp.get("sha256") and current != inp["sha256"]:
+                    warnings.append(f"{inp['role']} {inp['path']} has changed since the record was made")
+
+        for step in rec["steps"]:
+            rcp = step.get("recipe")
+            if not rcp:
+                raise ValueError(f"Stock {step['stock_id']!r} has no recipe (made before project records)")
+            new_id = step["stock_id"] + id_suffix
+            check_inputs(rcp)
+            a, op = rcp["args"], rcp["op"]
+            if op == "load":
+                self.load_from_file(a["path"], new_id, license=a.get("license"), attribution=a.get("attribution"),
+                                    **(a.get("loader_options") or {}))
+            elif op == "fetch_osm":
+                raw = json.loads(Path(rcp["inputs"][0]["path"]).read_text(encoding="utf-8"))
+                old_osm = self.get_meta(step["stock_id"]).get("osm") or {}
+                self._new_id(new_id)
+                self._from_osm_raw(raw, new_id, a["bbox"], a["overpass_url"], old_osm.get("query", ""),
+                                   old_osm.get("retrieved_at") or record.now(), a.get("loader_options") or {})
+            elif op == "enrich":
+                self.enrich(new_ids[rcp["parent"]], a["layer_path"], a["field_map"], new_id,
+                            layer_license=a.get("layer_license"), layer_attribution=a.get("layer_attribution"),
+                            **(a.get("options") or {}))
+            elif op == "assign_archetypes":
+                self.assign_archetypes(new_ids[rcp["parent"]], new_id, **a)
+            else:
+                raise ValueError(f"Unknown recipe operation {op!r}")
+            new_ids[step["stock_id"]] = new_id
+            w = step.get("weather")
+            if w and w.get("epw"):
+                if w.get("epw_sha256") and record.sha256_file(w["epw"]) != w["epw_sha256"]:
+                    warnings.append(f"weather file {w['epw']} has changed since the record was made")
+                self.resolve_weather(new_id, weather_file=w["epw"])
+
+        leaf = new_ids[rec["stock_id"]]
+        sets = sorted(rec["model_sets"], key=lambda m: (m.get("recipe") or {}).get("op") == "generate_scenario")
+        regenerated = []
+        for ms in sets:
+            rcp = ms.get("recipe")
+            if not rcp:
+                warnings.append(f"model set {ms['model_set_id']!r} has no recipe and was skipped")
+                continue
+            check_inputs(rcp)
+            a = rcp["args"]
+            if rcp["op"] == "generate_scenario":
+                self.generate_scenario(leaf, a["baseline_model_set_id"], a["scenario"],
+                                       model_set_id=ms["model_set_id"])
+            else:
+                self.generate_models(leaf, a["climate_zone"], weather_file=a.get("weather_file"), hvac=a["hvac"],
+                                     building_ids=a["building_ids"], model_set_id=ms["model_set_id"])
+            new = self.model_manifest(leaf, ms["model_set_id"])
+            now_hashes = {e["building_id"]: e.get("idf_sha256") for e in new["models"]}
+            old_hashes = ms.get("idf_sha256") or {}
+            differ = sorted(b for b in old_hashes if now_hashes.get(b) != old_hashes[b])
+            regenerated.append({
+                "model_set_id": ms["model_set_id"], "num_models": new["num_models"],
+                "identical": len(old_hashes) - len(differ), "different": len(differ),
+                "different_buildings": differ[:20],
+                "models_identical": new.get("models_sha256") == ms.get("models_sha256"),
+                "recorded_results": [{"results_id": r["results_id"], "district": r.get("district")}
+                                     for r in ms.get("results") or []],
+            })
+            if differ:
+                warnings.append(f"model set {ms['model_set_id']!r}: {len(differ)} model(s) differ from the record")
+        return {"record_path": str(path), "stock_ids": new_ids, "stock_id": leaf, "model_sets": regenerated,
+                "reproduced": not warnings and all(m["models_identical"] for m in regenerated),
+                "warnings": warnings}
 
     # ------------------------------------------------------------------ #
     # Access
