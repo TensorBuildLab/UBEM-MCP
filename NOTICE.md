@@ -37,6 +37,7 @@ See the header of each source file for a pointer back to this notice.
 - Data-only work on building stocks (`urban/query.py`, data mode in
   `urban/stock.py`) and the `query_stock`, `export_stock` and
   `assign_archetypes` tools.
+- Batch failure diagnosis and progress (`utils/err_parser.py`, `batch_manager.py`).
 - Project records (`urban/record.py`, recipes in `urban/stock_manager.py`)
   and the `export_project_record` / `rerun_project_record` tools.
 - Data provenance and privacy (`urban/provenance.py`): data sources, licences

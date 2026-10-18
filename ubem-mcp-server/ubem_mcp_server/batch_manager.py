@@ -17,7 +17,10 @@ Design notes:
 import asyncio
 import json
 import logging
+import math
+import multiprocessing
 import os
+import sys
 import re
 import subprocess
 import uuid
@@ -29,12 +32,26 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from .config import Config
+from .utils.err_parser import group_failures, parse_err_file
 from .utils.path_utils import resolve_idf_path, resolve_weather_file_path, get_file_info
 
 logger = logging.getLogger(__name__)
 
 _TERMINAL_JOB_STATUSES = {"completed", "completed_with_errors", "failed", "cancelled"}
 _TERMINAL_MODEL_STATUSES = {"success", "failed", "cancelled"}
+
+
+_RealProcessPool = ProcessPoolExecutor
+
+
+def _make_executor(workers: int):
+    """Worker pool for EnergyPlus runs. Workers start with forkserver (Linux)
+    or spawn rather than fork: the server process runs threads, and forking a
+    threaded process can deadlock the child."""
+    if ProcessPoolExecutor is _RealProcessPool:
+        method = "forkserver" if sys.platform.startswith("linux") else "spawn"
+        return ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context(method))
+    return ProcessPoolExecutor(max_workers=workers)  # replaced in tests
 
 
 def _safe_name(name: str) -> str:
@@ -57,7 +74,7 @@ class ModelSpec:
     result: Optional[Dict[str, Any]] = None
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
-    duration_seconds: Optional[float] = None
+    duration_seconds: Optional[float] = None  # EnergyPlus run time, without time spent waiting in the queue
 
 
 @dataclass
@@ -149,15 +166,21 @@ def run_energyplus_cli(
         "weather_file": weather_file,
         "output_directory": output_directory,
         "simulation_duration": str(end - start),
+        "started_at": start.isoformat(),
+        "simulation_seconds": round((end - start).total_seconds(), 2),
         "simulation_options": {"annual": annual, "design_day": design_day, "readvars": readvars,
                                "expandobjects": expandobjects, "output_prefix": prefix, "output_suffix": "C"},
         "output_files": sorted(p.name for p in Path(output_directory).iterdir() if p.is_file()),
         "timestamp": end.isoformat(),
     }
+    err_file = Path(output_directory) / f"{prefix}.err"
+    err_summary = parse_err_file(str(err_file))
+    if err_summary is not None:
+        result["err_summary"] = err_summary
     if proc.returncode != 0:
-        err_file = Path(output_directory) / f"{prefix}.err"
         details = err_file.read_text(errors="replace") if err_file.exists() else proc.stderr
-        result["error"] = f"EnergyPlus exited with code {proc.returncode}"
+        first = next((m["message"] for m in (err_summary or {}).get("messages", [])), None)
+        result["error"] = f"EnergyPlus exited with code {proc.returncode}" + (f": {first}" if first else "")
         result["error_details"] = details[-4000:]
     return result
 
@@ -302,12 +325,19 @@ class BatchManager:
             return
 
         loop = asyncio.get_running_loop()
-        executor = ProcessPoolExecutor(max_workers=max(1, job.max_workers))
+        workers = max(1, job.max_workers)
+        executor = _make_executor(workers)
         futures: Dict[asyncio.Future, ModelSpec] = {}
+        in_flight: List[ModelSpec] = list(pending_specs)  # submission order = start order (FIFO pool)
+
+        def mark_running():
+            for spec in in_flight[:workers]:
+                if spec.status == "queued":
+                    spec.status = "running"
+                    spec.started_at = datetime.now().isoformat()
+
         try:
             for spec in pending_specs:
-                spec.status = "running"
-                spec.started_at = datetime.now().isoformat()
                 fut = loop.run_in_executor(
                     executor,
                     _run_single_model_worker,
@@ -318,6 +348,7 @@ class BatchManager:
                     job.sim_kwargs,
                 )
                 futures[fut] = spec
+            mark_running()
             self._save_manifest(job)
 
             remaining = set(futures.keys())
@@ -331,14 +362,16 @@ class BatchManager:
                     except Exception as e:  # noqa: BLE001
                         result = {"success": False, "error": str(e)}
                     spec.completed_at = datetime.now().isoformat()
-                    if spec.started_at:
+                    if result.get("started_at"):
+                        spec.started_at = result["started_at"]
+                    if result.get("simulation_seconds") is not None:
+                        spec.duration_seconds = result["simulation_seconds"]
+                    elif spec.started_at:
                         spec.duration_seconds = round(
-                            (
-                                datetime.fromisoformat(spec.completed_at)
-                                - datetime.fromisoformat(spec.started_at)
-                            ).total_seconds(),
-                            2,
-                        )
+                            (datetime.fromisoformat(spec.completed_at)
+                             - datetime.fromisoformat(spec.started_at)).total_seconds(), 2)
+                    if spec in in_flight:
+                        in_flight.remove(spec)
                     spec.result = result
                     if result.get("success"):
                         spec.status = "success"
@@ -348,6 +381,7 @@ class BatchManager:
                         if not job.continue_on_error:
                             stop_early = True
 
+                mark_running()
                 if (stop_early or job.cancel_requested) and remaining:
                     for fut in remaining:
                         fut.cancel()
@@ -425,7 +459,7 @@ class BatchManager:
 
     def _status_summary(self, job: BatchJob) -> Dict[str, Any]:
         counts = Counter(m.status for m in job.models)
-        return {
+        out = {
             "batch_id": job.batch_id,
             "status": job.status,
             "created_at": job.created_at,
@@ -437,6 +471,53 @@ class BatchManager:
             "output_directory": job.output_directory,
             "metadata": job.metadata,
         }
+        progress = self._progress(job, counts)
+        if progress:
+            out["progress"] = progress
+        diagnosis = self._diagnosis(job)
+        if diagnosis:
+            out["diagnosis"] = diagnosis
+        return out
+
+    @staticmethod
+    def _progress(job: BatchJob, counts: Counter) -> Optional[Dict[str, Any]]:
+        """Elapsed time and, once some models have finished, an estimate of
+        the time left from their mean EnergyPlus run time."""
+        starts = [m.started_at for m in job.models if m.started_at]
+        if not starts:
+            return None
+        done = [m for m in job.models if m.status in _TERMINAL_MODEL_STATUSES]
+        ends = [m.completed_at for m in done if m.completed_at]
+        last = max(ends) if job.status in _TERMINAL_JOB_STATUSES and ends else datetime.now().isoformat()
+        elapsed = (datetime.fromisoformat(last) - datetime.fromisoformat(min(starts))).total_seconds()
+        out: Dict[str, Any] = {"finished": len(done), "total": len(job.models), "elapsed_seconds": round(elapsed)}
+        times = [m.duration_seconds for m in done if m.status == "success" and m.duration_seconds]
+        if times:
+            mean = sum(times) / len(times)
+            out["mean_simulation_seconds"] = round(mean, 1)
+            left = counts.get("queued", 0) + counts.get("running", 0)
+            if left and job.status not in _TERMINAL_JOB_STATUSES:
+                out["estimated_remaining_seconds"] = round(math.ceil(left / max(1, job.max_workers)) * mean)
+        return out
+
+    @staticmethod
+    def _diagnosis(job: BatchJob) -> Optional[Dict[str, Any]]:
+        """Failures grouped by cause, with a suggested fix, and successful runs
+        that still reported severe errors."""
+        failed = [{"label": m.label, "error": m.error, "err_summary": (m.result or {}).get("err_summary")}
+                  for m in job.models if m.status == "failed"]
+        severe_ok = [m.label for m in job.models if m.status == "success"
+                     and ((m.result or {}).get("err_summary") or {}).get("severe")]
+        if not failed and not severe_ok:
+            return None
+        out: Dict[str, Any] = {}
+        if failed:
+            out["failure_causes"] = group_failures(failed)
+            out["next_step"] = ("read one failed model's error_details with get_batch_results(status='failed') "
+                                "and fix the cause shared by the largest group first")
+        if severe_ok:
+            out["completed_with_severe_errors"] = {"count": len(severe_ok), "examples": severe_ok[:5]}
+        return out
 
     # ------------------------------------------------------------------ #
     # Persistence
