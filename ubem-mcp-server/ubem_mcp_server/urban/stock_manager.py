@@ -17,8 +17,9 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, own_models, provenance, query, record, retrofit, weather
-from .aggregate import aggregate, compare_results
+from . import measured, osm, own_models, provenance, query, record, retrofit, weather
+from .aggregate import aggregate, compare_results, hourly_meters
+from .results import annual_end_uses, find_sql
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
 from .stock import BuildingStock, load_geojson, stock_from_geojson
@@ -569,6 +570,121 @@ class StockManager:
             return json.load(f)
 
     # ------------------------------------------------------------------ #
+    # Measured energy (validation)
+    # ------------------------------------------------------------------ #
+
+    def load_measured(self, stock_id: str, path: str, columns: Dict[str, str],
+                      units: Optional[Dict[str, str]] = None, id_column: Optional[str] = None,
+                      match_field: Optional[str] = None, lat_column: Optional[str] = None,
+                      lon_column: Optional[str] = None, month_column: Optional[str] = None,
+                      year: Optional[int] = None, measured_id: Optional[str] = None,
+                      license: Optional[str] = None, attribution: Optional[str] = None) -> Dict[str, Any]:
+        """Match a table of measured energy use to a stock's buildings and
+        save it under <stock_directory>/measured/<measured_id>/."""
+        stock = self.get(stock_id)
+        resolved = self._resolve_table(path)
+        rows = measured.read_table(resolved)
+        if not rows:
+            raise ValueError(f"{path} has no data rows")
+        data = measured.load_measured(stock, rows, columns, units=units, id_column=id_column,
+                                      match_field=match_field, lat_column=lat_column, lon_column=lon_column,
+                                      month_column=month_column)
+        mid = measured_id or (f"measured_{year}" if year else "measured")
+        self._check_id(mid)
+        out_dir = self.stock_dir(stock_id) / "measured" / mid
+        if (out_dir / "measured.json").exists():
+            raise ValueError(f"Measured data {mid!r} already exist for stock {stock_id!r}")
+        src = provenance.source_record(f"file:{Path(resolved).name}", Path(resolved).name, "measured energy",
+                                       license=license, attribution=attribution)
+        meta = {"measured_id": mid, "stock_id": stock_id, "year": year, "columns": columns, "units": units,
+                "id_column": id_column, "match_field": match_field, "lat_column": lat_column,
+                "lon_column": lon_column, "month_column": month_column, "created_at": record.now(),
+                "source": src, "attribution": provenance.attribution_text([src]),
+                "recipe": record.recipe("load_measured", {"path": resolved}, [record.input_entry("measured", resolved)]),
+                **data}
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "measured.json").write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
+        warnings = provenance.licence_warnings([src])
+        m = data["match"]
+        if m["rows_unmatched"]:
+            warnings.append(f"{m['rows_unmatched']} of {m['rows']} rows matched no building "
+                            f"(examples: {', '.join(m['unmatched_examples'][:5])})")
+        if m["groups_with_several_buildings"]:
+            warnings.append(f"{m['groups_with_several_buildings']} meter(s) cover several buildings and will be "
+                            f"compared with the sum of those buildings")
+        return {"stock_id": stock_id, "measured_id": mid, "measured_directory": str(out_dir), "year": year,
+                "quantities": data["quantities"], "monthly": data["monthly"], "match": m,
+                "attribution": meta["attribution"], "warnings": warnings}
+
+    def compare_measured(self, stock_id: str, model_set_id: str, measured_id: str, p: int = 1) -> Dict[str, Any]:
+        """Compare a simulated model set with measured energy use."""
+        self._check_id(measured_id)
+        path = self.stock_dir(stock_id) / "measured" / measured_id / "measured.json"
+        if not path.exists():
+            raise KeyError(f"No measured data {measured_id!r} for stock {stock_id!r}; use load_measured_energy")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        manifest = self.model_manifest(stock_id, model_set_id)
+        model_dir = self.stock_dir(stock_id) / "models" / model_set_id
+        wanted = sorted({b for g in data["groups"] for b in g["building_ids"]})
+        in_set = {m["building_id"] for m in manifest["models"]}
+        runs = scan_runs(model_dir / "runs", [b for b in wanted if b in in_set])
+        if not any(r["status"] == "success" for r in runs.values()):
+            raise KeyError(f"Model set {model_set_id!r} has no simulation results for the measured buildings; "
+                           f"simulate it first")
+        modeled: Dict[str, Dict[str, Any]] = {}
+        for bid, run in runs.items():
+            sql = find_sql(run["output_directory"]) if run["status"] == "success" else None
+            if not sql:
+                continue
+            annual = annual_end_uses(sql)
+            hourly = hourly_meters(sql)
+            modeled[bid] = {
+                "annual_kwh": {f: sum(u.values()) / 3.6 for f, u in annual["end_uses_mj"].items()},
+                "monthly_kwh": {f: measured.monthly_from_hourly(s) for f, s in hourly.items()},
+                "floor_area_m2": annual["total_area_m2"],
+            }
+        weather = manifest.get("weather_file")
+        note = None
+        if data.get("year"):
+            note = (f"the models use the weather file {Path(weather).name if weather else '(unknown)'}, the "
+                    f"measured data are from {data['year']}; part of any difference is weather")
+        archetypes = {m["building_id"]: m.get("archetype") for m in manifest["models"]}
+        result = measured.compare(data, modeled, archetypes, p=p, weather_note=note)
+        out_dir = path.parent / "comparison" / model_set_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        summary = {"stock_id": stock_id, "model_set_id": model_set_id, "measured_id": measured_id,
+                   "year": data.get("year"), "created_at": record.now(), **result["summary"],
+                   "attribution": data.get("attribution")}
+        (out_dir / "summary.json").write_text(json.dumps(summary, indent=1, default=str), encoding="utf-8")
+        (out_dir / "meters.json").write_text(json.dumps(result["rows"], indent=1, default=str), encoding="utf-8")
+        self._write_meter_csv(out_dir / "meters.csv", result["rows"])
+        summary["files"] = {"summary": str(out_dir / "summary.json"), "meters_csv": str(out_dir / "meters.csv"),
+                            "meters_json": str(out_dir / "meters.json")}
+        summary["skipped_examples"] = result["skipped"][:5]
+        return summary
+
+    @staticmethod
+    def _write_meter_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
+        import csv as _csv
+        keys = sorted({k for r in rows for k in r["measured_kwh"]})
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            w = _csv.writer(f)
+            w.writerow(["group_id", "building_ids", "archetypes"]
+                       + [f"{k}_{c}" for k in keys for c in ("measured_kwh", "modeled_kwh", "percent_error")]
+                       + ["floor_area_measured_m2", "floor_area_modeled_m2", "eui_measured", "eui_modeled"])
+            for r in rows:
+                eui = r.get("eui_kwh_m2") or {}
+                w.writerow([r["group_id"], " ".join(r["building_ids"]), " ".join(r["archetypes"])]
+                           + [r[c].get(k) for k in keys for c in ("measured_kwh", "modeled_kwh", "percent_error")]
+                           + [r["floor_area_m2"]["measured"], r["floor_area_m2"]["modeled"],
+                              eui.get("measured"), eui.get("modeled")])
+
+    def _resolve_table(self, path: str) -> str:
+        if os.path.isabs(path) and os.path.exists(path):
+            return path
+        return resolve_path(self.config, path, file_types=[".csv"], description="CSV table")
+
+    # ------------------------------------------------------------------ #
     # Project records (reproducibility)
     # ------------------------------------------------------------------ #
 
@@ -870,7 +986,8 @@ def scan_runs(runs_dir: Path, building_ids: Sequence[str]) -> Dict[str, Dict[str
         bid = d.name.split("_", 1)[1] if "_" in d.name else d.name
         if not d.is_dir() or bid not in wanted:
             continue
-        errs = list(d.glob("*.err"))
+        # EnergyPlus also writes <name>Sqlite.err; read the main .err file.
+        errs = sorted(e for e in d.glob("*.err") if not e.name.endswith("Sqlite.err"))
         text = errs[0].read_text(errors="replace") if errs else ""
         ok = "EnergyPlus Completed Successfully" in text and any(d.glob("*.sql"))
         out[bid] = {"status": "success" if ok else "failed", "output_directory": str(d),
