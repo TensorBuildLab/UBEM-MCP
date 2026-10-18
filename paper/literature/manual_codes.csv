@@ -1,0 +1,121 @@
+id,title,code
+https://openalex.org/W4200092820,Open-Source Tool for Transforming CityGML Levels of Detail,G
+https://openalex.org/W2756006468,Seasonal effects of input parameters in urban-scale building energy simulation,V
+https://openalex.org/W7213153530,Integrating Context-Dependent Occupant Behavior into Urban Building Energy Modeling: A Data-Driven Framework for High-Density Housing,O
+https://openalex.org/W4412642561,A bottom-up urban building energy model for evaluating thermal load electrification measures,G
+https://openalex.org/W2884968541,City-scale building energy assessment,S
+https://openalex.org/W4390167250,"The Synergistic Relationship between Urban Building Energy Performance, Microclimate, and Urban Elements",C
+https://openalex.org/W4366825773,"Uncertainty and sensitivity analysis of building-stock energy models: sampling procedure, stock size and Sobol’ convergence",V
+https://openalex.org/W2612160445,City Scale Modeling with OpenStudio,G
+https://openalex.org/W7147640530,GIS-AWBEM: GIS-based Automated White-Box Building Energy Modeling,G
+https://openalex.org/W4392628803,Characterizing the energy flexibility of districts using urban building energy modelling,L
+https://openalex.org/W4403404720,Building stock energy modeling to assess annual progress in stock energy efficiency and carbon emission reduction of commercial buildings,S
+https://openalex.org/W4385393944,District-level validation of a shoeboxing simplification algorithm to speed-up Urban Building Energy Modeling simulations,G
+https://openalex.org/W4224061634,Advancing urban building energy modelling through new model components and applications: A review,X
+https://openalex.org/W4404655324,Trends in energy performance certificate data: A comparative study of building stock characteristics,D
+https://openalex.org/W3208139608,Challenges and Lessons Learned in Applying Sensitivity Analysis to Building Stock Energy Models,V
+https://openalex.org/W4366824658,TOM.D: Taking advantage of microclimate data for urban building energy modeling,C
+https://openalex.org/W4403397086,UBEM calibration method by energy consumption disaggregation using a change-point model,V
+https://openalex.org/W4388327919,A Comparison of Different Deep Learning Model Architectures and Training Strategy for Urban Energy Modeling,D
+https://openalex.org/W7168377784,Structural constraints on building decarbonization in electricity-dominant cities,S
+https://openalex.org/W4391916359,EMPIRICAL VALIDATION OF UBEM: AN ASSESSMENT OF BIAS IN URBAN BUILDING ENERGY MODELING FOR CHICAGO,V
+https://openalex.org/W7197547123,Validation of a meso-scale Urban Building Energy Model of domestic heat demand in England and Scotland,M
+https://openalex.org/W4415053970,Harnessing machine learning for rapid and cost-efficient 3D geometry generation in neighborhood energy modeling,D
+https://openalex.org/W4416743017,Cost-effective decarbonization of multifamily buildings using UBEM,S
+https://openalex.org/W4213066117,Building Stock Energy Model: Towards a Stochastic Approach,D
+https://openalex.org/W4399439947,Modeling and mapping solar energy production with photovoltaic panels on Politecnico di Torino university campus,R
+https://openalex.org/W4312662902,A simplified urban building energy model to support early-stage energy plans,M
+https://openalex.org/W7161475185,Analysing green urban clusters through a multi-node dynamic model and a detailed user-driven approach,R
+https://openalex.org/W4311216223,Defining archetypes of mixed-use developments using Google Maps API data,D
+https://openalex.org/W7168721831,Automated Extraction of Window-to-Wall Ratio from Street View Imagery for Urban-Scale Energy Modeling: A Case Study of Vienna,D
+https://openalex.org/W4416704787,Data acquisition on building systems and operations in Urban Building Energy Modeling,D
+https://openalex.org/W2944056663,Data-driven building archetypes for urban building energy modelling,D
+https://openalex.org/W4392628751,Developing teaching in urban building energy modelling,X
+https://openalex.org/W4242716032,Automatic and Rapid Calibration of Urban Building Energy Models,V
+https://openalex.org/W4402461237,The Impact of Building Level of Detail Modelling Strategies: Insights into Building and Urban Energy Modelling,G
+https://openalex.org/W2967604920,"Energy performance analysis of mandatory design codes and voluntary green building programs under different climate change scenarios using urban building energy modeling tools : a case in Austin, Texas",S
+https://openalex.org/W4286384703,Compiling Open Datasets to Improve Urban Building Energy Models with Occupancy and Layout Data,D
+https://openalex.org/W4406265095,"Developing a Top-Down Statistical Urban Building Energy Model for Space Heating in Mendoza, Argentina",D
+https://openalex.org/W3213037972,Information modelling for urban building energy simulation—A taxonomic review,X
+https://openalex.org/W2902808127,Profiling Occupancy Patterns to Calibrate Urban Building Energy Models (UBEMs) Using Measured Data Clustering,V
+https://openalex.org/W4403837233,An Integrated Urban Building Energy Benchmarking Workflow to Support Urban Energy Evaluation: A Case Study of Sheffield UK,M
+https://openalex.org/W4392628668,Exploring the Potential of Digital Twins at the District Scale: a Framework for Investigation,V
+https://openalex.org/W4399749909,Integration of PV Systems in the Urban Environment—A Review,X
+https://openalex.org/W7171555342,"A dynamic stock-level life cycle assessment framework integrating material, energy, climate change scenarios, and grid decarbonization in urban commercial buildings",S
+https://openalex.org/W4285822503,An integrated approach to quantify the potential local climate mitigation of a district energy network compared to individual air conditioning systems.,R
+https://openalex.org/W4311961294,Planning Strategy for Urban Building Energy Conservation Supported by Agent-Based Modeling,P
+https://openalex.org/W4401459861,A Workflow Utilizing Pointclouds and Lod3 Geometry for Neighborhood-Level Building Performance Assessment,G
+https://openalex.org/W4412020969,LITHEUM. A web-based lighting and thermal urban model for city energy assessment,G
+https://openalex.org/W7125716472,Data for: Electrification and Renovation in EU Building Decarbonization: A Multi-Model Comparison,S
+https://openalex.org/W3199359376,Towards an automated generator of urban building energy loads from 3D building models,G
+https://openalex.org/W7222390812,"Kentsel Karbonsuzlaştırma Stratejileri: Mevcut Bir Yapı Stokunun Enerji, Ekonomi ve Çevresel Performansına İlişkin Bütünleşik Bir Değerlendirme",S
+https://openalex.org/W7213906278,Quantifying combined performance of stormwater mitigation and cooling energy savings for green roof deployment,S
+https://openalex.org/W4403394234,Going beyond Climate Neutral Cities: Evidence from a Positive Energy District in the Stuttgart Region,X
+https://openalex.org/W7126040556,Confronting Land Surface Temperature and Ground Station Data for Urban Heat Island Assessment and Urban Building Energy Modeling—A Case Study for Northern Italy,C
+https://openalex.org/W4295664456,"Matching energy targets, stakeholders’ needs and modelling choices in developing urban energy scenarios",S
+https://openalex.org/W7167844961,"From static archetypes toward dynamic, condition-aware archetypes in UBEM: an integrative review with an illustrative case demonstration",X
+https://openalex.org/W4403938959,Grey-Box Method for Urban Building Energy Modelling: Advancements and Potentials,X
+https://openalex.org/W4392633373,Supporting the EU mission “100 climate-neutral cities”: using urban building energy modeling for zero-emission building retrofit scenarios at district scale,S
+https://openalex.org/W3133556430,Urban building energy modeling (UBEM) tools: A state-of-the-art review of bottom-up physics-based approaches,X
+https://openalex.org/W4392782953,Predicting building energy consumption in urban neighborhoods using machine learning algorithms,D
+https://openalex.org/W4410065278,A fit-for-purpose framework for urban occupancy modeling: Theory and a case study,O
+https://openalex.org/W2922174705,"Urban-scale building energy consumption database: a case study for Wuhan, China",D
+https://openalex.org/W4403895818,Urban Building Energy Modeling: A Comparative Study of Process-Driven and Data-Driven Models,D
+https://openalex.org/W4413182122,Physics-Informed and Explainable Graph Neural Networks for Generalizable Urban Building Energy Modeling,D
+https://openalex.org/W4416705976,Validation of a meso-scale Urban Building Energy Model of domestic peak heating load and annual heat demand in England and Scotland,M
+https://openalex.org/W4206303803,On the accuracy of Urban Building Energy Modelling,X
+https://openalex.org/W4406143976,Predicting Energy and Emissions in Residential Building Stocks: National UBEM with Energy Performance Certificates and Artificial Intelligence,D
+https://openalex.org/W4416706022,Urban building energy modeling challenges: Evaluating zoning approaches and window impacts on energy consumption,G
+https://openalex.org/W7213589542,Profiling Occupancy Patterns in Community-Scale Residential Buildings Using Measured Energy Use Data Clustering,O
+https://openalex.org/W4414317464,A Lightweight Framework for Seamless Integration of Building Energy Simulations into Urban Digital Twins,G
+https://openalex.org/W4318822996,Census-based urban building energy modeling to evaluate the effectiveness of retrofit programs,S
+https://openalex.org/W4404471526,Urban building energy models: how can we improve the treatment of uncertainty for energy policy decision-making?,V
+https://openalex.org/W7214526078,A modular framework for quantifying the impact of multi-domain modelling assumptions on urban building energy demand,V
+https://openalex.org/W4405483222,Multi-objective optimal energy-efficient retrofit determination using hybrid urban building energy model: Considering uncertainties between models,S
+https://openalex.org/W4409190900,Assessing biogenic carbon storage at urban scale through urban building energy modelling,S
+https://openalex.org/W4391934367,Ranking building design and operation parameters for residential heating demand forecasting with machine learning,D
+https://openalex.org/W3036352163,"Quantifying the Building Energy Dynamics of Manhattan, New York City, Using an Urban Building Energy Model and Localized Weather Data",M
+https://openalex.org/W2609240086,Quantification and Modelling of the Dynamic Wake Effect for Floating Offshore Wind Turbines,off
+https://openalex.org/W3000682826,Spatial and Temporal Modeling of Urban Building Energy Consumption Using Machine Learning and Open Data,D
+https://openalex.org/W3213142887,A Parallel Computing Infrastructure for Building Energy Simulation,G
+https://openalex.org/W4402118655,Editorial: The role of sustainable development in addressing climate change,off
+https://openalex.org/W3087666401,Developing a common approach for classifying building stock energy models,X
+https://openalex.org/W7216266824,Machine Learning algorithms for Urban Building Energy Modeling,D
+https://openalex.org/W2790197011,Data-driven Urban Energy Simulation (DUE-S): Integrating machine learning into an urban building energy simulation workflow,D
+https://openalex.org/W7116890583,Digital Twins for Climate-Positive Cities: Integrating Local Climate Zones with Solar Energy Technologies and Nature-Based Solutions,R
+https://openalex.org/W4399077887,Surrogate modelling for urban building energy simulation based on the bidirectional long short-term memory model,G
+https://openalex.org/W2889778269,Energy demand models for buildings in a smart cities context,X
+https://openalex.org/W4416705923,A novel approach to generate occupancy schedules based on human mobility and lstm-gan model,O
+https://openalex.org/W4200218597,"Community cooling infrastructure from waste heat among diverse building types in Rourkela Steel Township, India",R
+https://openalex.org/W4413626737,Assessing the impact of building geometry detail levels on the accuracy of calibrated urban building energy models,V
+https://openalex.org/W4285822550,Lumped-capacitance models to evaluate the urban cooling energy consumptions: analysis on a case-study district in the University of Padua.,G
+https://openalex.org/W4416705956,Empowering urban building energy modeling with city information models: A critical review on the benefits and challenges,X
+https://openalex.org/W7162010110,"Green Infrastructure as a Strategy for Revitalizing Old Residential Neighborhoods: Evaluation of Carbon Footprint and Energy Performance - Case Study of Heliopolis, Cairo",S
+https://openalex.org/W7140359797,Couple simulation-based quantitative analysis of the impact of spatial form on building energy consumption in high-rise residential clusters: a case study in China’s HSCW region,P
+https://openalex.org/W3156883685,Use of Energy Performance Certificates data repositories in Urban Building Energy Models,D
+https://openalex.org/W7155208944,"A scalable, automatic, and evolutionary algorithm for calibrating urban building energy models",V
+https://openalex.org/W4294530381,Fast and Robust External Solar Shading Calculations using the Pixel Counting Algorithm with Transparency,G
+https://openalex.org/W4388747789,"Taxonomy, Semantic Data Schema, and Schema Alignment for Open Data in Urban Building Energy Modeling",D
+https://openalex.org/W3046701448,Automatic and Rapid Calibration of Urban Building Energy Models by Learning from Energy Performance Database,V
+https://openalex.org/W4391623406,Data Driven Urban Building Energy Modeling with Machine Learning in Satom CH,D
+https://openalex.org/W7160902949,Buildings.city: Scalable urban building energy modeling and carbon emissions mapping using open archetype templates,G
+https://openalex.org/W4410278188,Archetypes-based calibration for urban building energy modelling,V
+https://openalex.org/W4392628720,Stochastic-based occupant-centric building archetype modelling using plug loads,O
+https://openalex.org/W4409099052,"A review on building occupant behavior modeling: current status, rethink and perspective",X
+https://openalex.org/W4408029690,Geodata-based number of floor estimation for urban residential buildings as an input parameter for energy modelling,D
+https://openalex.org/W4381332797,"Substitution of heating systems in the Italian buildings panorama and potential for energy, environmental and economic efficiency improvement",S
+https://openalex.org/W4411085612,Adopting explainable-AI to investigate the impact of urban morphology design on energy and environmental performance in dry-arid climates,P
+https://openalex.org/W7131615065,Ageing in a warming world: Projecting heating and cooling demands for elderly housing in norway – A case study,C
+https://openalex.org/W3023632747,Using unsupervised learning to partition 3D city scenes for distributed building energy microsimulation,G
+https://openalex.org/W4410168028,Caracterización de la forma urbana para una aplicación interactiva de estimación de la demanda energética residencial,M
+https://openalex.org/W4312435633,Global sensitivity analysis for Building-Stock Energy Models: Application of three global approaches,V
+https://openalex.org/W4389223824,Building archetype characterization for mass-housing energy efficiency through a UBEM approach,G
+https://openalex.org/W7164005968,Improving urban building energy modeling (UBEM) accuracy through shape and energy use pattern calibration factors based on representative buildings,V
+https://openalex.org/W4294531518,City-Scale Building Retrofit Analysis: A Case Study using CityBES,S
+https://openalex.org/W7165121930,Scan2UBEM: An AI-driven End-to-End Pipeline Towards Automated Urban Building Energy Modeling from 3D Scans,G
+https://openalex.org/W4309726230,An equitable energy allowance for all: Pathways for a below 2 ° C-compliant global buildings sector,S
+https://openalex.org/W4413038550,Energy transition and equity: Quantifying pathways to building decarbonization based on notions of fairness,S
+https://openalex.org/W7151580975,Développements méthodologiques pour la validation des outils de simulation énergétique urbaine,V
+https://openalex.org/W4212916419,Evaluation of the impact of input uncertainty on urban building energy simulations using uncertainty and sensitivity analysis,V
+https://openalex.org/W7165840666,A national-scale dataset for neighbourhood-level urban building energy modelling for England and Wales,D
+https://openalex.org/W3123730913,Quality Control Methods for Advanced Metering Infrastructure Data,D

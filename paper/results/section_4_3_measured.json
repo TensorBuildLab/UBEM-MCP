@@ -1,0 +1,289 @@
+{
+ "site": {
+  "center": [
+   47.626,
+   -122.36
+  ],
+  "radius_m": 700,
+  "year": 2019,
+  "name": "Lower Queen Anne, Seattle"
+ },
+ "records": {
+  "total": 158,
+  "single_building": 155,
+  "with_steam": 6
+ },
+ "selection": {
+  "model_stock_buildings": 1271,
+  "with_record": 146,
+  "single_building_records_modeled": 144
+ },
+ "match": {
+  "method": "id",
+  "rows": 155,
+  "rows_matched": 142,
+  "rows_unmatched": 11,
+  "rows_without_data": 2,
+  "buildings_matched": 142,
+  "groups": 142,
+  "groups_with_several_buildings": 0,
+  "unmatched_examples": [
+   "70",
+   "110",
+   "112",
+   "490",
+   "597",
+   "21298",
+   "21432",
+   "23465",
+   "23508",
+   "26164"
+  ]
+ },
+ "compare_reported": {
+  "meters_compared": 141,
+  "meters_suspect": [
+   {
+    "group_id": "g0063",
+    "building_ids": [
+     "way_231753651"
+    ],
+    "reason": "measured EUI 1.0 kWh/m2 is outside 10-2000; probably a data error"
+   }
+  ],
+  "district": {
+   "electricity": {
+    "meters": 141,
+    "measured_kwh": 63989008,
+    "modeled_kwh": 70824437,
+    "percent_error": 10.7
+   },
+   "natural_gas": {
+    "meters": 93,
+    "measured_kwh": 34166841,
+    "modeled_kwh": 48635994,
+    "percent_error": 42.3
+   },
+   "total": {
+    "meters": 141,
+    "measured_kwh": 99584007,
+    "modeled_kwh": 140304082,
+    "percent_error": 40.9
+   }
+  },
+  "across_meters_guideline14": {
+   "electricity": {
+    "n": 141,
+    "nmbe_percent": -10.76,
+    "cvrmse_percent": 91.71
+   },
+   "natural_gas": {
+    "n": 93,
+    "nmbe_percent": -42.81,
+    "cvrmse_percent": 142.35
+   },
+   "total": {
+    "n": 141,
+    "nmbe_percent": -41.18,
+    "cvrmse_percent": 107.14
+   }
+  },
+  "percent_error_spread": {
+   "electricity": {
+    "n": 141,
+    "median_percent_error": 11.5,
+    "median_absolute_percent_error": 25.0,
+    "within_10_percent": 0.213,
+    "within_25_percent": 0.504,
+    "within_50_percent": 0.716
+   },
+   "natural_gas": {
+    "n": 93,
+    "median_percent_error": 72.6,
+    "median_absolute_percent_error": 85.3,
+    "within_10_percent": 0.065,
+    "within_25_percent": 0.226,
+    "within_50_percent": 0.43
+   },
+   "total": {
+    "n": 141,
+    "median_percent_error": 63.0,
+    "median_absolute_percent_error": 64.7,
+    "within_10_percent": 0.113,
+    "within_25_percent": 0.277,
+    "within_50_percent": 0.44
+   }
+  },
+  "by_archetype": {
+   "highrise_apartment": {
+    "meters": 2,
+    "median_percent_error": 258.1
+   },
+   "large_hotel": {
+    "meters": 2,
+    "median_percent_error": 101.1
+   },
+   "large_office": {
+    "meters": 3,
+    "median_percent_error": 100.1
+   },
+   "medium_office": {
+    "meters": 11,
+    "median_percent_error": 4.3
+   },
+   "midrise_apartment": {
+    "meters": 111,
+    "median_percent_error": 66.8
+   },
+   "primary_school": {
+    "meters": 1,
+    "median_percent_error": 272.9
+   },
+   "secondary_school": {
+    "meters": 5,
+    "median_percent_error": 84.0
+   },
+   "single_family": {
+    "meters": 3,
+    "median_percent_error": -5.0
+   },
+   "small_hotel": {
+    "meters": 2,
+    "median_percent_error": 35.4
+   },
+   "standalone_retail": {
+    "meters": 1,
+    "median_percent_error": 37.5
+   }
+  },
+  "caveats": [
+   "the models use the weather file USA_WA_Seattle.994014_TMYx.2011-2025.epw, the measured data are from 2019; part of any difference is weather",
+   "57 meter(s) have modeled floor area more than 25% from the measured floor area; compare their EUI rather than totals",
+   "1 meter(s) left out of the statistics because their measured EUI is implausible (g0063); check those records"
+  ]
+ },
+ "compare_weather_normalized": {
+  "meters_compared": 141,
+  "meters_suspect": [
+   {
+    "group_id": "g0063",
+    "building_ids": [
+     "way_231753651"
+    ],
+    "reason": "measured EUI 1.0 kWh/m2 is outside 10-2000; probably a data error"
+   }
+  ],
+  "district": {
+   "total": {
+    "meters": 141,
+    "measured_kwh": 100053918,
+    "modeled_kwh": 140304082,
+    "percent_error": 40.2
+   }
+  },
+  "across_meters_guideline14": {
+   "total": {
+    "n": 141,
+    "nmbe_percent": -40.52,
+    "cvrmse_percent": 106.46
+   }
+  },
+  "percent_error_spread": {
+   "total": {
+    "n": 141,
+    "median_percent_error": 61.5,
+    "median_absolute_percent_error": 65.8,
+    "within_10_percent": 0.106,
+    "within_25_percent": 0.277,
+    "within_50_percent": 0.454
+   }
+  },
+  "by_archetype": {
+   "highrise_apartment": {
+    "meters": 2,
+    "median_percent_error": 256.9
+   },
+   "large_hotel": {
+    "meters": 2,
+    "median_percent_error": 101.9
+   },
+   "large_office": {
+    "meters": 3,
+    "median_percent_error": 100.4
+   },
+   "medium_office": {
+    "meters": 11,
+    "median_percent_error": 4.1
+   },
+   "midrise_apartment": {
+    "meters": 111,
+    "median_percent_error": 66.5
+   },
+   "primary_school": {
+    "meters": 1,
+    "median_percent_error": 273.8
+   },
+   "secondary_school": {
+    "meters": 5,
+    "median_percent_error": 85.0
+   },
+   "single_family": {
+    "meters": 3,
+    "median_percent_error": -6.3
+   },
+   "small_hotel": {
+    "meters": 2,
+    "median_percent_error": 35.1
+   },
+   "standalone_retail": {
+    "meters": 1,
+    "median_percent_error": 38.7
+   }
+  },
+  "caveats": [
+   "the models use the weather file USA_WA_Seattle.994014_TMYx.2011-2025.epw, the measured data are from 2019; part of any difference is weather",
+   "57 meter(s) have modeled floor area more than 25% from the measured floor area; compare their EUI rather than totals",
+   "1 meter(s) left out of the statistics because their measured EUI is implausible (g0063); check those records"
+  ]
+ },
+ "eui": {
+  "all": {
+   "meters": 141,
+   "median_eui_measured": 116.8,
+   "median_eui_modeled": 175.8,
+   "median_area_ratio": 1.1
+  },
+  "midrise_apartment": {
+   "meters": 111,
+   "median_eui_measured": 101.1,
+   "median_eui_modeled": 175.9,
+   "median_area_ratio": 1.2
+  },
+  "medium_office": {
+   "meters": 11,
+   "median_eui_measured": 152.0,
+   "median_eui_modeled": 163.4,
+   "median_area_ratio": 1.1
+  }
+ },
+ "by_fuel_mix": {
+  "no_gas_meter": {
+   "meters": 48,
+   "median_percent_error_electricity": -10.1,
+   "median_percent_error_total": 113.0
+  },
+  "gas_meter": {
+   "meters": 93,
+   "median_percent_error_electricity": 25.0,
+   "median_percent_error_natural_gas": 72.6,
+   "median_percent_error_total": 43.6
+  }
+ },
+ "simulation": {
+  "models": 144,
+  "workers": 4,
+  "wall_clock_h": 2.8,
+  "note": "from first model file to last result file"
+ },
+ "nmbe_sign": "ASHRAE Guideline 14: sum(measured - modeled); negative means the models over-predict"
+}

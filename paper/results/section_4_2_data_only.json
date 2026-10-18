@@ -1,0 +1,152 @@
+{
+ "structures": 2978,
+ "osm_personal_columns_dropped": [
+  "contact:website",
+  "phone"
+ ],
+ "parcels": {
+  "features": 2576,
+  "fields": [
+   "PARCEL",
+   "PARCEL_USE"
+  ]
+ },
+ "parcel_match": {
+  "matched": 2961,
+  "unmatched": 17
+ },
+ "use_filled_from_parcels": 231,
+ "use_not_given_to_outbuildings": 524,
+ "known_share_before": {
+  "archetype": 0.726,
+  "use": 0.918,
+  "year_built": 0.0,
+  "num_floors": 0.073,
+  "height_m": 0.001
+ },
+ "known_share_after": {
+  "archetype": 0.803,
+  "use": 0.988,
+  "year_built": 0.0,
+  "num_floors": 0.073,
+  "height_m": 0.001
+ },
+ "floor_area_known_for": 218,
+ "by_use_after": {
+  "house": {
+   "count": 1859,
+   "footprint_m2": 321698.04
+  },
+  "garage": {
+   "count": 285,
+   "footprint_m2": 19164.13
+  },
+  "university": {
+   "count": 227,
+   "footprint_m2": 299486.1
+  },
+  "shed": {
+   "count": 199,
+   "footprint_m2": 7102.55
+  },
+  "apartments": {
+   "count": 80,
+   "footprint_m2": 48141.26
+  },
+  "unknown": {
+   "count": 36,
+   "footprint_m2": 10115.44
+  },
+  "office": {
+   "count": 26,
+   "footprint_m2": 16695.58
+  },
+  "shelter": {
+   "count": 26,
+   "footprint_m2": 243.84
+  },
+  "detached": {
+   "count": 23,
+   "footprint_m2": 6153.58
+  },
+  "roof": {
+   "count": 21,
+   "footprint_m2": 3286.93
+  },
+  "carport": {
+   "count": 20,
+   "footprint_m2": 3044.84
+  },
+  "terrace": {
+   "count": 20,
+   "footprint_m2": 4606.27
+  },
+  "community_centre": {
+   "count": 19,
+   "footprint_m2": 29530.14
+  },
+  "school": {
+   "count": 16,
+   "footprint_m2": 30773.51
+  },
+  "commercial": {
+   "count": 15,
+   "footprint_m2": 5622.94
+  }
+ },
+ "house_footprint_m2": {
+  "mean": 173.05,
+  "median": 156.05
+ },
+ "resstock_pima_sfd": {
+  "samples": 1103,
+  "dwellings": 280056,
+  "mean_floor_area_m2": 199.8,
+  "eui_kwh_m2_p25_p50_p75": [
+   82.0,
+   110.2,
+   147.2
+  ]
+ },
+ "resstock_pima_sfd_vintage_share": {
+  "2000s": 0.231,
+  "1990s": 0.176,
+  "1970s": 0.163,
+  "1980s": 0.121,
+  "1950s": 0.114,
+  "1960s": 0.083,
+  "2010s": 0.053,
+  "1940s": 0.033,
+  "<1940": 0.027
+ },
+ "comstock_pima": {
+  "samples": 19771,
+  "buildings": 10007
+ },
+ "warnings": [
+  "ODbL-licensed footprints are combined with parcels.geojson; a shared derived database must be released under the ODbL, so check that those terms allow it"
+ ],
+ "attribution": "\u00a9 OpenStreetMap contributors; Parcels: Pima County Information Technology Department - GIS",
+ "export": {
+  "rows": 2978,
+  "columns": [
+   "building_id",
+   "archetype",
+   "use",
+   "year_built",
+   "vintage",
+   "num_floors",
+   "height_m",
+   "footprint_area_m2",
+   "gross_floor_area_m2",
+   "PARCEL",
+   "PARCEL_USE"
+  ]
+ },
+ "timings_s": {
+  "fetch_osm_s": 30.4,
+  "fetch_parcels_s": 0.8,
+  "enrich_s": 2.9,
+  "fetch_reference_s": 0.0
+ }
+}

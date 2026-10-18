@@ -1,0 +1,278 @@
+{
+ "stock": {
+  "stock_id": "case_study",
+  "stock_directory": "outputs/case_study/stocks/case_study",
+  "source": "/workspace/ubem-mcp-server/outputs/case_study/campus_source.geojson",
+  "origin_lon_lat": [
+   -110.94588,
+   32.233871
+  ],
+  "num_buildings": 106,
+  "num_excluded": 10,
+  "excluded_by_reason": {
+   "unconditioned": 7,
+   "too_small": 3
+  },
+  "by_archetype": {
+   "single_family": 66,
+   "secondary_school": 31,
+   "full_service_restaurant": 3,
+   "quick_service_restaurant": 3,
+   "small_hotel": 1,
+   "medium_office": 1,
+   "small_office": 1
+  },
+  "by_vintage": {
+   "pre1980": 106
+  },
+  "total_footprint_area_m2": 102135.9,
+  "total_gross_floor_area_m2": 164694.7,
+  "inferred_share": {
+   "archetype": 0.358,
+   "height_m": 1.0,
+   "num_floors": 0.953,
+   "year_built": 1.0
+  },
+  "notes_by_type": {
+   "archetype defaulted to single_family": 38,
+   "use '\u2026' approximated as secondary_school": 31,
+   "dropped N interior ring(s)": 4,
+   "multipolygon: kept largest of N parts": 1
+  },
+  "extent": {
+   "width_m": 710.8,
+   "depth_m": 682.2
+  }
+ },
+ "weather": {
+  "stock_id": "case_study",
+  "site": {
+   "latitude": 32.23387050704527,
+   "longitude": -110.9458804102713
+  },
+  "source": "climate.onebuilding.org",
+  "station": {
+   "station": "USA_AZ_Tucson.722740",
+   "name": "Tucson",
+   "country": "USA",
+   "state": "AZ",
+   "wmo": "722740",
+   "latitude": 32.228,
+   "longitude": -110.956,
+   "elevation_m": 776.9,
+   "distance_km": 1.2,
+   "datasets": [
+    "TMYx.2004-2018",
+    "TMYx.2007-2021",
+    "TMYx.2009-2023",
+    "TMYx.2011-2025",
+    "TMYx"
+   ],
+   "default_dataset": "TMYx.2011-2025"
+  },
+  "dataset": "TMYx.2011-2025",
+  "url": "https://climate.onebuilding.org/WMO_Region_4_North_and_Central_America/USA_United_States_of_America/AZ_Arizona/USA_AZ_Tucson.722740_TMYx.2011-2025.zip",
+  "epw": "outputs/case_study/weather/files/USA_AZ_Tucson.722740_TMYx.2011-2025/USA_AZ_Tucson.722740_TMYx.2011-2025.epw",
+  "stat": "outputs/case_study/weather/files/USA_AZ_Tucson.722740_TMYx.2011-2025/USA_AZ_Tucson.722740_TMYx.2011-2025.stat",
+  "ddy": "outputs/case_study/weather/files/USA_AZ_Tucson.722740_TMYx.2011-2025/USA_AZ_Tucson.722740_TMYx.2011-2025.ddy",
+  "distance_km": 1.2,
+  "ashrae_climate_zone": "2B",
+  "climate_zone_source": "stat file (ASHRAE Handbook design conditions)",
+  "library_climate_zone": "2B",
+  "notes": [],
+  "warnings": [],
+  "resolved_at": "2026-10-17T20:34:40"
+ },
+ "scenario": {
+  "name": "electrify",
+  "measures": [
+   {
+    "type": "heat_pump",
+    "heating_cop": 3.3
+   },
+   {
+    "type": "heat_pump_water_heater",
+    "cop": 3.0,
+    "archetypes": [
+     "single_family"
+    ]
+   },
+   {
+    "type": "lighting",
+    "reduction": 0.4
+   }
+  ]
+ },
+ "timings_s": {
+  "intake_and_weather_s": 18.3,
+  "baseline_modelgen_s": 3.4,
+  "baseline_simulate_aggregate_s": 908.2,
+  "scenario_modelgen_s": 3.0,
+  "scenario_simulate_aggregate_s": 1171.1
+ },
+ "comparison": {
+  "created_at": "2026-10-17T21:09:26",
+  "scenario": {
+   "name": "electrify",
+   "measures": [
+    {
+     "type": "heat_pump",
+     "heating_cop": 3.3
+    },
+    {
+     "type": "heat_pump_water_heater",
+     "cop": 3.0,
+     "archetypes": [
+      "single_family"
+     ]
+    },
+    {
+     "type": "lighting",
+     "reduction": 0.4
+    }
+   ],
+   "adoption_rate": 1.0,
+   "seed": 0
+  },
+  "baseline_model_set_id": "baseline",
+  "scenario_model_set_id": "baseline__electrify",
+  "adoption": {
+   "buildings_targeted": 106,
+   "buildings_retrofitted": 106,
+   "measure_applications": {
+    "heat_pump": 106,
+    "lighting": 106,
+    "heat_pump_water_heater": 66
+   }
+  },
+  "results": {
+   "baseline": "outputs/case_study/stocks/case_study/models/baseline/results/latest",
+   "scenario": "outputs/case_study/stocks/case_study/models/baseline__electrify/results/latest"
+  },
+  "coverage": {
+   "buildings_compared": 106,
+   "buildings_retrofitted": 106,
+   "only_in_baseline": [],
+   "only_in_scenario": [],
+   "note": "savings cover buildings with results in both the baseline and the scenario"
+  },
+  "district": {
+   "baseline_kwh": 36488973.0,
+   "scenario_kwh": 28916027.45,
+   "savings_kwh": 7572945.55,
+   "savings_pct": 20.75406602975644,
+   "by_fuel": {
+    "electricity": {
+     "baseline_kwh": 27958810.4,
+     "scenario_kwh": 25844111.84,
+     "change_pct": -7.563621376394465
+    },
+    "natural_gas": {
+     "baseline_kwh": 8530162.6,
+     "scenario_kwh": 3071915.61,
+     "change_pct": -63.9876078094924
+    }
+   },
+   "peak_kw": {
+    "electricity": {
+     "baseline": {
+      "kw": 9003.331,
+      "hour_of_year": 4265,
+      "month": 6,
+      "day": 27,
+      "hour": 17
+     },
+     "scenario": {
+      "kw": 10835.901,
+      "hour_of_year": 871,
+      "month": 2,
+      "day": 6,
+      "hour": 7
+     },
+     "change_pct": 20.354355515753
+    },
+    "natural_gas": {
+     "baseline": {
+      "kw": 18184.488,
+      "hour_of_year": 871,
+      "month": 2,
+      "day": 6,
+      "hour": 7
+     },
+     "scenario": {
+      "kw": 901.391,
+      "hour_of_year": 204,
+      "month": 1,
+      "day": 9,
+      "hour": 12
+     },
+     "change_pct": -95.04307737451833
+    }
+   },
+   "savings_pct_retrofitted_buildings": 20.75406602975644
+  },
+  "by_archetype": {
+   "full_service_restaurant": {
+    "buildings": 3,
+    "retrofitted": 3,
+    "baseline_kwh": 1164097.44,
+    "scenario_kwh": 1078372.31,
+    "savings_pct": 7.364085432573401
+   },
+   "medium_office": {
+    "buildings": 1,
+    "retrofitted": 1,
+    "baseline_kwh": 3751024.75,
+    "scenario_kwh": 3139677.4,
+    "savings_pct": 16.298142260991483
+   },
+   "quick_service_restaurant": {
+    "buildings": 3,
+    "retrofitted": 3,
+    "baseline_kwh": 1350411.18,
+    "scenario_kwh": 1305205.03,
+    "savings_pct": 3.347584103976384
+   },
+   "secondary_school": {
+    "buildings": 31,
+    "retrofitted": 31,
+    "baseline_kwh": 21142331.889999997,
+    "scenario_kwh": 17017516.469999995,
+    "savings_pct": 19.509746803052398
+   },
+   "single_family": {
+    "buildings": 66,
+    "retrofitted": 66,
+    "baseline_kwh": 7415476.149999999,
+    "scenario_kwh": 4999330.069999998,
+    "savings_pct": 32.582480627356624
+   },
+   "small_hotel": {
+    "buildings": 1,
+    "retrofitted": 1,
+    "baseline_kwh": 1325634.36,
+    "scenario_kwh": 1101708.78,
+    "savings_pct": 16.891956542224815
+   },
+   "small_office": {
+    "buildings": 1,
+    "retrofitted": 1,
+    "baseline_kwh": 339997.23,
+    "scenario_kwh": 274217.39,
+    "savings_pct": 19.347169387232938
+   }
+  },
+  "retrofitted_buildings_with_increased_use": [],
+  "savings_distribution_pct": {
+   "min": 3.309049511815579,
+   "p25": 19.275853167569167,
+   "median": 33.31370871702947,
+   "p75": 36.37431168447419,
+   "max": 41.302536365400265
+  },
+  "files": {
+   "buildings_comparison_csv": "outputs/case_study/stocks/case_study/models/baseline__electrify/results/latest/comparison/buildings_comparison.csv",
+   "comparison_json": "outputs/case_study/stocks/case_study/models/baseline__electrify/results/latest/comparison/comparison.json"
+  }
+ }
+}
