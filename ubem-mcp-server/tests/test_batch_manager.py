@@ -8,6 +8,7 @@ cancellation, manifest persistence) can be verified quickly and deterministicall
 without an EnergyPlus install or pickling concerns.
 """
 import asyncio
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -161,3 +162,50 @@ async def test_unknown_batch_id_raises_keyerror(tmp_path):
     manager = bm.BatchManager(cfg)
     with pytest.raises(KeyError):
         manager.get_status("does-not-exist")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="uses a POSIX shell script as a fake EnergyPlus")
+@pytest.mark.parametrize("exit_code", [0, 1])
+def test_run_energyplus_cli_command_and_errors(tmp_path, exit_code):
+    fake = tmp_path / "energyplus"
+    fake.write_text(
+        "#!/bin/sh\n"
+        'echo "$@" > "$PWD/args.txt"\n'
+        'echo "** Severe  ** boom" > "$PWD/model.err"\n'
+        f"exit {exit_code}\n")
+    fake.chmod(0o755)
+    cfg = Config()
+    cfg.energyplus.executable_path = str(fake)
+    cfg.energyplus.idd_path = "/x/Energy+.idd"
+    out = tmp_path / "run"
+    res = bm.run_energyplus_cli(cfg, "/m/model.idf", "/w/site.epw", str(out), readvars=False)
+    args = (out / "args.txt").read_text().split()
+    assert args[-1] == "/m/model.idf"
+    for flag, value in (("--weather", "/w/site.epw"), ("--output-directory", str(out)),
+                        ("--output-prefix", "model"), ("--idd", "/x/Energy+.idd")):
+        assert args[args.index(flag) + 1] == value
+    assert "--annual" in args and "--expandobjects" in args and "--readvars" not in args
+    assert res["success"] is (exit_code == 0)
+    if exit_code:
+        assert "boom" in res["error_details"] and "code 1" in res["error"]
+    else:
+        assert "model.err" in res["output_files"]
+
+
+@pytest.mark.skipif(os.name == "nt", reason="uses a POSIX shell script as a fake EnergyPlus")
+def test_run_energyplus_cli_makes_relative_paths_absolute(tmp_path, monkeypatch):
+    # EnergyPlus runs inside the output directory, so relative paths would break.
+    fake = tmp_path / "energyplus"
+    fake.write_text('#!/bin/sh\necho "$@" > "$PWD/args.txt"\n')
+    fake.chmod(0o755)
+    cfg = Config()
+    cfg.energyplus.executable_path = str(fake)
+    cfg.energyplus.idd_path = None
+    monkeypatch.chdir(tmp_path)
+    res = bm.run_energyplus_cli(cfg, "m/model.idf", "w/site.epw", "runs/a", readvars=False)
+    out = tmp_path / "runs" / "a"
+    args = (out / "args.txt").read_text().split()
+    assert args[-1] == str(tmp_path / "m" / "model.idf")
+    assert args[args.index("--weather") + 1] == str(tmp_path / "w" / "site.epw")
+    assert args[args.index("--output-directory") + 1] == str(out)
+    assert res["output_directory"] == str(out)

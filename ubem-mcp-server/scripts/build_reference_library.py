@@ -33,6 +33,7 @@ import re
 import statistics
 import sys
 import urllib.request
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -86,6 +87,8 @@ ROLE_OVERRIDES = {
     "large_hotel": {
         "occupancy": "GuestRoom_Occ_Sch", "lighting": "GuestRoom_Ltg_Sch_Base", "equipment": "GuestRoom_Eqp_Sch",
         "heating_setpoint": "Guest_HTGSETP_SCH", "cooling_setpoint": "Guest_CLGSETP_SCH",
+        # Guest rooms, kitchen and laundry each have their own hot-water schedule.
+        "hot_water": "GuestRoom_SWH_Sch",
     },
     # Storage is 95% of the floor area (bulk 66% at 7.2 C heating, fine 29%
     # at 15.6/26.7 C); fine-storage setpoints sit between bulk and office.
@@ -296,7 +299,9 @@ def location_summary(ws):
         h = [x / 100 if x > 1.5 else x for x in heff[cz]]
         result[cz]["cooling_cop"] = round(statistics.mean(cop[cz]), 3) if cop[cz] else None
         result[cz]["heating_efficiency"] = round(statistics.mean(h), 3) if h else None
-        result[cz]["economizer"] = (max(set(econ[cz]), key=econ[cz].count) if econ[cz] else None)
+        # Most common across the building's systems; ties go to the first listed
+        # (Counter keeps insertion order), so rebuilds are reproducible.
+        result[cz]["economizer"] = Counter(econ[cz]).most_common(1)[0][0] if econ[cz] else None
         eui = result[cz].get("reference_eui_mj_m2", {})
         result[cz]["reference_eui_mj_m2_total"] = round(sum(sum(d.values()) for d in eui.values()), 2)
     return result
@@ -441,6 +446,10 @@ def build(cache_dir: Path) -> dict:
             f2f = (_typical_height(find(bs, "Form", "Floor to Floor Height"))
                    or _typical_height(find(bs, "Form", "Floor to Ceiling Height")))
             wwr, wwr_by_o = _wwr(bs)
+            loads = {k: (round(v, 5) if isinstance(v, float) else v)
+                     for k, v in zone_loads(wb["ZoneSummary"]).items()}
+            if loads["hot_water_l_h_m2"] > 0 and "hot_water" not in roles:
+                raise KeyError(f"{archetype} {vintage}: hot water use but no hot-water schedule")
             entry["vintages"][vintage] = {
                 "form": {
                     "floor_area_m2": _num(find(bs, "Form", "Total Floor Area")),
@@ -450,8 +459,7 @@ def build(cache_dir: Path) -> dict:
                     "window_to_wall_ratio": wwr,
                     "wwr_by_orientation": wwr_by_o,
                 },
-                "loads": {k: (round(v, 5) if isinstance(v, float) else v)
-                          for k, v in zone_loads(wb["ZoneSummary"]).items()},
+                "loads": loads,
                 "hvac": {
                     "system_type": g("HVAC/System Type", False),
                     "heating_type": g("HVAC/Heating Type", False),

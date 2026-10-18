@@ -13,9 +13,13 @@ from typing import Dict, List, Optional, Sequence
 
 
 class IDD:
-    def __init__(self, classes: Dict[str, List[str]], version: Optional[str]):
+    def __init__(self, classes: Dict[str, List[str]], version: Optional[str],
+                 min_fields: Optional[Dict[str, int]] = None,
+                 defaults: Optional[Dict[str, Dict[int, str]]] = None):
         self._classes = classes  # lower-case class name -> ordered field names
         self.version = version
+        self._min_fields = min_fields or {}  # lower-case class name -> \min-fields
+        self._defaults = defaults or {}  # lower-case class name -> {field index: \default}
 
     def fields(self, class_name: str) -> List[str]:
         try:
@@ -26,12 +30,21 @@ class IDD:
     def has(self, class_name: str) -> bool:
         return class_name.lower() in self._classes
 
+    def min_fields(self, class_name: str) -> int:
+        return self._min_fields.get(class_name.lower(), 0)
+
+    def default(self, class_name: str, index: int) -> Optional[str]:
+        return self._defaults.get(class_name.lower(), {}).get(index)
+
 
 @lru_cache(maxsize=4)
 def load_idd(path: str) -> IDD:
     classes: Dict[str, List[str]] = {}
+    min_fields: Dict[str, int] = {}
+    defaults: Dict[str, Dict[int, str]] = {}
     version = None
     current: Optional[List[str]] = None
+    key = ""
     with open(path, encoding="latin-1") as f:
         for line in f:
             if version is None and line.startswith("!IDD_Version"):
@@ -42,14 +55,23 @@ def load_idd(path: str) -> IDD:
             if not line[0].isspace() and not stripped.startswith("\\"):
                 # A class header such as "Zone," (or "Lead Input;" for empty classes).
                 name = stripped.rstrip(",;").strip()
-                current = classes.setdefault(name.lower(), [])
+                key = name.lower()
+                current = classes.setdefault(key, [])
                 continue
             if current is None:
                 continue
             m = re.search(r"\\field\s+(.*)$", stripped)
             if m:
                 current.append(m.group(1).strip())
-    return IDD(classes, version)
+                continue
+            m = re.match(r"\\min-fields\s+(\d+)", stripped)
+            if m:
+                min_fields[key] = int(m.group(1))
+                continue
+            m = re.match(r"\\default\s+(.*)$", stripped)
+            if m and current:
+                defaults.setdefault(key, {})[len(current) - 1] = m.group(1).strip()
+    return IDD(classes, version, min_fields, defaults)
 
 
 def _fmt(value) -> str:
@@ -88,6 +110,14 @@ class IDFWriter:
             values[idx] = _fmt(value)
             last = max(last, idx)
         values = values[: last + 1]
+        if class_name.lower().startswith("hvactemplate:"):
+            # ExpandObjects, unlike EnergyPlus, neither fills in IDD defaults nor
+            # accepts objects shorter than \min-fields, so write them out.
+            while len(values) < self.idd.min_fields(class_name):
+                values.append("")
+            for i, v in enumerate(values):
+                if v == "" and self.idd.default(class_name, i) is not None:
+                    values[i] = self.idd.default(class_name, i)
         if extensible:
             values += [_fmt(v) for v in extensible]
         self._raw(class_name, values, [names[i] if i < len(names) else "" for i in range(len(values))])

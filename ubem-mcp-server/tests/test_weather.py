@@ -164,7 +164,9 @@ def test_library_climate_zone_mapping():
     assert weather.library_climate_zone("7") == ("7", None)
     assert weather.library_climate_zone("8A") == ("8", None)
     zone, note = weather.library_climate_zone("0B")
-    assert zone == "1A" and "0B" in note
+    assert zone == "2B" and "0B" in note
+    assert weather.library_climate_zone("1B")[0] == "2B"  # Phoenix under ASHRAE 169-2021
+    assert weather.library_climate_zone("0A")[0] == "1A"
     assert weather.library_climate_zone("5C")[0] == "4C"
     with pytest.raises(ValueError):
         weather.library_climate_zone("9Q")

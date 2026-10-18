@@ -8,6 +8,7 @@ found, and can be selected or excluded explicitly with ``-m energyplus`` /
 """
 import asyncio
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -93,8 +94,7 @@ async def test_real_batch_runs_models_in_worker_processes(tmp_path):
 
 
 async def test_real_batch_leaves_no_temp_files_in_input_directory(tmp_path):
-    # eppy's IDF.run() writes a temporary copy next to the input IDF; with
-    # several workers sharing one input directory those copies must not leak.
+    # Several workers run the same input file; nothing may be written next to it.
     src = tmp_path / "inputs"
     src.mkdir()
     idf = src / "1ZoneUncontrolled.idf"
@@ -112,6 +112,33 @@ async def test_real_batch_leaves_no_temp_files_in_input_directory(tmp_path):
 
     assert status["counts"] == {"success": 3}
     assert sorted(p.name for p in src.iterdir()) == ["1ZoneUncontrolled.idf"]
+
+
+@pytest.mark.parametrize("archetype", ["large_office", "hospital", "small_hotel"])
+def test_central_plant_and_mixed_templates_expand_and_run(tmp_path, archetype):
+    """Central-plant archetypes (chiller, tower, boiler) must get through
+    ExpandObjects, which needs full-length HVACTemplate objects."""
+    from shapely.geometry import box
+
+    from ubem_mcp_server.batch_manager import run_energyplus_cli
+    from ubem_mcp_server.urban.idd import load_idd
+    from ubem_mcp_server.urban.library import resolve
+    from ubem_mcp_server.urban.modelgen import ModelBuilder, epw_location
+    from ubem_mcp_server.urban.stock import Building
+
+    cfg = _make_config(tmp_path)
+    b = Building("b", box(0, 0, 40, 25), archetype, 1990, "1980_2004", 3, 3.5, 10.5)
+    idf = tmp_path / f"{archetype}.idf"
+    text = ModelBuilder(load_idd(cfg.energyplus.idd_path), resolve(archetype, "1980_2004", "3C")).build(
+        b, [], epw_location(EPW))
+    # Sizing plus one week keeps the test short.
+    text = re.sub(r"12,(\s*!- End Month)", lambda m: "1," + m.group(1), text)
+    text = re.sub(r"31,(\s*!- End Day of Month)", lambda m: "7," + m.group(1), text)
+    idf.write_text(text)
+    res = run_energyplus_cli(cfg, str(idf), EPW, str(tmp_path / "run"), annual=False, readvars=False)
+    err = _err_summary(tmp_path / "run", archetype)
+    assert res["success"], err[-2000:]
+    assert "EnergyPlus Completed Successfully" in err and " 0 Severe Errors" in err
 
 
 async def test_stock_to_models_to_batch(tmp_path):

@@ -5,10 +5,9 @@ This module is new to UBEM-MCP (not part of EnergyPlus-MCP, which only runs
 one IDF at a time). See NOTICE.md for the relationship to EnergyPlus-MCP.
 
 Design notes:
-- eppy's IDF class holds module-level global state (IDF.setiddname), so
-  concurrent simulations cannot safely share a process via threads. Each
-  model in a batch runs in its own worker process (ProcessPoolExecutor),
-  which builds its own EnergyPlusManager and therefore its own eppy state.
+- Each model in a batch runs in its own worker process (ProcessPoolExecutor),
+  which calls the EnergyPlus command line directly rather than going through
+  eppy (see run_energyplus_cli).
 - A batch can take minutes to hours, which would exceed typical MCP client
   call timeouts if a single tool call blocked until every model finished.
   submit_batch() returns a batch_id immediately; the batch runs as a
@@ -20,6 +19,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import uuid
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
@@ -29,7 +29,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from .config import Config
-from .energyplus_tools import EnergyPlusManager
 from .utils.path_utils import resolve_idf_path, resolve_weather_file_path, get_file_info
 
 logger = logging.getLogger(__name__)
@@ -87,18 +86,13 @@ def _run_single_model_worker(
     """Entry point executed in a worker process. Must stay at module scope
     (not a method/lambda/closure) so ProcessPoolExecutor can pickle it.
 
-    Builds its own EnergyPlusManager so this process's eppy global IDD state
-    is independent of every other concurrently-running worker.
+    Runs the EnergyPlus command line directly. EnergyPlusManager.run_simulation
+    loads the model with eppy and writes it back out before running, which
+    for a typical generated building took about three times as long as the
+    simulation itself; a batch runs files that are already complete.
     """
     try:
-        manager = EnergyPlusManager(config)
-        raw = manager.run_simulation(
-            idf_path=idf_path,
-            weather_file=weather_file,
-            output_directory=output_directory,
-            **sim_kwargs,
-        )
-        return json.loads(raw)
+        return run_energyplus_cli(config, idf_path, weather_file, output_directory, **sim_kwargs)
     except Exception as e:  # noqa: BLE001 - worker boundary: always return a result, never raise
         return {
             "success": False,
@@ -107,6 +101,65 @@ def _run_single_model_worker(
             "output_directory": output_directory,
             "error": str(e),
         }
+
+
+def run_energyplus_cli(
+    config: Config,
+    idf_path: str,
+    weather_file: Optional[str],
+    output_directory: str,
+    annual: bool = True,
+    design_day: bool = False,
+    readvars: bool = True,
+    expandobjects: bool = True,
+) -> Dict[str, Any]:
+    """Run one model with the EnergyPlus command line, using the same options
+    and output naming as EnergyPlusManager.run_simulation."""
+    # EnergyPlus runs inside the output directory, so every path must be absolute.
+    output_directory = os.path.abspath(output_directory)
+    idf_path = os.path.abspath(idf_path)
+    weather_file = os.path.abspath(weather_file) if weather_file else None
+    os.makedirs(output_directory, exist_ok=True)
+    prefix = Path(idf_path).stem
+    exe = config.energyplus.executable_path or "energyplus"
+    cmd = [exe, "--output-directory", output_directory, "--output-prefix", prefix, "--output-suffix", "C"]
+    if config.energyplus.idd_path:
+        cmd += ["--idd", config.energyplus.idd_path]
+    if weather_file:
+        cmd += ["--weather", weather_file]
+    if annual:
+        cmd.append("--annual")
+    if design_day:
+        cmd.append("--design-day")
+    if readvars:
+        cmd.append("--readvars")
+    if expandobjects:
+        cmd.append("--expandobjects")
+    cmd.append(idf_path)
+
+    start = datetime.now()
+    # ExpandObjects writes its intermediate files to the working directory,
+    # so each run works in its own output directory.
+    proc = subprocess.run(cmd, cwd=output_directory, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                          text=True, errors="replace")
+    end = datetime.now()
+    result: Dict[str, Any] = {
+        "success": proc.returncode == 0,
+        "input_idf": idf_path,
+        "weather_file": weather_file,
+        "output_directory": output_directory,
+        "simulation_duration": str(end - start),
+        "simulation_options": {"annual": annual, "design_day": design_day, "readvars": readvars,
+                               "expandobjects": expandobjects, "output_prefix": prefix, "output_suffix": "C"},
+        "output_files": sorted(p.name for p in Path(output_directory).iterdir() if p.is_file()),
+        "timestamp": end.isoformat(),
+    }
+    if proc.returncode != 0:
+        err_file = Path(output_directory) / f"{prefix}.err"
+        details = err_file.read_text(errors="replace") if err_file.exists() else proc.stderr
+        result["error"] = f"EnergyPlus exited with code {proc.returncode}"
+        result["error_details"] = details[-4000:]
+    return result
 
 
 def discover_idf_files(config: Config, directory: str, pattern: str = "*.idf") -> List[Dict[str, Any]]:
