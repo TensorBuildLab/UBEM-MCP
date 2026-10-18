@@ -31,6 +31,9 @@ See the header of each source file for a pointer back to this notice.
   `find_weather_stations` / `get_site_weather` tools.
 - Results aggregation (`urban/aggregate.py`) and the `aggregate_stock_results`
   tool.
+- Workflow guides, server instructions and reference resources
+  (`guides/`, `get_workflow_guide`, MCP prompts and `ubem://` resources), and
+  the structured response envelope and tool annotations in `server.py`.
 - Data-only work on building stocks (`urban/query.py`, data mode in
   `urban/stock.py`) and the `query_stock`, `export_stock` and
   `assign_archetypes` tools.
