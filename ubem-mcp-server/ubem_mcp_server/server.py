@@ -1497,6 +1497,25 @@ def ubem_tool(*, read_only: bool = False, destructive: bool = False, idempotent:
     return decorate
 
 
+def _submit_model_set(stock_id: str, model_set_id: str, max_workers: Optional[int] = None,
+                      metadata: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """Run every model of a model set as one background batch, linked to the
+    stock and model set so aggregate_stock_results can find it."""
+    manifest = stock_manager.model_manifest(stock_id, model_set_id)
+    models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
+    if not models:
+        return None
+    if not manifest.get("weather_file"):
+        raise ValueError(f"Model set {model_set_id!r} has no weather file. Give weather_file when generating, "
+                         f"or call get_site_weather first.")
+    model_dir = stock_manager.stock_dir(stock_id) / "models" / model_set_id
+    return batch_manager.submit_batch(
+        models=models, weather_file=manifest["weather_file"], max_workers=max_workers,
+        output_directory=str(model_dir / "runs"),
+        metadata={"stock_id": stock_id, "model_set_id": model_set_id, **(metadata or {})},
+    )
+
+
 def _batch_next_steps(batch_id: str) -> List[str]:
     return [f"poll get_batch_status(batch_id={batch_id!r}) every minute or two until is_complete is true",
             f"then aggregate_stock_results(batch_id={batch_id!r})"]
@@ -2198,16 +2217,75 @@ async def simulate_building_stock(
     if not gen["weather_file"]:
         raise ValueError("No weather file. Give weather_file, call get_site_weather, or omit climate_zone "
                          "to resolve both from the nearest station.")
-    manifest = stock_manager.model_manifest(stock_id, gen["model_set_id"])
-    models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
-    if not models:
+    batch = _submit_model_set(stock_id, gen["model_set_id"], max_workers)
+    if batch is None:
         return {"batch": None, "models": gen, "warnings": ["no models were generated; see models.failures"]}
-    batch = batch_manager.submit_batch(
-        models=models, weather_file=gen["weather_file"], max_workers=max_workers,
-        output_directory=str(Path(gen["model_directory"]) / "runs"),
-        metadata={"stock_id": stock_id, "model_set_id": gen["model_set_id"]},
-    )
     return {"batch": batch, "models": gen, "next_steps": _batch_next_steps(batch["batch_id"])}
+
+
+@ubem_tool()
+async def simulate_model_set(stock_id: str, model_set_id: str, max_workers: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Simulate an existing model set as a background batch
+
+    Use for a model set that was generated without simulating, one that
+    includes your own models (set_building_models), or one regenerated from
+    a project record. Results go to the model set's runs/ folder, so
+    aggregate_stock_results(batch_id=...) works when the batch completes.
+
+    Args:
+        stock_id: Stock the model set belongs to
+        model_set_id: Model set to simulate
+        max_workers: Parallel EnergyPlus processes (default: server setting)
+
+    Returns:
+        JSON with the batch_id and next steps.
+    """
+    batch = _submit_model_set(stock_id, model_set_id, max_workers)
+    if batch is None:
+        raise ValueError(f"Model set {model_set_id!r} has no models")
+    return {"batch": batch, "next_steps": _batch_next_steps(batch["batch_id"])}
+
+
+@ubem_tool()
+async def set_building_models(
+    stock_id: str,
+    model_set_id: str,
+    building_models: Dict[str, str],
+    new_model_set_id: Optional[str] = None,
+    license: Optional[str] = None,
+    attribution: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Use your own EnergyPlus models for some buildings in a model set
+
+    Creates a new model set in which the given buildings use your models
+    (from OpenStudio, a consultant, a calibration study or another tool) and
+    every other building keeps its archetype model; the original set is not
+    changed. Your models are copied as they are; only the outputs district
+    aggregation needs (SQLite, annual summary, hourly electricity and gas
+    meters) are added if missing, and each addition is reported. Buildings
+    that were not in the set are added. The batch runs every model with the
+    model set's weather file. Retrofit scenarios generated from the new set
+    leave your models unchanged.
+
+    Args:
+        stock_id: Stock the model set belongs to
+        model_set_id: Model set to start from (not a retrofit scenario)
+        building_models: building_id -> path of an EnergyPlus .idf file,
+                         e.g. {"way_123": "models/library.idf"}
+        new_model_set_id: Name for the new set (default: <model_set_id>__own)
+        license: Licence of the supplied models, e.g. "CC-BY-4.0" or "proprietary"
+        attribution: Credit to show with results that use them
+
+    Returns:
+        JSON with the new model set, which buildings use supplied models, the
+        outputs added to each, and warnings (e.g. EnergyPlus version mismatch).
+    """
+    result = await asyncio.to_thread(stock_manager.set_building_models, stock_id, model_set_id, building_models,
+                                     new_model_set_id=new_model_set_id, license=license, attribution=attribution)
+    result["next_steps"] = [f"simulate_model_set(stock_id={stock_id!r}, model_set_id={result['model_set_id']!r})"]
+    return result
 
 
 @ubem_tool(idempotent=True)
@@ -2420,16 +2498,14 @@ async def rerun_project_record(
     if simulate:
         batches = []
         for ms in result["model_sets"]:
-            manifest = stock_manager.model_manifest(result["stock_id"], ms["model_set_id"])
-            models = [{"idf_path": m["idf_path"], "label": m["building_id"]} for m in manifest["models"]]
-            if not models or not manifest.get("weather_file"):
-                result["warnings"].append(f"model set {ms['model_set_id']!r} was not simulated (no models or weather)")
+            try:
+                batch = _submit_model_set(result["stock_id"], ms["model_set_id"], max_workers)
+            except ValueError as e:
+                batch = None
+                result["warnings"].append(str(e))
+            if batch is None:
+                result["warnings"].append(f"model set {ms['model_set_id']!r} was not simulated")
                 continue
-            batch = batch_manager.submit_batch(
-                models=models, weather_file=manifest["weather_file"], max_workers=max_workers,
-                output_directory=str(Path(manifest["models"][0]["idf_path"]).parent / "runs"),
-                metadata={"stock_id": result["stock_id"], "model_set_id": ms["model_set_id"]},
-            )
             batches.append({"model_set_id": ms["model_set_id"], "batch_id": batch["batch_id"]})
         result["batches"] = batches
         result["next_steps"] = [s for b in batches for s in _batch_next_steps(b["batch_id"])]

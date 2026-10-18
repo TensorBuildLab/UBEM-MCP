@@ -111,7 +111,8 @@ def summarize_manifest(manifest: Dict[str, Any], output_dir: str) -> Dict[str, A
         "num_failed": manifest["num_failed"],
         "failures": manifest["failures"][:10],
         "by_hvac_system": dict(Counter(m["hvac_system"] for m in models)),
-        "by_zoning": dict(Counter(m["zoning"] for m in models)),
-        "total_zones": sum(m["zones"] for m in models),
-        "buildings_with_party_walls": sum(1 for m in models if m["party_walls"]),
+        "by_zoning": dict(Counter(m.get("zoning") or "supplied model" for m in models)),
+        "total_zones": sum(m.get("zones") or 0 for m in models),
+        "buildings_with_party_walls": sum(1 for m in models if m.get("party_walls")),
+        **({"num_supplied": n} if (n := sum(1 for m in models if m.get("model_source") == "supplied")) else {}),
     }

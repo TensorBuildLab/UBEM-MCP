@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import uuid
 from dataclasses import asdict
 from datetime import datetime
@@ -16,7 +17,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, provenance, query, record, retrofit, weather
+from . import osm, own_models, provenance, query, record, retrofit, weather
 from .aggregate import aggregate, compare_results
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
@@ -351,7 +352,11 @@ class StockManager:
         base = self.model_manifest(stock_id, baseline_model_set_id)
         if base.get("scenario"):
             raise ValueError(f"Model set {baseline_model_set_id!r} is itself a scenario; use its baseline")
-        ids = [m["building_id"] for m in base["models"]]
+        supplied = [m for m in base["models"] if m.get("model_source") == "supplied"]
+        ids = [m["building_id"] for m in base["models"] if m.get("model_source") != "supplied"]
+        if not ids:
+            raise ValueError("Every model in this set was supplied by the user; scenario measures can only be "
+                             "applied to archetype models")
         stock = self.get(stock_id)
         buildings = [b for b in stock.buildings if b.building_id in set(ids)]
         adopters, targeted = retrofit.adopting_buildings(spec, buildings)
@@ -361,8 +366,22 @@ class StockManager:
         def extra(manifest):
             rec = record.recipe("generate_scenario", {"baseline_model_set_id": baseline_model_set_id,
                                                       "scenario": spec}, manifest["recipe"]["inputs"])
-            return {"scenario": spec, "baseline_model_set_id": baseline_model_set_id,
-                    "adoption": retrofit.summarize_adoption(manifest["models"], targeted), "recipe": rec}
+            out = {"scenario": spec, "baseline_model_set_id": baseline_model_set_id,
+                   "adoption": retrofit.summarize_adoption(manifest["models"], targeted), "recipe": rec}
+            if supplied:
+                out_dir = Path(manifest["models"][0]["idf_path"]).parent
+                kept = []
+                for m in supplied:
+                    dst = out_dir / Path(m["idf_path"]).name
+                    shutil.copyfile(m["idf_path"], dst)
+                    kept.append({**m, "idf_path": str(dst), "retrofit": [],
+                                 "notes": m.get("notes", []) + ["supplied model: scenario measures not applied"]})
+                out["models"] = manifest["models"] + kept
+                out["num_models"] = len(out["models"])
+                out["adoption"]["supplied_models_unchanged"] = [m["building_id"] for m in supplied]
+                hashes = {m["building_id"]: m.get("idf_sha256") for m in out["models"]}
+                out["models_sha256"] = record.combined_hash(hashes)
+            return out
 
         return self.generate_models(
             stock_id, climate_zone=base["climate_zone"], weather_file=base.get("weather_file"),
@@ -370,6 +389,90 @@ class StockManager:
             param_hook=retrofit.scenario_hook(spec, adopters),
             extra_manifest=lambda m: {**extra(m), "climate": {**climate, "climate_zone": base["climate_zone"]}},
         )
+
+    def set_building_models(self, stock_id: str, model_set_id: str, building_models: Dict[str, str],
+                            new_model_set_id: Optional[str] = None, license: Optional[str] = None,
+                            attribution: Optional[str] = None) -> Dict[str, Any]:
+        """A new model set in which some buildings use the user's own
+        EnergyPlus models instead of archetype models. `building_models` maps
+        building_id -> IDF path. The other buildings' models are copied, so
+        the original model set stays as it was."""
+        if not building_models:
+            raise ValueError("building_models is empty; give {building_id: path to an .idf file}")
+        base = self.model_manifest(stock_id, model_set_id)
+        if base.get("scenario"):
+            raise ValueError(f"Model set {model_set_id!r} is a retrofit scenario; supply models to its baseline "
+                             f"{base['baseline_model_set_id']!r} and generate the scenario again")
+        stock = self.get(stock_id)
+        unknown = [b for b in building_models if b not in {x.building_id for x in stock.buildings}]
+        if unknown:
+            raise KeyError(f"Unknown building_id(s) in stock {stock_id!r}: {unknown[:10]}")
+        new_id = new_model_set_id or f"{model_set_id}__own"
+        self._check_id(new_id)
+        out_dir = self.stock_dir(stock_id) / "models" / new_id
+        if (out_dir / "manifest.json").exists():
+            raise ValueError(f"Model set {new_id!r} already exists for stock {stock_id!r}")
+        resolved = {bid: self._resolve_model(path) for bid, path in building_models.items()}
+
+        ep_version = record._idd_header(self.config.energyplus.idd_path)["version"]
+        warnings: List[str] = []
+        inputs = []
+        supplied: Dict[str, Dict[str, Any]] = {}
+        out_dir.mkdir(parents=True, exist_ok=True)
+        for bid, src in resolved.items():
+            dst = out_dir / f"{bid}.idf"
+            info = own_models.prepare_supplied_model(src, str(dst), ep_version)
+            warnings += info["warnings"]
+            entry = own_models.supplied_entry(stock.get(bid), str(dst), src, record.sha256_file(src), info, license)
+            entry["idf_sha256"] = record.sha256_file(str(dst))
+            supplied[bid] = entry
+            inputs.append(record.input_entry(f"building model {bid}", src))
+
+        models = []
+        for m in base["models"]:
+            if m["building_id"] in supplied:
+                models.append(supplied.pop(m["building_id"]))
+                continue
+            dst = out_dir / Path(m["idf_path"]).name
+            shutil.copyfile(m["idf_path"], dst)
+            models.append({**m, "idf_path": str(dst)})
+        added = list(supplied.values())  # buildings that were not in the base set
+        models += added
+        failures = [f for f in base.get("failures", []) if f["building_id"] not in resolved]
+
+        src_records = [provenance.source_record(f"file:{Path(p).name}", Path(p).name, "building model",
+                                                license=license, attribution=attribution)
+                       for p in resolved.values()]
+        sources = provenance.merge_sources(base.get("sources") or self.get_meta(stock_id).get("sources") or [],
+                                           src_records)
+        hashes = {m["building_id"]: m.get("idf_sha256") for m in models}
+        manifest = {k: v for k, v in base.items() if k not in ("models", "failures", "recipe")}
+        manifest.update({
+            "created_at": datetime.now().isoformat(), "model_set_id": new_id, "based_on": model_set_id,
+            "models": models, "failures": failures, "num_models": len(models), "num_failed": len(failures),
+            "num_supplied": sum(1 for m in models if m.get("model_source") == "supplied"),
+            "models_sha256": record.combined_hash(hashes), "software": self.software_versions(),
+            "sources": sources, "attribution": provenance.attribution_text(sources),
+            "recipe": record.recipe("set_building_models",
+                                    {"base_model_set_id": model_set_id, "building_models": resolved,
+                                     "license": license, "attribution": attribution}, inputs),
+        })
+        with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=1, default=str)
+        warnings += provenance.licence_warnings(sources)
+        return {"stock_id": stock_id, "model_set_id": new_id, "based_on": model_set_id,
+                "model_directory": str(out_dir), "weather_file": manifest.get("weather_file"),
+                "num_models": len(models), "num_supplied": manifest["num_supplied"],
+                "added_buildings": [m["building_id"] for m in added],
+                "supplied": [{"building_id": m["building_id"], "outputs_added": m["outputs_added"],
+                              "energyplus_version": m["energyplus_version"]}
+                             for m in models if m.get("model_source") == "supplied"],
+                "attribution": manifest["attribution"], "warnings": warnings}
+
+    def _resolve_model(self, path: str) -> str:
+        if os.path.isabs(path) and os.path.exists(path):
+            return path
+        return resolve_path(self.config, path, file_types=[".idf"], description="EnergyPlus model")
 
     def compare_scenario(self, stock_id: str, scenario_model_set_id: str,
                          baseline_results_id: Optional[str] = None,
@@ -594,7 +697,8 @@ class StockManager:
                 self.resolve_weather(new_id, weather_file=w["epw"])
 
         leaf = new_ids[rec["stock_id"]]
-        sets = sorted(rec["model_sets"], key=lambda m: (m.get("recipe") or {}).get("op") == "generate_scenario")
+        order = {"generate_models": 0, "set_building_models": 1, "generate_scenario": 2}
+        sets = sorted(rec["model_sets"], key=lambda m: order.get((m.get("recipe") or {}).get("op"), 0))
         regenerated = []
         for ms in sets:
             rcp = ms.get("recipe")
@@ -603,7 +707,11 @@ class StockManager:
                 continue
             check_inputs(rcp)
             a = rcp["args"]
-            if rcp["op"] == "generate_scenario":
+            if rcp["op"] == "set_building_models":
+                self.set_building_models(leaf, a["base_model_set_id"], a["building_models"],
+                                         new_model_set_id=ms["model_set_id"], license=a.get("license"),
+                                         attribution=a.get("attribution"))
+            elif rcp["op"] == "generate_scenario":
                 self.generate_scenario(leaf, a["baseline_model_set_id"], a["scenario"],
                                        model_set_id=ms["model_set_id"])
             else:
