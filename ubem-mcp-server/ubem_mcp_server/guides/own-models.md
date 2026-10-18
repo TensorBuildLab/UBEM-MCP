@@ -10,7 +10,7 @@ Use this when the user already has EnergyPlus models (IDF files), for example fr
 
 1. Find the files: `discover_idf_files(directory="models/", pattern="*.idf")`.
 2. Start the batch: `run_batch_simulation(models=["models/a.idf", "models/b.idf"], weather_file="site.epw", max_workers=4)`. Each item can also be an object with its own `idf_path`, `weather_file` and `label`. The call returns at once with a `batch_id`.
-3. Poll `get_batch_status(batch_id="...")` every one to two minutes until `is_complete` is true.
+3. Wait with `get_batch_status(batch_id="...", wait_seconds=50)`, repeating until `is_complete` is true.
 4. Collect results page by page: `get_batch_results(batch_id="...", limit=50)`, and the failures with `get_batch_results(batch_id="...", status="failed")`.
 
 Models must be complete IDF files that EnergyPlus can run; HVACTemplate objects are expanded automatically. Use the single-model tools (`load_idf_model(idf_path="models/a.idf")`, `validate_idf(idf_path="models/a.idf")`) to check one model before running hundreds.
