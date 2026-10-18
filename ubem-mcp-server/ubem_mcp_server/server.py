@@ -1634,13 +1634,14 @@ async def load_building_stock(
     height_unit: str = "m",
     default_archetype: str = "single_family",
     default_year: int = 1980,
-    min_footprint_m2: float = 20.0,
+    min_footprint_m2: Optional[float] = None,
     license: Optional[str] = None,
     attribution: Optional[str] = None,
     keep_personal_fields: bool = False,
+    mode: str = "model",
 ) -> str:
     """
-    Load building footprints from a GeoJSON file as a building stock for urban modeling
+    Load building footprints (or any building inventory) from a GeoJSON file as a building stock
 
     Each footprint is projected to a local metric frame and given a normalized
     archetype, year built / vintage, floor count and height. Attribute columns are
@@ -1661,7 +1662,12 @@ async def load_building_stock(
         height_unit: "m" or "ft" for numeric heights without a unit
         default_archetype: Archetype for buildings with no recognizable use (see list_archetypes)
         default_year: Year built for buildings with no construction year
-        min_footprint_m2: Smaller footprints are excluded
+        min_footprint_m2: Smaller footprints are excluded (default 20 m2 in model mode, 0 in data mode)
+        mode: "model" (default) prepares buildings for simulation: unknown values are filled with
+              defaults (listed in inferred_fields) and sheds and tiny footprints are excluded.
+              "data" keeps the inventory as the data describe it: every structure, full geometry,
+              raw use, unknown values left empty. Use it for data work (query_stock, export_stock);
+              assign_archetypes derives a modeling stock from it later.
         license: Licence of the input data, e.g. "ODbL-1.0", "CC-BY-4.0" (recorded with the
                  stock and its results; a warning is returned while it is unknown)
         attribution: Credit line the data's licence requires, e.g. "City of Tucson Open Data"
@@ -1681,6 +1687,7 @@ async def load_building_stock(
             default_archetype=default_archetype, default_year=default_year,
             min_footprint_m2=min_footprint_m2,
             keep_personal_fields=keep_personal_fields or None,
+            mode=mode if mode != "model" else None,
         )
         result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, license=license,
                                               attribution=attribution, **opts)
@@ -1701,7 +1708,8 @@ async def fetch_osm_buildings(
     stock_id: Optional[str] = None,
     default_archetype: str = "single_family",
     default_year: int = 1980,
-    min_footprint_m2: float = 20.0,
+    min_footprint_m2: Optional[float] = None,
+    mode: str = "model",
 ) -> str:
     """
     Download building footprints from OpenStreetMap and load them as a building stock
@@ -1719,7 +1727,12 @@ async def fetch_osm_buildings(
         stock_id: Optional name for the stock
         default_archetype: Archetype for buildings tagged only building=yes (see list_archetypes)
         default_year: Year built when OSM has no start_date (most buildings)
-        min_footprint_m2: Smaller footprints are excluded
+        min_footprint_m2: Smaller footprints are excluded (default 20 m2 in model mode, 0 in data mode)
+        mode: "model" (default) prepares buildings for simulation: unknown values are filled with
+              defaults (listed in inferred_fields) and sheds and tiny footprints are excluded.
+              "data" keeps the inventory as the data describe it: every structure, full geometry,
+              raw use, unknown values left empty. Use it for data work (query_stock, export_stock);
+              assign_archetypes derives a modeling stock from it later.
 
     Returns:
         JSON summary of the stock, as for load_building_stock.
@@ -1727,7 +1740,7 @@ async def fetch_osm_buildings(
     try:
         opts = _stock_loader_options(
             default_archetype=default_archetype, default_year=default_year,
-            min_footprint_m2=min_footprint_m2,
+            min_footprint_m2=min_footprint_m2, mode=mode if mode != "model" else None,
         )
         result = await asyncio.to_thread(
             stock_manager.fetch_osm, bbox=bbox, center_lat=center_lat, center_lon=center_lon,
@@ -1849,6 +1862,133 @@ async def get_building_stock(
     except Exception as e:
         logger.error(f"Error reading building stock {stock_id}: {str(e)}")
         return f"Error reading building stock: {str(e)}"
+
+
+@mcp.tool()
+async def query_stock(
+    stock_id: str,
+    filters: Optional[Dict[str, Any]] = None,
+    group_by: Optional[List[str]] = None,
+    metrics: Optional[List[str]] = None,
+    max_groups: int = 20,
+    sample: int = 5,
+    offset: int = 0,
+    columns: Optional[List[str]] = None,
+) -> str:
+    """
+    Filter, group and summarize the buildings of a stock, with no model or simulation
+
+    Works on data-mode and model-mode stocks. Any attribute can be used: the
+    standard fields (archetype, use, year_built, vintage, num_floors, height_m,
+    footprint_area_m2, gross_floor_area_m2), `decade` (of year built), or any
+    column of the source data, such as a parcel's land-use code. Results are
+    summaries: counts, totals and the share of buildings whose attributes are
+    known (and, in model mode, guessed) per group, plus a few sample rows. Use
+    export_stock for the full table.
+
+    Args:
+        stock_id: Stock to query
+        filters: Attribute -> condition, all of which must hold. A condition is a value,
+                 a list of values (any of), {"min": x, "max": y} or {"is_null": true|false}.
+                 Example: {"archetype": "single_family", "year_built": {"max": 1979}}
+        group_by: Attributes to group by, e.g. ["vintage"] or ["use", "decade"]
+        metrics: "count" or "<sum|mean|median|min|max>:<attribute>";
+                 default ["sum:footprint_area_m2", "sum:gross_floor_area_m2", "median:year_built"]
+        max_groups: Largest groups to list (the rest are pooled under other_groups)
+        sample: Sample rows to return (up to 50); page with offset / next_offset
+        offset: First sample row to return
+        columns: Extra source-data columns to include in the sample rows
+
+    Returns:
+        JSON with the number of matching buildings, overall metrics and data completeness,
+        the groups (largest first), sample rows and next_offset when more rows exist.
+    """
+    try:
+        result = stock_manager.query_stock(stock_id, filters=filters, group_by=group_by, metrics=metrics,
+                                           max_groups=max_groups, sample=sample, offset=offset,
+                                           columns=columns)
+        return json.dumps(result, indent=2, default=str)
+    except (KeyError, ValueError) as e:
+        return f"Could not query building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error querying building stock {stock_id}: {str(e)}")
+        return f"Error querying building stock: {str(e)}"
+
+
+@mcp.tool()
+async def export_stock(
+    stock_id: str,
+    format: str = "csv",
+    filters: Optional[Dict[str, Any]] = None,
+    columns: Optional[List[str]] = None,
+    name: Optional[str] = None,
+) -> str:
+    """
+    Export a stock's buildings to a CSV or GeoJSON file, with its data sources and licences
+
+    CSV has one row per building with its centroid longitude and latitude;
+    GeoJSON keeps the full footprint geometry. Next to the file, a
+    <name>.metadata.json records the filters, the data sources, their licences
+    and the attribution to show wherever the data are used.
+
+    Args:
+        stock_id: Stock to export
+        format: "csv" or "geojson"
+        filters: Same conditions as query_stock, to export part of the stock
+        columns: Extra source-data columns to include, e.g. ["PARCEL", "LAND_USE"]
+        name: File name without extension (letters, digits, _ or -); default stock id + time
+
+    Returns:
+        JSON with the file path, row count, columns, metadata path, attribution and
+        licence warnings.
+    """
+    try:
+        result = stock_manager.export_stock(stock_id, fmt=format, filters=filters, columns=columns, name=name)
+        return json.dumps(result, indent=2)
+    except (KeyError, ValueError) as e:
+        return f"Could not export building stock: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error exporting building stock {stock_id}: {str(e)}")
+        return f"Error exporting building stock: {str(e)}"
+
+
+@mcp.tool()
+async def assign_archetypes(
+    stock_id: str,
+    new_stock_id: Optional[str] = None,
+    default_archetype: str = "single_family",
+    default_year: int = 1980,
+    min_footprint_m2: float = 20.0,
+) -> str:
+    """
+    Turn a data-mode stock into a modeling stock ready for generate_building_models
+
+    Classifies every building into a DOE archetype from its use, fills unknown
+    year built, floor count and height with defaults (each recorded in the
+    building's inferred_fields), and excludes unconditioned structures (sheds,
+    garages, parking) and footprints under min_footprint_m2. The result is a new
+    stock; the data-mode stock is unchanged.
+
+    Args:
+        stock_id: Data-mode stock (from load_building_stock or fetch_osm_buildings with mode="data")
+        new_stock_id: Optional name for the modeling stock
+        default_archetype: Archetype for buildings with no recognizable use (see list_archetypes)
+        default_year: Year built for buildings with no construction year
+        min_footprint_m2: Smaller footprints are excluded
+
+    Returns:
+        JSON summary of the new stock, as for load_building_stock.
+    """
+    try:
+        result = stock_manager.assign_archetypes(
+            stock_id, new_stock_id=new_stock_id, default_archetype=default_archetype,
+            default_year=default_year, min_footprint_m2=min_footprint_m2)
+        return f"Modeling stock created:\n{json.dumps(result, indent=2)}"
+    except (KeyError, ValueError) as e:
+        return f"Could not assign archetypes: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error assigning archetypes for {stock_id}: {str(e)}")
+        return f"Error assigning archetypes: {str(e)}"
 
 
 @mcp.tool()

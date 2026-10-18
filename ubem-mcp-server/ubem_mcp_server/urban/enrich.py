@@ -72,9 +72,11 @@ def enrich_stock(
                          overwrite, height_unit, unrecognized)
         filled.update(changed)
 
-    # Only the defaults carry over: column names and units described the
-    # original source, not the already-normalized properties being reloaded.
-    opts = {k: v for k, v in (loader_options or {}).items() if k in ("default_archetype", "default_year")}
+    # Only the defaults, the mode and the privacy choice carry over: column
+    # names and units described the original source, not the already-normalized
+    # properties being reloaded.
+    keep = ("default_archetype", "default_year", "mode", "keep_personal_fields")
+    opts = {k: v for k, v in (loader_options or {}).items() if k in keep}
     new_stock = stock_from_geojson(data, source=f"{stock.source} + enrichment", min_footprint_m2=0.0, **opts)
     summary = {
         "buildings": len(stock.buildings),
@@ -156,7 +158,8 @@ def _apply(props: Dict[str, Any], building, layer_props: Dict[str, Any], field_m
     targets = {"use": "archetype", "year_built": "year_built", "num_floors": "num_floors", "height_m": "height_m"}
     for target, attr in targets.items():
         value = layer_value(target)
-        if value is None or not (overwrite or attr in inferred):
+        # Fill values that were guessed (model mode) or are unknown (data mode).
+        if value is None or not (overwrite or attr in inferred or props.get(attr) in (None, "")):
             continue
         if target == "use":
             mapped = use_value_map.get(str(value).strip().lower(), value)

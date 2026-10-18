@@ -349,12 +349,15 @@ docker build \
 
 The server provides **55 tools** organized into **11 categories**:
 
-### 🗺️ Urban Building Stock (6 tools) — new in UBEM-MCP
+### 🗺️ Urban Building Stock (9 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
-- `load_building_stock` - Load building footprints from a GeoJSON file and normalize their attributes
+- `load_building_stock` - Load building footprints from a GeoJSON file, for modeling or as a data inventory (`mode`)
 - `fetch_osm_buildings` - Download building footprints for an area from OpenStreetMap
-- `enrich_building_stock` - Fill guessed attributes (year built, use, floors, height) from a parcel/assessor layer by spatial join
+- `enrich_building_stock` - Fill guessed or unknown attributes (year built, use, floors, height) from a parcel/assessor layer by spatial join
 - `get_building_stock` - Summarize a stock and list/filter its buildings
+- `query_stock` - Filter, group and summarize buildings by any attribute or source column, with data completeness, without running a model
+- `export_stock` - Export a stock to CSV or GeoJSON with a record of its sources, licences and attribution
+- `assign_archetypes` - Derive a modeling stock from a data inventory (archetypes, defaults, exclusions)
 - `list_building_stocks` - List loaded stocks (persisted across restarts)
 
 ### 🌦️ Site Weather (2 tools) — new in UBEM-MCP
@@ -509,6 +512,16 @@ UBEM starts from the city, not from finished EnergyPlus models. The urban tools 
 4. **Inspect** with `get_building_stock` (filter by archetype, vintage, or floor area).
 
 5. **Know where the data came from** — every stock records its data sources with their licences and the attribution they require: OpenStreetMap (ODbL), your own files (pass `license` and `attribution` to `load_building_stock`, or `layer_license` and `layer_attribution` to `enrich_building_stock`), the weather file (Climate.OneBuilding.Org) and the archetype library (DOE, CC BY 4.0). Tool results list the sources and warn when a licence is unknown or when ODbL footprints are combined with data whose terms may not allow it. Model sets and results carry the same record, and each results folder gets an `ATTRIBUTION.txt` to copy into reports and maps.
+
+**Working with data only.** Not every study needs a model. Load footprints or an inventory with `"mode": "data"` to keep it as the data describe it: every structure (sheds and garages included), the full footprint geometry (all parts, courtyards), the raw use value, and unknown values left empty rather than guessed. Then:
+```json
+{"tool": "query_stock", "arguments": {"stock_id": "inventory", "group_by": ["use"], "filters": {"year_built": {"is_null": true}}}}
+```
+returns counts, floor areas and the share of each attribute that is known, per group, and
+```json
+{"tool": "export_stock", "arguments": {"stock_id": "inventory", "format": "csv", "columns": ["PARCEL"]}}
+```
+writes the table with a metadata file of its sources and licences. `query_stock` and `export_stock` work on modeling stocks too. When you do want to simulate, `assign_archetypes` derives a modeling stock from the inventory, and `generate_building_models` refuses a data-mode stock until then.
 
 **Personal data.** Columns about people, such as an owner's name, mailing address, phone or e-mail in assessor data, are dropped when a stock is loaded, and the tool reports which columns were removed. Modeling never needs them. Pass `keep_personal_fields: true` only if you need them and are allowed to hold them.
 
