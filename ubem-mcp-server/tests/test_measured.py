@@ -31,6 +31,12 @@ def test_units_numbers_and_months():
     assert measured.detect_unit("Site Energy Use (kBtu)") == "kbtu"
     assert measured.detect_unit("Property GFA - Self-Reported (ft²)") == "ft2"
     assert measured.detect_unit("Largest Property Use Type") is None
+    # snake_case column names, as in many open-data portals
+    assert measured.detect_unit("electricity_kwh") == "kwh"
+    assert measured.detect_unit("naturalgas_therms") == "therm"
+    assert measured.detect_unit("gas_gj_2019") == "gj"
+    assert measured.detect_unit("bldg_gfa_sf") == "ft2"
+    assert measured.detect_unit("propertygfabuildings") is None
     assert measured._number("1,234.5") == 1234.5 and measured._number("Not Available") is None
     assert [measured._month(v) for v in ("7", "2023-07", "Jul", "july", "13", "")] == [7, 7, 7, 7, None, None]
     assert measured._norm_id("123.0") == measured._norm_id(" 123 ") == "123"
@@ -226,3 +232,18 @@ def test_scan_runs_reads_the_main_err_file_not_the_sqlite_one(tmp_path):
     (run / "b1Sqlite.err").write_text("SQLite3 message, Opening SQLite database\n")
     (run / "b1.sql").write_text("")
     assert scan_runs(tmp_path / "runs", ["b1"])["b1"]["status"] == "success"
+
+
+def test_implausible_measured_eui_is_listed_not_counted():
+    data = {"groups": [
+        {"group_id": "ok", "building_ids": ["a"], "annual_kwh": {"total": 15000.0}, "floor_area_m2": 100.0},
+        {"group_id": "bad", "building_ids": ["b"], "annual_kwh": {"total": 200.0}, "floor_area_m2": 100.0},
+    ]}
+    modeled = {"a": {"annual_kwh": {"electricity": 18000.0}, "monthly_kwh": {}, "floor_area_m2": 100},
+               "b": {"annual_kwh": {"electricity": 30000.0}, "monthly_kwh": {}, "floor_area_m2": 100}}
+    out = measured.compare(data, modeled, {"a": "small_office", "b": "small_office"})
+    s = out["summary"]
+    assert s["meters_compared"] == 1 and s["district"]["total"]["measured_kwh"] == 15000
+    assert s["meters_suspect"][0]["group_id"] == "bad" and "2.0 kWh/m2" in s["meters_suspect"][0]["reason"]
+    assert any("implausible" in c for c in s["caveats"])
+    assert {r["group_id"] for r in out["rows"]} == {"ok", "bad"}  # still in the per-meter table

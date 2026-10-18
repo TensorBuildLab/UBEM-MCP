@@ -34,6 +34,7 @@ Report, in this order:
 2. How far individual buildings are off (`percent_error_spread`: median absolute percent error, share within 10, 25 and 50%), and `across_meters_guideline14` (NMBE and CV(RMSE) across meters; a positive NMBE means the model is below the measurements).
 3. Which archetypes are furthest off (`by_archetype`) and the `largest_differences`, as candidates for better data or the user's own models (`set_building_models`, guide `own-models`).
 4. Every item in `caveats`: weather year, floor area mismatch, meters not compared.
+5. `meters_suspect`: records whose measured EUI is implausible (below 10 or above 2,000 kWh/m2) are left out of the statistics; name them so the user can check the source data.
 
 For monthly data, also give `monthly_guideline14`. Its thresholds (NMBE within 5%, CV(RMSE) within 15%) are written for calibrating single buildings; archetype models are not calibrated, so present them as a reference, not as pass or fail.
 

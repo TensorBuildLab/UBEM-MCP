@@ -35,8 +35,12 @@ AREA_KEY = "floor_area"
 G14_MONTHLY = {"nmbe_percent": 5.0, "cvrmse_percent": 15.0}
 _MONTHS = {m: i + 1 for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep",
                                            "oct", "nov", "dec"))}
-_HINTS = [(r"mmbtu", "mmbtu"), (r"kbtu", "kbtu"), (r"therm", "therm"), (r"\bmwh\b", "mwh"), (r"\bkwh\b", "kwh"),
-          (r"\bgj\b", "gj"), (r"\bmj\b", "mj"), (r"ft2|ft²|sq\.? ?ft|\bsf\b", "ft2"), (r"m2|m²", "m2")]
+# Unit words count only between non-letters, so "electricity_kwh" and
+# "Use (kWh)" match but "gja" or "sfx" do not.
+_W = r"(?<![a-z]){}(?![a-z])"
+_HINTS = [(r"mmbtu", "mmbtu"), (r"kbtu", "kbtu"), (r"therm", "therm"), (_W.format("mwh"), "mwh"),
+          (_W.format("kwh"), "kwh"), (_W.format("gj"), "gj"), (_W.format("mj"), "mj"),
+          (r"ft2|ft²|sq\.? ?ft|" + _W.format("sf"), "ft2"), (r"m2|m²", "m2")]
 
 
 def detect_unit(column: str) -> Optional[str]:
@@ -277,11 +281,18 @@ def _spread(errors: Iterable[Optional[float]]) -> Optional[Dict[str, Any]]:
             "within_50_percent": round(sum(x <= 50 for x in a) / len(a), 3)}
 
 
+# Annual site EUI (kWh/m2) outside this range is almost always a data error
+# (a missing meter, a unit slip, floor area of the wrong building).
+PLAUSIBLE_EUI_KWH_M2 = (10.0, 2000.0)
+
+
 def compare(dataset: Dict[str, Any], modeled: Dict[str, Dict[str, Any]], archetypes: Dict[str, Optional[str]],
             p: int = 1, weather_note: Optional[str] = None) -> Dict[str, Any]:
     """Compare measured groups with modeled buildings.
 
     `modeled[building_id]` = {"annual_kwh": {fuel: kWh}, "monthly_kwh": {fuel: [12]}, "floor_area_m2"}.
+    Meters whose measured EUI is implausible are listed but left out of the
+    statistics.
     """
     rows, skipped = [], []
     for g in dataset["groups"]:
@@ -316,6 +327,10 @@ def compare(dataset: Dict[str, Any], modeled: Dict[str, Dict[str, Any]], archety
             row["eui_kwh_m2"] = {"measured": round(meas_annual[tot_key] / g["floor_area_m2"], 1),
                                  "modeled": round(model_annual[tot_key] / area_model, 1)}
             row["area_ratio"] = round(area_model / g["floor_area_m2"], 2)
+            lo, hi = PLAUSIBLE_EUI_KWH_M2
+            if not lo <= row["eui_kwh_m2"]["measured"] <= hi:
+                row["suspect"] = (f"measured EUI {row['eui_kwh_m2']['measured']} kWh/m2 is outside "
+                                  f"{lo:g}-{hi:g}; probably a data error")
         if g.get("monthly_kwh"):
             row["monthly"] = {}
             for fuel, meas_m in g["monthly_kwh"].items():
@@ -331,6 +346,8 @@ def compare(dataset: Dict[str, Any], modeled: Dict[str, Dict[str, Any]], archety
                     row["monthly"][fuel] = stats
         rows.append(row)
 
+    suspect = [r for r in rows if r.get("suspect")]
+    all_rows, rows = rows, [r for r in rows if not r.get("suspect")]
     keys = sorted({k for r in rows for k in r["measured_kwh"]})
     district, across, spread = {}, {}, {}
     for k in keys:
@@ -357,9 +374,14 @@ def compare(dataset: Dict[str, Any], modeled: Dict[str, Dict[str, Any]], archety
     if skipped:
         caveats.append(f"{len(skipped)} meter(s) were not compared because some of their buildings have no "
                        f"simulation results")
+    if suspect:
+        caveats.append(f"{len(suspect)} meter(s) left out of the statistics because their measured EUI is "
+                       f"implausible ({', '.join(r['group_id'] for r in suspect[:5])}); check those records")
     monthly_rows = [r for r in rows if r.get("monthly")]
     summary: Dict[str, Any] = {
         "meters_compared": len(rows), "meters_skipped": len(skipped), "main_quantity": main_key,
+        "meters_suspect": [{"group_id": r["group_id"], "building_ids": r["building_ids"][:5],
+                            "reason": r["suspect"]} for r in suspect],
         "district": district, "across_meters_guideline14": across, "percent_error_spread": spread,
         "by_archetype": {a: {"meters": len(v), "median_percent_error": round(statistics.median(v), 1)}
                          for a, v in sorted(by_arch.items())},
@@ -376,4 +398,4 @@ def compare(dataset: Dict[str, Any], modeled: Dict[str, Dict[str, Any]], archety
             "meeting_thresholds": sum(1 for s in stats if s["meets_guideline14_monthly"]),
             "note": "Guideline 14 thresholds are written for calibrating individual buildings; archetype "
                     "models are not calibrated, so they are a reference, not a pass mark"}
-    return {"summary": summary, "rows": rows, "skipped": skipped}
+    return {"summary": summary, "rows": all_rows, "skipped": skipped}

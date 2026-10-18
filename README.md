@@ -1,6 +1,6 @@
 # UBEM-MCP
 
-A Model Context Protocol (MCP) server for **urban building energy modeling (UBEM)**, built on EnergyPlus. It provides **55 tools** that take an AI assistant from **GIS building footprints** (GeoJSON or OpenStreetMap) to a normalized urban building stock, with **site weather and climate zone found automatically**, to **archetype EnergyPlus models generated for every building**, to **batch simulation of the whole portfolio at once**, to **district results** (per-building EUI, hourly district demand, GIS layers and maps) and **retrofit scenarios** compared against the baseline, alongside the single-model loading, validation, modification, analysis, and simulation tools of EnergyPlus-MCP.
+An open, model-neutral server for **urban building energy modeling (UBEM)** data and simulation, built on EnergyPlus. Through **68 tools** it takes an AI assistant, a script or a person from building footprints and parcel data to a building stock with recorded provenance, archetype or user-supplied EnergyPlus models, background batch runs, district results, retrofit scenarios, comparisons with measured energy use and NREL ComStock/ResStock reference data. It uses only the open Model Context Protocol, so it works with any MCP client and any model, and the same tools are a Python library and a command line.
 
 > **Version**: 0.1.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
@@ -12,6 +12,8 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 <summary><h2>📑 Table of Contents</h2></summary>
 
 - [Overview](#overview)
+- [What it is for](#what-it-is-for)
+- [Three ways to use it](#three-ways-to-use-it)
 - [Installation](#installation)
   - [Using the MCP Server](#using-the-mcp-server)
     - [Claude Desktop](#claude-desktop)
@@ -42,15 +44,29 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 
 ## Overview
 
-UBEM-MCP makes EnergyPlus building energy simulation — for a single building or an entire portfolio — accessible to AI assistants and automation tools through the Model Context Protocol.
+UBEM studies chain the same steps: gather building data, fill what is missing, assign archetypes, generate and simulate models, and aggregate the results. Most groups rebuild that chain as one-off scripts, and an AI agent asked to do it writes the scripts again each time. UBEM-MCP fixes those decisions in tested, documented tools instead:
 
-**Key Features:**
-- 🏙️ **Batch / Portfolio Simulation**: Run many EnergyPlus models concurrently as a background job; poll for status and results instead of blocking on a single long-running call
-- 🏗️ **Complete Model Lifecycle**: Load, validate, analyze, modify, and simulate IDF files
-- 🔍 **Deep Building Analysis**: Extract detailed information about zones, surfaces, materials, and schedules
-- 🔧 **HVAC Intelligence**: Discover, analyze, and visualize HVAC system topology
-- 📈 **Smart Output Management**: Auto-discover and configure output variables/meters
-- 📊 **Advanced Visualization**: Create interactive plots and HVAC system diagrams
+- **Named objects, not files**: every step produces a stock, model set, batch, results or scenario that the next tool takes by ID, so a baseline and its variants live side by side.
+- **Every value says where it came from**: inferred attributes are marked, assumptions are listed per building, sources and licences travel with the data, and personal columns are dropped on load.
+- **Data first, models optional**: inventories can be loaded, joined, queried and exported without running a model.
+- **Long jobs in the background**: batches return at once; status reports progress, time left and grouped failure causes.
+- **Answers sized for an agent**: one structured envelope, summaries instead of raw output, paged lists.
+- **Expertise the agent can look up**: server instructions, workflow guides and catalogues ship inside the server for every client.
+- **Open at every layer**: your own GIS layers, your own EnergyPlus models, the single-model tools of EnergyPlus-MCP.
+- **Reproducible by record**: input hashes, software versions and recipes, exported and rerun with one tool each.
+
+## What it is for
+
+The four use cases come from the UBEM research literature (16 reviews and a coded sample of 118 papers; see the paper), not from the authors' preferences. Each has a workflow guide inside the server and a worked example script.
+
+| Use case | What UBEM-MCP does | Guide | Worked example |
+|---|---|---|---|
+| **U1** Build and run models from GIS data to estimate and map district demand | footprints or OSM → stock → weather and climate zone → archetype models → batch → district totals, peaks, EUI maps | `stock-to-district` | `scripts/run_case_study.py` (106 campus buildings, Tucson) |
+| **U2** Retrofit and decarbonisation scenarios | declarative measure lists applied to a baseline, simulated and compared, including peak shifts | `retrofit-scenario` | `scripts/run_case_study.py` (campus electrification) |
+| **U3** Work with building stock data | data mode, parcel joins, queries of what is known, exports with licences, ComStock/ResStock county data | `data-only` | `scripts/run_data_example.py` (2,978 structures near campus, Pima County parcels) |
+| **U4** Compare models with measured energy use | bills, meters or benchmarking matched to buildings; ASHRAE Guideline 14 statistics | `validate-measured` | `scripts/run_measured_example.py` (Seattle benchmarking, Lower Queen Anne) |
+
+Your own detailed models can replace archetypes for chosen buildings in any of them (guide `own-models`).
 
 ## Three ways to use it
 
