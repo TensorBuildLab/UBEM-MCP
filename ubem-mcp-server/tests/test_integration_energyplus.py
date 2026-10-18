@@ -173,6 +173,9 @@ async def test_stock_to_models_to_batch(tmp_path):
     manifest = sm.model_manifest("demo", "t")
     house = next(m for m in manifest["models"] if m["building_id"] == "house")
     assert house["party_walls"] == 1  # shares a wall with "twin"
+    assert {s["id"] for s in manifest["sources"]} >= {"doe-commercial-reference-buildings",
+                                                     "doe-pnnl-residential-prototype"}
+    assert "CC BY 4.0" in manifest["attribution"]
 
     manager = BatchManager(cfg)
     submitted = manager.submit_batch(

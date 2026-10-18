@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from ..config import Config
 from ..utils.path_utils import resolve_path, resolve_weather_file_path
-from . import osm, retrofit, weather
+from . import osm, provenance, retrofit, weather
 from .aggregate import aggregate, compare_results
 from .enrich import enrich_stock
 from .generate import generate_models, summarize_manifest
@@ -46,11 +46,15 @@ class StockManager:
     # Creation
     # ------------------------------------------------------------------ #
 
-    def load_from_file(self, path: str, stock_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    def load_from_file(self, path: str, stock_id: Optional[str] = None, license: Optional[str] = None,
+                       attribution: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         stock_id = self._new_id(stock_id)
         resolved = self._resolve_input(path)
         stock = load_geojson(resolved, **kwargs)
-        return self._register(stock, stock_id, extra_meta={"source_file": resolved, "loader_options": kwargs})
+        src = provenance.source_record(f"file:{Path(resolved).name}", Path(resolved).name, "footprints",
+                                       license=license, attribution=attribution)
+        return self._register(stock, stock_id, extra_meta={"source_file": resolved, "loader_options": kwargs},
+                              sources=[src])
 
     def fetch_osm(
         self,
@@ -94,7 +98,8 @@ class StockManager:
             },
             "loader_options": kwargs,
         }
-        return self._register(stock, stock_id, extra_meta=meta)
+        src = provenance.osm_source(retrieved_at, meta["osm"]["osm_base_timestamp"])
+        return self._register(stock, stock_id, extra_meta=meta, sources=[src])
 
     def enrich(
         self,
@@ -102,6 +107,8 @@ class StockManager:
         layer_path: str,
         field_map: Dict[str, str],
         new_stock_id: Optional[str] = None,
+        layer_license: Optional[str] = None,
+        layer_attribution: Optional[str] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Join attributes from a GeoJSON layer onto a stock, saved as a new stock."""
@@ -117,7 +124,10 @@ class StockManager:
             "enrichment": {"layer": resolved, "field_map": field_map, "options": kwargs, "report": report},
             "loader_options": loader_options,
         }
-        result = self._register(enriched, new_id, extra_meta=meta)
+        layer_src = provenance.source_record(f"file:{Path(resolved).name}", Path(resolved).name, "attributes",
+                                             license=layer_license, attribution=layer_attribution)
+        sources = provenance.merge_sources(self.get_meta(stock_id).get("sources") or [], [layer_src])
+        result = self._register(enriched, new_id, extra_meta=meta, sources=sources)
         return {"enrichment": report, **result}
 
     # ------------------------------------------------------------------ #
@@ -181,7 +191,12 @@ class StockManager:
         info.update(weather.site_climate(files))
         info["warnings"] = warnings
         info["resolved_at"] = datetime.now().isoformat(timespec="seconds")
-        self._update_meta(stock_id, {"weather": info})
+        if info["source"] == "climate.onebuilding.org":
+            wsrc = provenance.weather_source(info.get("url"), info.get("dataset"))
+        else:
+            wsrc = provenance.source_record(f"file:{Path(info['epw']).name}", Path(info["epw"]).name, "weather")
+        sources = [s for s in self.get_meta(stock_id).get("sources") or [] if s.get("role") != "weather"]
+        self._update_meta(stock_id, {"weather": info, "sources": provenance.merge_sources(sources, [wsrc])})
         return {"stock_id": stock_id, "site": site, **info}
 
     def generate_models(
@@ -223,6 +238,11 @@ class StockManager:
         manifest["stock_id"] = stock_id
         manifest["model_set_id"] = set_id
         manifest["climate"] = climate
+        sources = provenance.merge_sources(self.get_meta(stock_id).get("sources") or [],
+                                           provenance.ARCHETYPE_SOURCES)
+        self._update_meta(stock_id, {"sources": sources})
+        manifest["sources"] = sources
+        manifest["attribution"] = provenance.attribution_text(sources)
         if extra_manifest:
             manifest.update(extra_manifest(manifest) if callable(extra_manifest) else extra_manifest)
         with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
@@ -337,8 +357,15 @@ class StockManager:
             bad = {k: v for k, v in emission_factors.items() if not isinstance(v, (int, float)) or v < 0}
             if bad:
                 raise ValueError(f"Emission factors must be non-negative numbers (kg CO2e/kWh): {bad}")
-        summary = aggregate(self.get(stock_id), manifest, outputs, str(model_dir / "results" / results_id),
+        out_dir = model_dir / "results" / results_id
+        summary = aggregate(self.get(stock_id), manifest, outputs, str(out_dir),
                             emission_factors=emission_factors, make_map=make_map)
+        sources = manifest.get("sources") or self.get_meta(stock_id).get("sources") or []
+        summary["attribution"] = provenance.attribution_text(sources)
+        lines = ["Data sources and required attribution for these results:", ""]
+        lines += [f"- {s['name']} ({s['license']}): {s.get('attribution') or 'no attribution recorded'}"
+                  for s in sources]
+        (out_dir / "ATTRIBUTION.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
         return summary
 
     def model_manifest(self, stock_id: str, model_set_id: str) -> Dict[str, Any]:
@@ -360,9 +387,11 @@ class StockManager:
         path = self.root / stock_id / "buildings.geojson"
         if not path.exists():
             raise KeyError(f"Unknown stock_id: {stock_id}")
-        stock = load_geojson(str(path), min_footprint_m2=0.0)
         meta = self.get_meta(stock_id)
+        keep = bool((meta.get("loader_options") or {}).get("keep_personal_fields"))
+        stock = load_geojson(str(path), min_footprint_m2=0.0, keep_personal_fields=keep)
         stock.source = meta.get("source", stock.source)
+        stock.personal_fields_removed = list((meta.get("summary") or {}).get("personal_fields_removed") or [])
         self._stocks[stock_id] = stock
         return stock
 
@@ -396,12 +425,17 @@ class StockManager:
     # Internals
     # ------------------------------------------------------------------ #
 
-    def _register(self, stock: BuildingStock, stock_id: str, extra_meta: Dict[str, Any]) -> Dict[str, Any]:
+    def _register(self, stock: BuildingStock, stock_id: str, extra_meta: Dict[str, Any],
+                  sources: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
         stock_dir = self.root / stock_id
         stock_dir.mkdir(parents=True, exist_ok=True)
+        sources = sources or []
+        attribution = provenance.attribution_text(sources)
 
+        geo = stock.to_geojson()
+        geo.setdefault("ubem_mcp", {})["attribution"] = attribution
         with open(stock_dir / "buildings.geojson", "w", encoding="utf-8") as f:
-            json.dump(stock.to_geojson(), f)
+            json.dump(geo, f)
         with open(stock_dir / "excluded.json", "w", encoding="utf-8") as f:
             json.dump([asdict(e) for e in stock.excluded], f, indent=1)
         summary = stock.summary()
@@ -410,6 +444,7 @@ class StockManager:
             "created_at": datetime.now().isoformat(),
             "source": stock.source,
             "summary": summary,
+            "sources": sources,
             **extra_meta,
         }
         with open(stock_dir / "meta.json", "w", encoding="utf-8") as f:
@@ -417,7 +452,13 @@ class StockManager:
 
         self._stocks[stock_id] = stock
         logger.info("Registered stock %s: %d buildings", stock_id, len(stock))
-        return {"stock_id": stock_id, "stock_directory": str(stock_dir), **summary}
+        warnings = provenance.licence_warnings(sources)
+        if summary["personal_fields_removed"]:
+            warnings.append("personal columns were dropped on load: " + ", ".join(summary["personal_fields_removed"])
+                            + " (load with keep_personal_fields=true only if you need them and may hold them)")
+        return {"stock_id": stock_id, "stock_directory": str(stock_dir), **summary,
+                "sources": [{"name": s["name"], "license": s["license"]} for s in sources],
+                "attribution": attribution, "warnings": warnings}
 
     def _update_meta(self, stock_id: str, updates: Dict[str, Any]) -> None:
         meta = self.get_meta(stock_id)

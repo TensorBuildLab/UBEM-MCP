@@ -26,7 +26,7 @@ from mcp.server.fastmcp import FastMCP
 from ubem_mcp_server.energyplus_tools import EnergyPlusManager
 from ubem_mcp_server.config import get_config, Config
 from ubem_mcp_server.batch_manager import BatchManager, discover_idf_files as _discover_idf_files
-from ubem_mcp_server.urban import ARCHETYPES, StockManager
+from ubem_mcp_server.urban import ARCHETYPES, StockManager, provenance
 
 logger = logging.getLogger(__name__)
 
@@ -1635,6 +1635,9 @@ async def load_building_stock(
     default_archetype: str = "single_family",
     default_year: int = 1980,
     min_footprint_m2: float = 20.0,
+    license: Optional[str] = None,
+    attribution: Optional[str] = None,
+    keep_personal_fields: bool = False,
 ) -> str:
     """
     Load building footprints from a GeoJSON file as a building stock for urban modeling
@@ -1659,10 +1662,17 @@ async def load_building_stock(
         default_archetype: Archetype for buildings with no recognizable use (see list_archetypes)
         default_year: Year built for buildings with no construction year
         min_footprint_m2: Smaller footprints are excluded
+        license: Licence of the input data, e.g. "ODbL-1.0", "CC-BY-4.0" (recorded with the
+                 stock and its results; a warning is returned while it is unknown)
+        attribution: Credit line the data's licence requires, e.g. "City of Tucson Open Data"
+        keep_personal_fields: Keep columns about people (owner, mailing address, phone, e-mail).
+                              They are dropped by default because modeling never needs them.
 
     Returns:
         JSON summary: stock_id, building counts by archetype and vintage, floor
-        areas, inferred-attribute shares, and exclusions by reason.
+        areas, inferred-attribute shares, exclusions by reason, data sources and
+        licences, required attribution, and warnings (unknown licence, dropped
+        personal columns).
     """
     try:
         opts = _stock_loader_options(
@@ -1670,8 +1680,10 @@ async def load_building_stock(
             use_field=use_field, year_field=year_field, id_field=id_field, height_unit=height_unit,
             default_archetype=default_archetype, default_year=default_year,
             min_footprint_m2=min_footprint_m2,
+            keep_personal_fields=keep_personal_fields or None,
         )
-        result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, **opts)
+        result = stock_manager.load_from_file(geojson_path, stock_id=stock_id, license=license,
+                                              attribution=attribution, **opts)
         return f"Building stock loaded:\n{json.dumps(result, indent=2)}"
     except (ValueError, FileNotFoundError) as e:
         return f"Could not load building stock: {str(e)}"
@@ -1740,6 +1752,8 @@ async def enrich_building_stock(
     height_unit: str = "m",
     min_overlap: float = 0.5,
     new_stock_id: Optional[str] = None,
+    layer_license: Optional[str] = None,
+    layer_attribution: Optional[str] = None,
 ) -> str:
     """
     Fill a building stock's guessed attributes from another GIS layer (e.g. assessor parcels)
@@ -1764,6 +1778,9 @@ async def enrich_building_stock(
         height_unit: "m" or "ft" for the layer's height column
         min_overlap: Minimum footprint share a polygon must cover when the centroid test fails
         new_stock_id: Optional name for the enriched stock
+        layer_license: Licence of the layer, e.g. "public domain" or "Pima County terms of use";
+                       mixing it with ODbL footprints returns a warning when it may conflict
+        layer_attribution: Credit line the layer's licence requires
 
     Returns:
         JSON with match counts, filled attribute counts, unrecognized use values,
@@ -1774,6 +1791,7 @@ async def enrich_building_stock(
             stock_id, layer_path, field_map, new_stock_id=new_stock_id,
             use_value_map=use_value_map, layer_crs=layer_crs, overwrite=overwrite,
             height_unit=height_unit, min_overlap=min_overlap,
+            layer_license=layer_license, layer_attribution=layer_attribution,
         )
         return f"Building stock enriched:\n{json.dumps(result, indent=2)}"
     except (KeyError, ValueError, FileNotFoundError) as e:
@@ -1819,6 +1837,9 @@ async def get_building_stock(
             "stock_id": stock_id,
             "stock_directory": str(stock_manager.stock_dir(stock_id)),
             "summary": stock.summary(),
+            "sources": [{"name": src["name"], "license": src["license"]}
+                        for src in stock_manager.get_meta(stock_id).get("sources") or []],
+            "attribution": provenance.attribution_text(stock_manager.get_meta(stock_id).get("sources") or []),
             "num_matching": len(matches),
             "buildings": buildings,
         }

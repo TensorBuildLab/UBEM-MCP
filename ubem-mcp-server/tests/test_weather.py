@@ -204,6 +204,8 @@ def test_stock_weather_is_resolved_and_saved(tmp_path):
     assert info["climate_zone_source"].startswith("stat file")
     assert Path(info["epw"]).exists() and not info["warnings"]
     assert sm.get_meta("uofa")["weather"]["epw"] == info["epw"]
+    wsrc = [s for s in sm.get_meta("uofa")["sources"] if s["role"] == "weather"]
+    assert len(wsrc) == 1 and wsrc[0]["id"] == "climate.onebuilding.org" and "Lawrie" in wsrc[0]["attribution"]
 
     # Model generation picks up the saved weather; an explicit zone still wins.
     epw, zone, climate = sm._weather_for_models("uofa", None, None)

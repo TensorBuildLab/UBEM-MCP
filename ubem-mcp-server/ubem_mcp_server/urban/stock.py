@@ -23,6 +23,7 @@ import shapely
 from shapely.validation import make_valid
 
 from .archetypes import ARCHETYPES, classify_use, parse_year, resolve_archetype_key, vintage_for_year
+from .provenance import scrub_personal_fields
 
 # Candidate source property names, checked case-insensitively in order.
 HEIGHT_FIELDS = ("height_m", "height", "building_height", "bldg_height", "measuredheight", "roof_height")
@@ -109,6 +110,8 @@ class BuildingStock:
         self.frame = frame
         self.excluded = excluded or []
         self.source = source
+        # Column names dropped as personal data when the stock was loaded.
+        self.personal_fields_removed: List[str] = []
 
     def __len__(self) -> int:
         return len(self.buildings)
@@ -161,6 +164,7 @@ class BuildingStock:
             "inferred_share": {k: round(v / n, 3) for k, v in sorted(inferred.items())} if n else {},
             "notes_by_type": dict(Counter(_note_class(note) for b in self.buildings for note in b.notes).most_common()),
             "extent": bounds,
+            "personal_fields_removed": list(self.personal_fields_removed),
         }
 
     def to_geojson(self) -> Dict[str, Any]:
@@ -212,12 +216,15 @@ def stock_from_geojson(
     default_archetype: str = "single_family",
     default_year: int = 1980,
     min_footprint_m2: float = DEFAULT_MIN_FOOTPRINT_M2,
+    keep_personal_fields: bool = False,
 ) -> BuildingStock:
     """Build a BuildingStock from a GeoJSON FeatureCollection.
 
     Field arguments override auto-detection of the attribute columns.
     `default_archetype` and `default_year` fill buildings whose use or age
     can't be determined (and are recorded in `inferred_fields`).
+    Columns about people (owner, mailing address, phone, ...) are dropped
+    unless `keep_personal_fields` is True; the names removed are reported.
     """
     if resolve_archetype_key(default_archetype) is None:
         raise ValueError(f"Unknown default_archetype {default_archetype!r}; valid: {sorted(ARCHETYPES)}")
@@ -236,9 +243,13 @@ def stock_from_geojson(
 
     excluded: List[ExcludedFeature] = []
     parsed: List[Tuple[str, Polygon, Dict[str, Any], List[str]]] = []
+    personal_removed: Counter = Counter()
     for i, feat in enumerate(features):
         props = feat.get("properties") or {}
         fid = _feature_id(feat, props, id_field, i)
+        if not keep_personal_fields:
+            props, removed = scrub_personal_fields(props)
+            personal_removed.update(set(removed))
         geom_json = feat.get("geometry")
         if not geom_json:
             excluded.append(ExcludedFeature(fid, "no_geometry"))
@@ -287,7 +298,9 @@ def stock_from_geojson(
             b.building_id = f"{b.building_id}_{seen_ids[b.building_id]}"
         buildings.append(b)
 
-    return BuildingStock(buildings, frame, excluded, source=source)
+    stock = BuildingStock(buildings, frame, excluded, source=source)
+    stock.personal_fields_removed = sorted(personal_removed)
+    return stock
 
 
 def _legacy_crs_name(data: Dict[str, Any]) -> Optional[str]:

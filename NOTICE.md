@@ -31,6 +31,9 @@ See the header of each source file for a pointer back to this notice.
   `find_weather_stations` / `get_site_weather` tools.
 - Results aggregation (`urban/aggregate.py`) and the `aggregate_stock_results`
   tool.
+- Data provenance and privacy (`urban/provenance.py`): data sources, licences
+  and required attribution for every stock, model set and result, and removal
+  of personal columns (owner names, mailing addresses) when data are loaded.
 - Retrofit scenarios (`urban/retrofit.py`, scenario comparison in
   `urban/aggregate.py`) and the `list_retrofit_measures` /
   `simulate_retrofit_scenario` / `compare_retrofit_scenario` tools.
