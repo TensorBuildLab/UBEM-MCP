@@ -28,7 +28,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 
 class UBEMError(RuntimeError):
-    """A tool answered ok=false. `error_type` is not_found, invalid_input or internal."""
+    """A tool answered ok=false. `error_type` is not_found, invalid_input, unavailable or internal."""
 
     def __init__(self, tool: str, error_type: Optional[str], error: Optional[str], result: Dict[str, Any]):
         super().__init__(f"{tool}: {error_type}: {error}")

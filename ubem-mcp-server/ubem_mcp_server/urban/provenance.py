@@ -18,7 +18,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 # situs address) describe the building, not a person, and are kept.
 PERSONAL_FIELD_PATTERN = re.compile(
     r"owner|taxpayer|tax_?payer|grantee|grantor|buyer|seller|(?:tenant|resident|occupant)_?name"
-    r"|mail(?:ing)?_?(?:addr|address|street|city|state|zip|name|line)|^mail_|^mail$|e-?mail"
+    r"|mail(?:ing)?_?(?:addr|address|street|city|state|zip|name|line)|^mail_|^mail$|^mail_?\d+$|e-?mail"
     r"|phone|telephone|^fax$|contact|first_?name|last_?name|full_?name|\bssn\b|birth_?date",
     re.IGNORECASE,
 )

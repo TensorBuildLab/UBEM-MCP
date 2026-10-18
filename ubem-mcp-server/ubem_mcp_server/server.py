@@ -93,7 +93,9 @@ How the tools fit together:
 - Data-only questions need no model: load with mode="data", then query_stock and
   export_stock.
 
-Every UBEM-MCP tool returns {"ok": ...}. On ok=false, read error_type and error.
+Every UBEM-MCP tool returns {"ok": ...}. On ok=false, read error_type and error;
+"unavailable" means an outside service (OpenStreetMap, weather, NREL data) did
+not answer, so try again later rather than changing the request.
 Pass warnings on to the user, together with how much of the input was guessed
 (inferred_share) or is known (known_share), and the attribution line for any
 map or report.
@@ -1441,8 +1443,8 @@ async def clear_logs() -> str:
 # Every UBEM-MCP tool returns one structured object (MCP structured content,
 # with the same JSON as text for clients that read text only):
 #   success: {"ok": true, ...data, "warnings": [...], "next_steps": [...]}
-#   failure: {"ok": false, "error_type": "not_found" | "invalid_input" | "internal",
-#             "error": "..."}
+#   failure: {"ok": false, "error_type": "not_found" | "invalid_input" | "unavailable" |
+#             "internal", "error": "..."}   (unavailable: an outside service did not answer)
 # Tool annotations tell any MCP client which tools only read, which may
 # change or discard work, and which reach the internet.
 
@@ -1484,6 +1486,8 @@ def ubem_tool(*, read_only: bool = False, destructive: bool = False, idempotent:
                 out = _fail("not_found", e)
             except (ValueError, TypeError) as e:
                 out = _fail("invalid_input", e)
+            except (ConnectionError, TimeoutError) as e:
+                out = _fail("unavailable", e)
             except Exception as e:  # noqa: BLE001 - tool boundary: always answer the client
                 logger.exception(f"Error in {fn.__name__}")
                 out = _fail("internal", e)
@@ -1871,6 +1875,7 @@ async def enrich_building_stock(
     new_stock_id: Optional[str] = None,
     layer_license: Optional[str] = None,
     layer_attribution: Optional[str] = None,
+    keep_columns: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Fill a building stock's guessed attributes from another GIS layer (e.g. assessor parcels)
@@ -1879,8 +1884,9 @@ async def enrich_building_stock(
     joins a GeoJSON layer onto the footprints: each building takes the attributes
     of the layer polygon containing its centroid (or covering most of its
     footprint), or of a point feature inside it. By default only attributes that
-    were inferred are filled. The result is saved as a new stock; the original
-    is unchanged.
+    were inferred are filled, and a parcel's use is not given to structures the
+    footprints mark as garages, sheds or carports. The result is saved as a new
+    stock; the original is unchanged.
 
     Args:
         stock_id: Stock to enrich
@@ -1898,6 +1904,8 @@ async def enrich_building_stock(
         layer_license: Licence of the layer, e.g. "public domain" or "Pima County terms of use";
                        mixing it with ODbL footprints returns a warning when it may conflict
         layer_attribution: Credit line the layer's licence requires
+        keep_columns: Layer columns to copy onto matched buildings (e.g. ["PARCEL", "PARCEL_USE"])
+                      so query_stock and export_stock can use them; never copy personal columns
 
     Returns:
         JSON with match counts, filled attribute counts, unrecognized use values,
@@ -1907,7 +1915,7 @@ async def enrich_building_stock(
         stock_id, layer_path, field_map, new_stock_id=new_stock_id,
         use_value_map=use_value_map, layer_crs=layer_crs, overwrite=overwrite,
         height_unit=height_unit, min_overlap=min_overlap,
-        layer_license=layer_license, layer_attribution=layer_attribution,
+        layer_license=layer_license, layer_attribution=layer_attribution, keep_columns=keep_columns,
     )
     return result
 

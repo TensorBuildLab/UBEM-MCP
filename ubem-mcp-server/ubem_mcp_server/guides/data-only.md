@@ -17,7 +17,11 @@ Data mode keeps every structure (sheds and garages included), the full footprint
 
 ## 2. Join other layers
 
-`enrich_building_stock(stock_id="inventory", layer_path="parcels.geojson", field_map={"year_built": "YEAR_BUILT", "use": "LAND_USE"}, new_stock_id="inventory_parcels", layer_license="public domain")` fills unknown values. Check the returned `warnings`: combining ODbL footprints with data under other terms can restrict how the result may be shared.
+`enrich_building_stock(stock_id="inventory", layer_path="parcels.geojson", field_map={"year_built": "YEAR_BUILT", "use": "LAND_USE"}, keep_columns=["PARCEL_ID", "LAND_USE"], new_stock_id="inventory_parcels", layer_license="public domain")` fills unknown values. Check the returned `warnings`: combining ODbL footprints with data under other terms can restrict how the result may be shared.
+
+- A parcel's land use describes the parcel, so it is not given to garages, sheds or carports on it (`use_not_given_to_unconditioned` counts them).
+- Land-use codes rarely match use words; translate them with `use_value_map` (e.g. {"0131": "house"}) or a column you derive, and report `unrecognized_use_values`.
+- `keep_columns` copies layer columns such as a parcel id or the raw code onto each building, so `query_stock` can group by them and measured data can later be matched by parcel. Personal columns (owner, mailing address) are refused.
 
 ## 3. Ask questions of the data
 

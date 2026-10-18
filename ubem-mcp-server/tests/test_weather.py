@@ -221,3 +221,27 @@ def test_local_weather_file_far_from_site_warns(tmp_path):
     assert info["ashrae_climate_zone"] == "3C" and info["climate_zone_source"] == "estimated from EPW"
     assert info["distance_km"] > 1000 and "km from the site" in info["warnings"][0]
     assert not any("climate.onebuilding.org" in c for c in sm.fetch.calls)
+
+
+def test_http_get_reports_missing_and_unreachable(monkeypatch):
+    import io
+    import urllib.error
+
+    from ubem_mcp_server.urban import weather as w
+
+    def raise_(exc):
+        def f(*a, **k):
+            raise exc
+        return f
+
+    monkeypatch.setattr(w.urllib.request, "urlopen",
+                        raise_(urllib.error.HTTPError("u", 404, "nf", {}, io.BytesIO())))
+    with pytest.raises(FileNotFoundError, match="404"):
+        w.http_get("https://x/y")
+    monkeypatch.setattr(w.urllib.request, "urlopen",
+                        raise_(urllib.error.HTTPError("u", 503, "busy", {}, io.BytesIO())))
+    with pytest.raises(ConnectionError, match="503"):
+        w.http_get("https://x/y")
+    monkeypatch.setattr(w.urllib.request, "urlopen", raise_(urllib.error.URLError("no route")))
+    with pytest.raises(ConnectionError, match="no route"):
+        w.http_get("https://x/y")

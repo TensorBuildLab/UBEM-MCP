@@ -29,7 +29,8 @@ from shapely.geometry.polygon import orient
 import shapely
 from shapely.validation import make_valid
 
-from .archetypes import ARCHETYPES, classify_use, parse_year, resolve_archetype_key, vintage_for_year
+from .archetypes import (ARCHETYPES, classify_use, is_generic_use, parse_year, resolve_archetype_key,
+                         vintage_for_year)
 from .provenance import scrub_personal_fields
 
 # Candidate source property names, checked case-insensitively in order.
@@ -533,7 +534,7 @@ def _raw_use(candidates, area: float, floors) -> Optional[str]:
     """The raw use value that determines the archetype (an unrecognized code in
     an earlier column does not hide a recognized one later), else the first
     non-empty value."""
-    present = [str(c) for c in candidates if c not in (None, "")]
+    present = [str(c) for c in candidates if not is_generic_use(c)]
     for c in present:
         if classify_use([c], area, floors)[0] is not None:
             return c
@@ -564,7 +565,8 @@ def _data_attributes(fid, poly, full, props, *, height_field, floors_field, use_
     if use_field is None:
         lower = {k.lower(): v for k, v in view.items()}
         use_candidates.extend(lower.get(k) for k in OSM_USE_FIELDS)
-    raw_use = props["use"] if isinstance(props.get("use"), str) else _raw_use(use_candidates, full.area, floors)
+    saved_use = props.get("use")
+    raw_use = saved_use if isinstance(saved_use, str) and not is_generic_use(saved_use)         else _raw_use(use_candidates, full.area, floors)
     archetype, reason = classify_use(use_candidates, full.area, floors)
     if archetype == "_unconditioned":
         archetype = None

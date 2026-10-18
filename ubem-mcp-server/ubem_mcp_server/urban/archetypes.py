@@ -109,6 +109,14 @@ _SMALL_OFFICE_MAX_GFA = 2_000.0
 _MEDIUM_OFFICE_MAX_GFA = 20_000.0
 
 
+# Values that say only "this is a building" (OSM building=yes), not its use.
+GENERIC_USES = frozenset({"yes", "true", "1", "building"})
+
+
+def is_generic_use(value) -> bool:
+    return value is None or str(value).strip() == "" or _norm(value) in GENERIC_USES
+
+
 def _norm(value) -> str:
     return re.sub(r"[\s\-/]+", "_", str(value).strip().lower())
 
@@ -140,7 +148,7 @@ def classify_use(
     should be excluded.
     """
     for raw in use_values:
-        if raw is None or str(raw).strip() == "" or _norm(raw) in ("yes", "true", "1"):
+        if is_generic_use(raw):
             continue
         direct = resolve_archetype_key(raw)
         if direct:

@@ -154,3 +154,33 @@ def test_assign_archetypes_derives_modeling_stock(tmp_path):
     assert len(mgr.get("inv2")) == 6  # data stock unchanged
     with pytest.raises(ValueError, match="already a modeling stock"):
         mgr.assign_archetypes("model")
+
+
+def test_generic_building_tag_is_unknown_use():
+    stock = stock_from_geojson(INVENTORY, mode="data")
+    assert stock.get("tiny").use is None  # building=yes says nothing about use
+    assert stock.summary()["known_share"]["use"] == pytest.approx(5 / 6, abs=1e-3)
+
+
+def test_enrich_gives_parcel_use_only_to_buildings_and_keeps_columns(tmp_path):
+    mgr = _data_stock(tmp_path)
+    layer = tmp_path / "parcels.geojson"
+    # One parcel under the "yes" building and the shed: a house parcel.
+    layer.write_text(json.dumps(fc(feature(rect(55, -5, 45, 20), USE_CLASS="house", PARCEL="112", PARCEL_USE="0131",
+                                           MAIL1="1 Main St"))))
+    res = mgr.enrich("inv", str(layer), {"use": "USE_CLASS"}, new_stock_id="inv2",
+                     keep_columns=["PARCEL_USE", "PARCEL"])
+    stock = mgr.get("inv2")
+    tiny, shed = stock.get("tiny"), stock.get("shed1")
+    assert tiny.use == "house" and tiny.archetype == "single_family"
+    assert shed.archetype is None and shed.use == "shed"  # a shed stays a shed
+    assert res["enrichment"]["filled"] == {"use": 1}
+    assert res["enrichment"]["use_not_given_to_unconditioned"] == 1
+    assert tiny.source_properties["PARCEL_USE"] == "0131"
+    assert shed.source_properties["PARCEL"] == "112" and "layer_PARCEL" not in shed.source_properties  # same value
+    assert "MAIL1" not in json.dumps(tiny.source_properties)
+    q = mgr.query_stock("inv2", group_by=["PARCEL_USE"], sample=0)
+    assert {g["PARCEL_USE"]: g["count"] for g in q["groups"]}["0131"] == 2
+
+    with pytest.raises(ValueError, match="personal"):
+        mgr.enrich("inv", str(layer), {"use": "USE_CLASS"}, new_stock_id="inv3", keep_columns=["MAIL1"])

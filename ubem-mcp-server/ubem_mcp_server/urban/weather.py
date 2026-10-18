@@ -19,6 +19,7 @@ import json
 import logging
 import math
 import re
+import urllib.error
 import urllib.request
 import zipfile
 from collections import defaultdict
@@ -45,9 +46,21 @@ Fetch = Callable[[str], bytes]
 
 
 def http_get(url: str, timeout: float = 120.0) -> bytes:
+    """GET a URL. A missing file raises FileNotFoundError; a server that is
+    down, busy or too slow raises ConnectionError (tools report "unavailable")."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (https URLs built here)
-        return resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (https URLs built here)
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        if e.code in (403, 404, 410):
+            raise FileNotFoundError(f"Not found on the server (HTTP {e.code}): {url}") from None
+        if e.code == 429 or e.code >= 500:
+            raise ConnectionError(f"The server answered HTTP {e.code} for {url}; try again later") from None
+        raise
+    except (urllib.error.URLError, TimeoutError) as e:
+        raise ConnectionError(f"Could not reach {url}: {getattr(e, 'reason', e)}; check the network and "
+                              "try again later") from None
 
 
 # --------------------------------------------------------------------------- #

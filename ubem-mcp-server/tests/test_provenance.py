@@ -11,13 +11,15 @@ from .test_urban_stock import _manager, fc, feature, rect
 
 
 @pytest.mark.parametrize("name", ["OWNER_NAME", "owner", "MAIL_ADDR1", "mailing_address", "MAIL_ZIP",
-                                  "Email", "e-mail", "phone", "TAXPAYER", "first_name", "Grantee"])
+                                  "Email", "e-mail", "phone", "TAXPAYER", "first_name", "Grantee",
+                                  "MAIL1", "mail5"])
 def test_personal_fields_are_recognized(name):
     assert provenance.is_personal_field(name)
 
 
 @pytest.mark.parametrize("name", ["PARCEL_USE", "building", "addr:street", "SITUS_ADDR", "residential_units",
-                                  "year_built", "height", "name", "building:levels", "PARCEL", "LAND_VALUE"])
+                                  "year_built", "height", "name", "building:levels", "PARCEL", "LAND_VALUE",
+                                  "MAILBOX_COUNT"])
 def test_building_fields_are_kept(name):
     assert not provenance.is_personal_field(name)
 

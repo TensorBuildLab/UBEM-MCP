@@ -388,7 +388,7 @@ The server provides **68 tools** organized into **15 categories**. It uses only 
 
 ```json
 {"ok": true, "warnings": [], "...": "tool data", "next_steps": ["poll get_batch_status(...) until is_complete"]}
-{"ok": false, "error_type": "not_found | invalid_input | internal", "error": "Unknown stock_id: nope"}
+{"ok": false, "error_type": "not_found | invalid_input | unavailable | internal", "error": "Unknown stock_id: nope"}
 ```
 
 Responses are summaries kept under 20,000 characters (lists are paged with `limit`/`offset`, groups are capped), with full detail written to files. Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so a client can tell which tools only read, which discard work, and which reach the internet. The single-model tools carried over from EnergyPlus-MCP keep their original text responses.

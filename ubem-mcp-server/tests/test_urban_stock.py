@@ -373,3 +373,33 @@ def test_enrich_with_points_and_projected_crs(tmp_path):
 
     with pytest.raises(ValueError, match="Unknown target"):
         mgr.enrich("base", str(pts), {"color": "x"})
+
+
+def test_overpass_retries_busy_server_then_explains(monkeypatch):
+    import io
+    import urllib.error
+
+    calls = []
+
+    def busy(req, timeout=None):
+        calls.append(1)
+        raise urllib.error.HTTPError("u", 504, "Gateway Timeout", {}, io.BytesIO())
+
+    monkeypatch.setattr(osm.urllib.request, "urlopen", busy)
+    monkeypatch.setattr(osm.time, "sleep", lambda s: None)
+    with pytest.raises(ConnectionError, match="HTTP 504.*3 tries"):
+        osm.fetch_overpass("q")
+    assert len(calls) == 3
+
+
+@pytest.mark.asyncio
+async def test_unreachable_service_is_reported_as_unavailable(monkeypatch, tmp_path):
+    from ubem_mcp_server import server
+
+    def down(*a, **k):
+        raise ConnectionError("The Overpass server did not answer")
+
+    monkeypatch.setattr(osm, "fetch_overpass", down)
+    _, res = await server.mcp.call_tool("fetch_osm_buildings", {"center_lat": 32.2, "center_lon": -110.9,
+                                                                "radius_m": 100, "stock_id": "x_unavail"})
+    assert res["ok"] is False and res["error_type"] == "unavailable"
