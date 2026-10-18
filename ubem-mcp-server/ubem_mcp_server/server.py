@@ -2591,7 +2591,8 @@ def scenario_schema_resource() -> str:
     }, indent=1)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Run the MCP server with the configured transport (stdio or streamable HTTP)."""
     logger.info(f"Starting {config.server.name} v{config.server.version}")
     logger.info(f"EnergyPlus version: {config.energyplus.version}")
     logger.info(f"Sample files path: {config.paths.sample_files_path}")
@@ -2630,3 +2631,7 @@ if __name__ == "__main__":
         raise
     finally:
         logger.info("Server stopped")
+
+
+if __name__ == "__main__":
+    main()
