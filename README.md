@@ -347,7 +347,16 @@ docker build \
 
 ## Available Tools
 
-The server provides **55 tools** organized into **11 categories**:
+The server provides **58 tools** organized into **11 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
+
+**Responses.** The 23 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
+
+```json
+{"ok": true, "warnings": [], "...": "tool data", "next_steps": ["poll get_batch_status(...) until is_complete"]}
+{"ok": false, "error_type": "not_found | invalid_input | internal", "error": "Unknown stock_id: nope"}
+```
+
+Responses are summaries kept under 20,000 characters (lists are paged with `limit`/`offset`, groups are capped), with full detail written to files. Every tool carries MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) so a client can tell which tools only read, which discard work, and which reach the internet. The single-model tools carried over from EnergyPlus-MCP keep their original text responses.
 
 ### 🗺️ Urban Building Stock (9 tools) — new in UBEM-MCP
 - `list_archetypes` - List the building archetypes (DOE prototype use types) and vintage bins
