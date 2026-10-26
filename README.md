@@ -17,6 +17,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [What it is for](#what-it-is-for)
 - [Three ways to use it](#three-ways-to-use-it)
 - [Installation](#installation)
+  - [Quickest: the ready-to-run image](#quickest-the-ready-to-run-image)
   - [Using the MCP Server](#using-the-mcp-server)
     - [Claude Desktop](#claude-desktop)
     - [VS Code](#vs-code)
@@ -108,6 +109,29 @@ ubem-mcp serve                                   # run the MCP server
 Results print as JSON; the exit code is 1 when a tool answers `ok: false`. Lists and objects are given as JSON (`--field-map '{"year_built": "YR"}'`) and lists of names also as `a,b,c`. `python -m ubem_mcp_server` works the same way.
 
 ## Installation
+
+### Quickest: the ready-to-run image
+
+Each release publishes an image with EnergyPlus 26.1 and UBEM-MCP installed; only Docker is needed. The folder you mount at `/data` is the workspace: put your GeoJSON, CSV or EPW files there, and results appear in `outputs/` inside it.
+
+```bash
+docker pull ghcr.io/tensorbuildlab/ubem-mcp:1.0.0
+```
+
+Add it to any MCP client, for example Claude Desktop (`claude_desktop_config.json`), VS Code (`.vscode/mcp.json`, key `servers`) or Cursor (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "ubem": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "-v", "/path/to/your/project:/data", "ghcr.io/tensorbuildlab/ubem-mcp:1.0.0"]
+    }
+  }
+}
+```
+
+The same image runs the command line: `docker run --rm -v "$PWD":/data ghcr.io/tensorbuildlab/ubem-mcp:1.0.0 tools`. The sections below build a development image from source instead.
 
 ### Using the MCP Server
 
