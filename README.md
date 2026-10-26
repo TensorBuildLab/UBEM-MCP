@@ -909,11 +909,15 @@ The server auto-detects EnergyPlus installation and uses sensible defaults. Conf
 
 ## Reproducing the paper
 
-[paper/README.md](paper/README.md) lists the script behind every table and figure of the SoftwareX paper, the result files they produced, and how to regenerate the figures (`python paper/figures/make_figures.py`). `scripts/verify_examples.py` regenerates the worked examples' models and checks them against the models that were simulated.
+[paper/README.md](paper/README.md) lists the script behind every table and figure of the SoftwareX paper, the result files they produced, and how to regenerate the figures (`python paper/figures/make_figures.py`). `src/scripts/verify_examples.py` regenerates the worked examples' models and checks them against the models that were simulated.
 
 ## Cite this work
 
 If you use UBEM-MCP, please cite the software (see [CITATION.cff](CITATION.cff); GitHub's "Cite this repository" button gives APA and BibTeX) and the EnergyPlus-MCP paper it builds on — see [NOTICE.md](NOTICE.md) for that citation.
+
+## Funding
+
+This work was supported by the U.S. National Science Foundation under grant [CMMI-2623038](https://www.nsf.gov/awardsearch/show-award/?AWD_ID=2623038). Any opinions, findings, conclusions or recommendations expressed here are those of the authors and do not necessarily reflect the views of the National Science Foundation.
 
 ## License
 
