@@ -10,16 +10,21 @@ Steps, all through the UBEM-MCP tools (called from the Python library):
   3. assign archetypes and generate models for the benchmarked buildings,
   4. simulate them with typical-year weather,
   5. load the measured energy use and compare, with ASHRAE Guideline 14
-     statistics, once as reported and once weather-normalized.
+     statistics, once as reported and once weather-normalized,
+  6. (--fuel-step) set each building's heating fuel from its meters
+     (no gas use: electricity), model and simulate again, and compare.
 
 Usage (inside the dev container, from ubem-mcp-server/):
     uv run python scripts/run_measured_example.py --out outputs/examples/measured [--workers 4]
     # redo only step 5 on finished simulations:
     uv run python scripts/run_measured_example.py --out outputs/examples/measured --compare-only
+    # then step 6:
+    uv run python scripts/run_measured_example.py --out outputs/examples/measured --compare-only --fuel-step
 """
 
 import argparse
 import csv
+from collections import Counter
 import json
 import math
 import time
@@ -84,6 +89,7 @@ def main(argv=None):
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--compare-only", action="store_true", help="redo step 5 on finished simulations")
+    ap.add_argument("--fuel-step", action="store_true", help="also run step 6 (heating fuel from the meters)")
     a = ap.parse_args(argv)
     a.out.mkdir(parents=True, exist_ok=True)
     results = a.out / "results.json"
@@ -100,6 +106,8 @@ def main(argv=None):
                 r["records"] = count_records(list(csv.DictReader(f)))
             select(u, r)
         compare(u, a, r, timings)
+        if a.fuel_step:
+            fuel_step(u, a, r, timings)
 
     results.write_text(json.dumps(r, indent=1, default=str), encoding="utf-8")
     print(json.dumps({k: r.get(k) for k in ("records", "selection", "timings_s")}, indent=1, default=str))
@@ -110,9 +118,9 @@ def count_records(rows):
             "with_steam": sum(1 for x in rows if x.get("steamuse_kbtu"))}
 
 
-def select(u, r):
+def select(u, r, stock_id="lqa_model"):
     """Model only buildings that one single-building benchmarking record describes."""
-    exp = u.export_stock(stock_id="lqa_model", format="csv",
+    exp = u.export_stock(stock_id=stock_id, format="csv",
                          columns=["osebuildingid", "numberofbuildings", "largestpropertyusetype"],
                          name="benchmarked_buildings")
     with open(exp["path"], encoding="utf-8") as f:
@@ -151,6 +159,13 @@ def build_and_simulate(u, a, r, timings):
     timings["simulate_s"] = time.perf_counter() - t0
 
 
+def load_once(u, a, **kw):
+    """load_measured_energy, or None when a rerun already loaded the same data."""
+    if (a.out / "outputs" / "stocks" / kw["stock_id"] / "measured" / kw["measured_id"]).exists():
+        return None
+    return u.load_measured_energy(**kw)
+
+
 def compare(u, a, r, timings):
     """Step 5."""
     # The measured table keeps only single-building properties, as modeled.
@@ -164,17 +179,65 @@ def compare(u, a, r, timings):
     common = dict(stock_id="lqa_model", csv_path=str(single), id_column="osebuildingid",
                   match_field="osebuildingid", year=YEAR, license=BENCHMARK_LICENSE,
                   attribution=BENCHMARK_ATTRIBUTION)
-    r["load_reported"] = u.load_measured_energy(
+    r["load_reported"] = load_once(u, a,
         columns={"electricity": "electricity_kwh", "natural_gas": "naturalgas_therms",
                  "total": "siteenergyuse_kbtu", "floor_area": "propertygfabuildings"},
-        units={"floor_area": "ft2"}, measured_id="seattle_2019", **common)
-    r["load_normalized"] = u.load_measured_energy(
+        units={"floor_area": "ft2"}, measured_id="seattle_2019", **common) or r.get("load_reported")
+    r["load_normalized"] = load_once(u, a,
         columns={"total": "siteenergyusewn_kbtu", "floor_area": "propertygfabuildings"},
-        units={"floor_area": "ft2"}, measured_id="seattle_2019_weather_normalized", **common)
+        units={"floor_area": "ft2"}, measured_id="seattle_2019_weather_normalized", **common) or r.get("load_normalized")
     r["compare_reported"] = u.compare_to_measured(stock_id="lqa_model", model_set_id="benchmarked",
                                                   measured_id="seattle_2019")
     r["compare_normalized"] = u.compare_to_measured(stock_id="lqa_model", model_set_id="benchmarked",
                                                     measured_id="seattle_2019_weather_normalized")
+    r["timings_s"] = timings
+
+
+
+def _num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def fuel_step(u, a, r, timings):
+    """Step 6: a building that used no gas or district steam in the year is
+    heated with electricity; one that used gas is heated with gas."""
+    pts = json.loads((a.out / "benchmarking_2019.geojson").read_text(encoding="utf-8"))
+    counts = Counter()
+    for f in pts["features"]:
+        p = f["properties"]
+        gas, steam = _num(p.get("naturalgas_therms")), _num(p.get("steamuse_kbtu"))
+        p["HEATING_FUEL"] = "natural_gas" if gas > 0 else ("electricity" if steam == 0 else None)
+        counts[p["HEATING_FUEL"] or "district_steam"] += 1
+    layer = a.out / "benchmarking_2019_fuel.geojson"
+    layer.write_text(json.dumps(pts), encoding="utf-8")
+    r["fuel_records"] = dict(counts)
+
+    t0 = time.perf_counter()
+    r["fuel_enrich"] = u.enrich_building_stock(
+        stock_id="lqa_model", layer_path=str(layer), field_map={"heating_fuel": "HEATING_FUEL"}, overwrite=True,
+        new_stock_id="lqa_model_fuel", layer_license=BENCHMARK_LICENSE, layer_attribution=BENCHMARK_ATTRIBUTION)
+    sel = {}
+    ids = select(u, sel, stock_id="lqa_model_fuel")
+    r["fuel_selection"] = sel["selection"]
+    u.get_site_weather(stock_id="lqa_model_fuel")
+    r["fuel_models"] = u.generate_building_models(stock_id="lqa_model_fuel", building_ids=ids,
+                                                  model_set_id="benchmarked_fuel")
+    sim = u.simulate_model_set(stock_id="lqa_model_fuel", model_set_id="benchmarked_fuel")
+    r["fuel_batch"] = u.wait(sim["batch"]["batch_id"], poll_seconds=10, timeout=4 * 3600)
+    timings["fuel_step_s"] = time.perf_counter() - t0
+
+    common = dict(stock_id="lqa_model_fuel", csv_path=str(a.out / "benchmarking_2019_single.csv"),
+                  id_column="osebuildingid", match_field="osebuildingid", year=YEAR, license=BENCHMARK_LICENSE,
+                  attribution=BENCHMARK_ATTRIBUTION)
+    r["fuel_load"] = load_once(u, a,
+        columns={"electricity": "electricity_kwh", "natural_gas": "naturalgas_therms",
+                 "total": "siteenergyuse_kbtu", "floor_area": "propertygfabuildings"},
+        units={"floor_area": "ft2"}, measured_id="seattle_2019", **common) or r.get("fuel_load")
+    r["compare_fuel"] = u.compare_to_measured(stock_id="lqa_model_fuel", model_set_id="benchmarked_fuel",
+                                              measured_id="seattle_2019")
     r["timings_s"] = timings
 
 

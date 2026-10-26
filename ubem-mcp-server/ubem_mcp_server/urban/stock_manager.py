@@ -160,7 +160,7 @@ class StockManager:
             p = ft["properties"]
             # Re-read the original columns plus anything joined later (enrich).
             flat = dict(p.get("source_properties") or {})
-            flat.update({k: p[k] for k in ("archetype", "year_built", "num_floors", "height_m")
+            flat.update({k: p[k] for k in ("archetype", "year_built", "num_floors", "height_m", "heating_fuel")
                          if p.get(k) not in (None, "")})
             if p.get("use"):
                 flat["use"] = p["use"]

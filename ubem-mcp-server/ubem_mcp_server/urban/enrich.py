@@ -15,11 +15,11 @@ from pyproj import CRS, Transformer
 from shapely import STRtree
 from shapely.geometry import Polygon, shape
 
-from .archetypes import classify_use
+from .archetypes import classify_use, normalize_heating_fuel
 from .provenance import is_personal_field
 from .stock import BuildingStock, _legacy_crs_name, _reproject, stock_from_geojson
 
-ENRICHABLE = ("year_built", "use", "num_floors", "height_m")
+ENRICHABLE = ("year_built", "use", "num_floors", "height_m", "heating_fuel")
 
 
 def enrich_stock(
@@ -37,7 +37,8 @@ def enrich_stock(
     """Return a new stock with attributes joined from `layer`, plus a report.
 
     field_map maps target attributes ("year_built", "use", "num_floors",
-    "height_m") to column names in the layer. use_value_map translates the
+    "height_m", "heating_fuel") to column names in the layer. heating_fuel
+    values are "electricity" or "natural_gas" (common spellings accepted). use_value_map translates the
     layer's use values (e.g. assessor land-use codes) to archetype keys or
     recognized use words. Each building matches the layer feature containing
     its footprint centroid; if none does, the polygon covering the largest
@@ -104,6 +105,7 @@ def enrich_stock(
         **({"kept_columns": keep_columns, "kept_columns_missing": report["missing_column"]}
            if keep_columns else {}),
         "unrecognized_use_values": dict(unrecognized.most_common(20)),
+        **({"unrecognized_heating_fuel_values": report["bad_fuel"]} if "heating_fuel" in field_map else {}),
         "inferred_share_before": stock.summary()["inferred_share"],
         "inferred_share_after": new_stock.summary()["inferred_share"],
     }
@@ -188,7 +190,8 @@ def _apply(props: Dict[str, Any], building, layer_props: Dict[str, Any], field_m
         value = layer_props.get(key) if key else None
         return None if value in (None, "") else value
 
-    targets = {"use": "archetype", "year_built": "year_built", "num_floors": "num_floors", "height_m": "height_m"}
+    targets = {"use": "archetype", "year_built": "year_built", "num_floors": "num_floors", "height_m": "height_m",
+               "heating_fuel": "heating_fuel"}
     for target, attr in targets.items():
         value = layer_value(target)
         # Fill values that were guessed (model mode) or are unknown (data mode).
@@ -204,6 +207,12 @@ def _apply(props: Dict[str, Any], building, layer_props: Dict[str, Any], field_m
                 unrecognized[str(value)] += 1
                 continue
             props["archetype"] = mapped
+        elif target == "heating_fuel":
+            fuel = normalize_heating_fuel(value)
+            if fuel is None:
+                report["bad_fuel"] += 1
+                continue
+            props["heating_fuel"] = fuel
         elif target == "height_m" and height_unit == "ft":
             props["height_m"] = f"{value} ft"
         else:

@@ -655,7 +655,8 @@ class ModelBuilder:
                 w.add("HVACTemplate:Plant:HotWaterLoop", {"Name": "Hot water loop", "Pump Control Type": "Intermittent"})
                 w.add("HVACTemplate:Plant:Boiler", {"Name": "Boiler", "Boiler Type": "HotWaterBoiler",
                                                     "Capacity": "autosize", "Efficiency": p.heating_efficiency,
-                                                    "Fuel Type": "NaturalGas", "Template Plant Loop Type": "HotWater"})
+                                                    "Fuel Type": "NaturalGas" if gas else "Electricity",
+                                                    "Template Plant Loop Type": "HotWater"})
             if p.hvac_system == "vav":
                 w.add("HVACTemplate:Plant:ChilledWaterLoop", {"Name": "Chilled water loop",
                                                                "Pump Control Type": "Intermittent"})

@@ -1779,6 +1779,7 @@ async def load_building_stock(
         stock_id: Optional name for the stock (letters, digits, _ or -); auto-generated if omitted
         source_crs: CRS of the coordinates if not WGS84 lon/lat, e.g. "EPSG:2868"
         height_field / floors_field / use_field / year_field / id_field: column names to use
+                     (a column named "heating_fuel", electricity or natural_gas, is read too)
         height_unit: "m" or "ft" for numeric heights without a unit
         default_archetype: Archetype for buildings with no recognizable use (see list_archetypes)
         default_year: Year built for buildings with no construction year
@@ -1892,8 +1893,11 @@ async def enrich_building_stock(
         stock_id: Stock to enrich
         layer_path: GeoJSON FeatureCollection (polygons such as parcels, or points)
         field_map: Target attribute -> layer column, using any of
-                   "year_built", "use", "num_floors", "height_m",
-                   e.g. {"year_built": "YEAR_BUILT", "use": "LAND_USE"}
+                   "year_built", "use", "num_floors", "height_m", "heating_fuel",
+                   e.g. {"year_built": "YEAR_BUILT", "use": "LAND_USE"}. heating_fuel
+                   ("electricity" or "natural_gas") replaces the archetype's heating
+                   and water-heating fuel in generated models, e.g. electricity for
+                   buildings with no gas account in a benchmarking table
         use_value_map: Translate layer use values (e.g. land-use codes) to archetype
                        keys or use words, e.g. {"0131": "single_family", "0310": "office"}
         layer_crs: CRS of the layer if not WGS84 lon/lat, e.g. "EPSG:2868"
@@ -1941,7 +1945,8 @@ async def get_building_stock(
 
     Returns:
         JSON with the stock summary, the number of matching buildings, and up to
-        `limit` matching buildings with their normalized attributes.
+        `limit` matching buildings with their normalized attributes (attributes
+        with no value are left out of each listed building).
     """
     stock = stock_manager.get(stock_id)
     matches = stock.filter(archetypes=archetypes, vintages=vintages,
@@ -1950,7 +1955,7 @@ async def get_building_stock(
     for b in matches[:max(0, limit)]:
         props = b.to_properties()
         props.pop("source_properties", None)
-        buildings.append(props)
+        buildings.append({k: v for k, v in props.items() if v not in (None, [], "")})
     data = {
         "stock_id": stock_id,
         "stock_directory": str(stock_manager.stock_dir(stock_id)),

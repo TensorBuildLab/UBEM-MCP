@@ -200,3 +200,24 @@ def parse_year(value) -> Optional[int]:
         return year if 1600 <= year <= 2100 else None
     m = re.search(r"(1[6-9]\d\d|20\d\d)", str(value))
     return int(m.group(1)) if m else None
+
+
+# Heating fuel of a building, when the data give it: "electricity" or
+# "natural_gas". None means the archetype's own fuel.
+HEATING_FUELS = ("electricity", "natural_gas")
+_FUEL_WORDS = {
+    "electricity": "electricity", "electric": "electricity", "elec": "electricity",
+    "electric resistance": "electricity", "heat pump": "electricity", "all electric": "electricity",
+    "all-electric": "electricity",
+    "natural_gas": "natural_gas", "natural gas": "natural_gas", "naturalgas": "natural_gas", "gas": "natural_gas",
+    "ng": "natural_gas", "fuel gas": "natural_gas",
+}
+
+
+def normalize_heating_fuel(value: object) -> Optional[str]:
+    """'electricity', 'natural_gas', or None when the value is empty or not
+    recognized."""
+    if value is None:
+        return None
+    return _FUEL_WORDS.get(str(value).strip().lower().replace("-", " ").replace("_", " ")) \
+        or _FUEL_WORDS.get(str(value).strip().lower())

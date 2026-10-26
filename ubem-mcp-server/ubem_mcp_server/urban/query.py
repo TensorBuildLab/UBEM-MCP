@@ -21,7 +21,7 @@ from .stock import Building, BuildingStock
 
 # Attributes every building has, in the order export writes them.
 STANDARD_FIELDS = ("building_id", "archetype", "use", "year_built", "vintage", "num_floors", "height_m",
-                   "footprint_area_m2", "gross_floor_area_m2")
+                   "footprint_area_m2", "gross_floor_area_m2", "heating_fuel")
 NUMERIC_FIELDS = {"year_built", "num_floors", "height_m", "footprint_area_m2", "gross_floor_area_m2"}
 COMPLETENESS_FIELDS = ("archetype", "use", "year_built", "num_floors", "height_m")
 AGGREGATES: Dict[str, Callable[[List[float]], float]] = {
@@ -119,7 +119,9 @@ def _summarize(buildings: Sequence[Building], metrics: Sequence[Tuple[str, str]]
 
 
 def sample_row(b: Building, extra: Sequence[str] = ()) -> Dict[str, Any]:
-    row = {k: value_of(b, k) for k in STANDARD_FIELDS}
+    """A building as a sample row; standard fields with no value are left out
+    (the export keeps every column), requested extra columns are always kept."""
+    row = {k: v for k in STANDARD_FIELDS if (v := value_of(b, k)) is not None}
     for k in extra:
         if k not in row:
             row[k] = value_of(b, k)

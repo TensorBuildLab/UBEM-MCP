@@ -39,3 +39,13 @@ Report, in this order:
 For monthly data, also give `monthly_guideline14`. Its thresholds (NMBE within 5%, CV(RMSE) within 15%) are written for calibrating single buildings; archetype models are not calibrated, so present them as a reference, not as pass or fail.
 
 The per-meter table is in `files.meters_csv` for plots or further analysis.
+
+## 4. Fix what the comparison points to
+
+Compare per fuel before blaming the archetype. If buildings with no gas account are modeled with gas heat (their modeled electricity is low and their total high), set their heating fuel and model them again:
+
+1. Add a column to the measured table's points or parcels, e.g. `HEATING_FUEL = "electricity"` where the gas column is empty and `"natural_gas"` where it is not.
+2. `enrich_building_stock(stock_id=..., layer_path=..., field_map={"heating_fuel": "HEATING_FUEL"}, overwrite=true, new_stock_id=...)`, then `assign_archetypes` if the stock is in data mode.
+3. `generate_building_models` and `simulate_model_set` for those buildings, and `compare_to_measured` again. Each model's manifest entry says `heating_fuel` and `heating_fuel_from: "building data"`.
+
+Report the comparison before and after; do not tune other inputs to close the remaining gap without saying so.

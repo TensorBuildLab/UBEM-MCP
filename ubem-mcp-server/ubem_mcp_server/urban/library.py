@@ -369,3 +369,41 @@ def _day_of_year(md: str) -> int:
     m, d = (int(x) for x in md.split("/"))
     cum = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]
     return cum[m - 1] + d
+
+
+def with_heating_fuel(p: "ArchetypeParams", fuel: Optional[str]) -> "ArchetypeParams":
+    """Archetype parameters for a building whose data give its heating fuel.
+
+    "electricity": electric resistance space heating (furnace coils, boiler,
+    air-handler coil) and water heating, and gas process loads as electric
+    loads, as in a building with no gas service. "natural_gas": gas furnace or
+    boiler (80%) and water heater (80%). The change is listed in the
+    parameters' assumptions."""
+    from dataclasses import replace
+
+    if fuel == "electricity":
+        if (p.heating_fuel == "Electricity" and p.water_heater_fuel == "Electricity"
+                and not p.gas_equipment and p.ahu_heating_coil != "Gas"):
+            return p
+        changes: Dict[str, Any] = {"heating_fuel": "Electricity", "heating_efficiency": 1.0,
+                                   "water_heater_fuel": "Electricity", "water_heater_efficiency": 1.0}
+        parts = ["electric resistance space and water heating"]
+        if p.ahu_heating_coil == "Gas":
+            changes["ahu_heating_coil"] = "Electric"
+        if p.gas_equipment:
+            changes["gas_equipment"] = []
+            changes["electric_equipment"] = list(p.electric_equipment) + [
+                {**g, "name": f"{g['name']}_electric", "fraction_lost": g.get("fraction_lost", 0.0)}
+                for g in p.gas_equipment]
+            parts.append("gas process loads as electric")
+    elif fuel == "natural_gas":
+        if p.heating_fuel == "NaturalGas" and p.water_heater_fuel == "NaturalGas":
+            return p
+        changes = {"heating_fuel": "NaturalGas", "heating_efficiency": 0.8,
+                   "water_heater_fuel": "NaturalGas", "water_heater_efficiency": 0.8}
+        parts = ["gas space heating (80%) and water heating (80%)"]
+    else:
+        return p
+    changes["assumptions"] = list(p.assumptions) + [
+        f"heating fuel {fuel} from the building data: " + ", ".join(parts)]
+    return replace(p, **changes)

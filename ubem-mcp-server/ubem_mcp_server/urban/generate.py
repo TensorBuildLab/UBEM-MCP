@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 from shapely import STRtree
 
 from .idd import load_idd
-from .library import data_sources, normalize_climate_zone, resolve
+from .library import data_sources, normalize_climate_zone, resolve, with_heating_fuel
 from .modelgen import SHADING_RADIUS_M, ModelBuilder, Neighbor, epw_location
 from .stock import Building, BuildingStock
 
@@ -49,7 +49,7 @@ def generate_models(
             near_idx = tree.query(b.footprint.buffer(SHADING_RADIUS_M))
             neighbors = [Neighbor(all_buildings[int(i)].footprint, all_buildings[int(i)].height_m)
                          for i in near_idx if all_buildings[int(i)].building_id != b.building_id]
-            params = resolve(b.archetype, b.vintage, cz)
+            params = with_heating_fuel(resolve(b.archetype, b.vintage, cz), b.heating_fuel)
             applied: List[Dict[str, str]] = []
             if param_hook is not None:
                 params, applied = param_hook(b, params)
@@ -65,6 +65,9 @@ def generate_models(
                 "vintage": b.vintage,
                 "num_floors": b.num_floors,
                 "gross_floor_area_m2": round(b.gross_floor_area_m2, 1),
+                "heating_fuel": {"Electricity": "electricity", "NaturalGas": "natural_gas"}.get(
+                    params.heating_fuel, params.heating_fuel),
+                **({"heating_fuel_from": "building data"} if b.heating_fuel else {}),
                 "hvac_system": (params.hvac_system + ("_heat_pump" if params.heat_pump_heating_cop else "")
                                 if hvac == "template" else "ideal_loads"),
                 "zones": info.num_zones,

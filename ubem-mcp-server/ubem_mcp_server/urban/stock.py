@@ -29,7 +29,8 @@ from shapely.geometry.polygon import orient
 import shapely
 from shapely.validation import make_valid
 
-from .archetypes import (ARCHETYPES, classify_use, is_generic_use, parse_year, resolve_archetype_key,
+from .archetypes import (ARCHETYPES, classify_use, is_generic_use, normalize_heating_fuel, parse_year,
+                         resolve_archetype_key,
                          vintage_for_year)
 from .provenance import scrub_personal_fields
 
@@ -62,6 +63,8 @@ class Building:
     use: Optional[str] = None  # raw use value from the data, before classification
     # Data mode only: the full footprint (all parts, courtyards kept), local frame.
     full_geometry: Optional[Any] = None
+    # "electricity" or "natural_gas" when the data say; None = archetype default.
+    heating_fuel: Optional[str] = None
 
     @property
     def footprint_area_m2(self) -> float:
@@ -84,6 +87,7 @@ class Building:
             "height_m": None if self.height_m is None else round(self.height_m, 2),
             "footprint_area_m2": round(self.footprint_area_m2, 1),
             "gross_floor_area_m2": None if gfa is None else round(gfa, 1),
+            "heating_fuel": self.heating_fuel,
             "inferred_fields": list(self.inferred_fields),
             "notes": list(self.notes),
             "source_properties": self.source_properties,
@@ -514,6 +518,7 @@ def _normalize_attributes(fid, poly, props, notes, *, height_field, floors_field
         _add(inferred, "year_built")
 
     source_props = props.get("source_properties") if isinstance(props.get("source_properties"), dict) else props
+    fuel = _heating_fuel({**source_props, **props}, notes)
     return Building(
         building_id=_safe_id(fid),
         footprint=poly,
@@ -527,7 +532,17 @@ def _normalize_attributes(fid, poly, props, notes, *, height_field, floors_field
         notes=notes,
         source_properties=source_props,
         use=props["use"] if isinstance(props.get("use"), str) else raw_use,
+        heating_fuel=fuel,
     )
+
+
+def _heating_fuel(view: Dict[str, Any], notes: List[str]) -> Optional[str]:
+    """The building's heating fuel from a "heating_fuel" column, if any."""
+    _, raw = _lookup(view, None, HEATING_FUEL_FIELDS)
+    fuel = normalize_heating_fuel(raw)
+    if raw not in (None, "") and fuel is None:
+        notes.append(f"heating fuel {raw!r} not recognized (use electricity or natural_gas); archetype fuel kept")
+    return fuel
 
 
 def _raw_use(candidates, area: float, floors) -> Optional[str]:
@@ -542,7 +557,8 @@ def _raw_use(candidates, area: float, floors) -> Optional[str]:
 
 
 # Normalized attributes a saved stock writes at the top level of each feature.
-_NORMALIZED_KEYS = ("archetype", "year_built", "num_floors", "height_m")
+_NORMALIZED_KEYS = ("archetype", "year_built", "num_floors", "height_m", "heating_fuel")
+HEATING_FUEL_FIELDS = ("heating_fuel",)
 
 
 def _data_attributes(fid, poly, full, props, *, height_field, floors_field, use_field, year_field,
@@ -579,6 +595,7 @@ def _data_attributes(fid, poly, full, props, *, height_field, floors_field, use_
         building_id=_safe_id(fid), footprint=poly, archetype=archetype, year_built=year,
         vintage=vintage_for_year(year), num_floors=floors, floor_to_floor_m=f2f, height_m=height,
         inferred_fields=[], notes=notes, source_properties=src, use=raw_use, full_geometry=full,
+        heating_fuel=_heating_fuel(view, notes),
     )
 
 
