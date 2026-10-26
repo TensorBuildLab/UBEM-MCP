@@ -532,5 +532,42 @@
    "buildings_comparison_csv": "outputs/release/case_study/stocks/case_study/models/baseline__electrify/results/latest/comparison/buildings_comparison.csv",
    "comparison_json": "outputs/release/case_study/stocks/case_study/models/baseline__electrify/results/latest/comparison/comparison.json"
   }
+ },
+ "end_use_kwh": {
+  "cooling": {
+   "baseline": 8825666.8,
+   "electrified": 8267178.1,
+   "saved": 558488.6
+  },
+  "exterior_lighting": {
+   "baseline": 1030728.3,
+   "electrified": 1030728.3,
+   "saved": 0.0
+  },
+  "fans": {
+   "baseline": 3198147.9,
+   "electrified": 3004871.8,
+   "saved": 193276.1
+  },
+  "heating": {
+   "baseline": 4920753.2,
+   "electrified": 1596055.3,
+   "saved": 3324697.9
+  },
+  "interior_equipment": {
+   "baseline": 9306122.7,
+   "electrified": 9306122.7,
+   "saved": 0.0
+  },
+  "interior_lighting": {
+   "baseline": 7545345.7,
+   "electrified": 4527211.9,
+   "saved": 3018133.9
+  },
+  "water_systems": {
+   "baseline": 1662208.5,
+   "electrified": 1183859.4,
+   "saved": 478349.1
+  }
  }
 }

@@ -4,7 +4,8 @@
   "memory_gb": 7.6,
   "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
   "processor": "11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz",
-  "python": "3.12.15"
+  "python": "3.12.15",
+  "note": "Windows 11 laptop, Docker Desktop (WSL2) with 8 GB; the host reported its CPU at 1.8 GHz (Win32_Processor CurrentClockSpeed and MaxClockSpeed both 1805 MHz) during the run, below the 3.0 GHz nominal clock, because of its power settings."
  },
  "intake_s": 2.7,
  "stock": {
