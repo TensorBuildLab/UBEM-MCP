@@ -1,0 +1,113 @@
+{
+ "environment": {
+  "cpu_count": 8,
+  "memory_gb": 7.6,
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "processor": "11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz",
+  "python": "3.12.15"
+ },
+ "intake_s": 1.0,
+ "stock": {
+  "stock_id": "bench",
+  "origin_lon_lat": [
+   -110.934945,
+   32.228924
+  ],
+  "num_buildings": 1961,
+  "num_excluded": 616,
+  "excluded_by_reason": {
+   "unconditioned": 564,
+   "too_small": 52
+  },
+  "by_archetype": {
+   "single_family": 1840,
+   "midrise_apartment": 60,
+   "small_office": 24,
+   "secondary_school": 13,
+   "standalone_retail": 7,
+   "primary_school": 6,
+   "quick_service_restaurant": 4,
+   "full_service_restaurant": 4,
+   "outpatient": 2,
+   "medium_office": 1
+  },
+  "by_vintage": {
+   "1980_2004": 1961
+  },
+  "total_footprint_area_m2": 479426.4,
+  "total_gross_floor_area_m2": 612163.4,
+  "inferred_share": {
+   "archetype": 0.067,
+   "height_m": 0.998,
+   "num_floors": 0.917,
+   "year_built": 1.0
+  },
+  "notes_by_type": {
+   "archetype defaulted to single_family": 132,
+   "use '\u2026' approximated as secondary_school": 13,
+   "dropped N interior ring(s)": 2
+  },
+  "extent": {
+   "width_m": 1607.5,
+   "depth_m": 1578.4
+  }
+ },
+ "hvac": "template",
+ "runs": [
+  {
+   "n": 24,
+   "workers": 1,
+   "models": 24,
+   "succeeded": 24,
+   "modelgen_s": 1.1,
+   "simulation_s": 210.5,
+   "aggregate_s": 6.0,
+   "total_s": 217.6,
+   "buildings_per_hour": 397.1,
+   "per_building_sim_mean_s": 111.3,
+   "per_building_sim_median_s": 108.2,
+   "per_building_sim_max_s": 209.7,
+   "peak_energyplus_memory_mb": 213,
+   "peak_process_memory_mb": 213,
+   "peak_energyplus_processes": 1,
+   "floor_area_with_results_m2": 5215
+  },
+  {
+   "n": 24,
+   "workers": 2,
+   "models": 24,
+   "succeeded": 24,
+   "modelgen_s": 0.6,
+   "simulation_s": 109.2,
+   "aggregate_s": 6.0,
+   "total_s": 115.8,
+   "buildings_per_hour": 746.1,
+   "per_building_sim_mean_s": 60.4,
+   "per_building_sim_median_s": 61.1,
+   "per_building_sim_max_s": 108.7,
+   "peak_energyplus_memory_mb": 426,
+   "peak_process_memory_mb": 214,
+   "peak_energyplus_processes": 2,
+   "floor_area_with_results_m2": 5215
+  },
+  {
+   "n": 24,
+   "workers": 4,
+   "models": 24,
+   "succeeded": 24,
+   "modelgen_s": 0.6,
+   "simulation_s": 78.6,
+   "aggregate_s": 6.8,
+   "total_s": 86.0,
+   "buildings_per_hour": 1004.5,
+   "per_building_sim_mean_s": 44.6,
+   "per_building_sim_median_s": 43.6,
+   "per_building_sim_max_s": 77.8,
+   "peak_energyplus_memory_mb": 852,
+   "peak_process_memory_mb": 214,
+   "peak_energyplus_processes": 4,
+   "floor_area_with_results_m2": 5215
+  }
+ ],
+ "note": "24-building random subset of houses in a residential area next to the University of Arizona campus; see paper Section 5.3"
+}

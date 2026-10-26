@@ -28,7 +28,7 @@ OpenAlex metadata are CC0.
 
 ## Worked examples (Section 4)
 
-Each example is a script in `ubem-mcp-server/scripts/` that calls the UBEM-MCP library, which runs the same code as the MCP tools. Their summaries are copied to `results/`.
+Each example is a script in `ubem-mcp-server/scripts/` that calls the UBEM-MCP library, which runs the same code as the MCP tools. Their summaries are copied to `results/` (`section_4_1_campus.json`, `section_4_2_data_only.json`, `section_4_3_measured.json`).
 
 | Section | Script | Data |
 |---|---|---|
@@ -36,3 +36,10 @@ Each example is a script in `ubem-mcp-server/scripts/` that calls the UBEM-MCP l
 | 4.2 Data-only workflow (U3) | `run_data_example.py` | OpenStreetMap, Pima County parcels, NREL ComStock/ResStock (CC BY 4.0) |
 | 4.3 Comparison with measured energy use (U4) | `run_measured_example.py` | OpenStreetMap, City of Seattle building energy benchmarking (public domain) |
 | 4.5 Reproduction by an agent | `agent_tests/` task `S41_campus` | as 4.1 |
+
+## Verification (Section 5)
+
+| Section | Script | Result file |
+|---|---|---|
+| 5.2 Archetype check against DOE reference results, Tucson | `validate_archetypes.py` | `results/section_5_2_archetypes_tucson.json` |
+| 5.3 Background batch scaling | `benchmark_scaling.py` | `results/section_5_3_scaling.json` |

@@ -15,5 +15,5 @@ from .energyplus_tools import EnergyPlusManager
 from .config import Config, get_config
 from .batch_manager import BatchManager
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = ["EnergyPlusManager", "Config", "get_config", "BatchManager"]

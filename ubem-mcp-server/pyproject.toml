@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ubem-mcp-server"
-version = "0.1.0"
-description = "UBEM-MCP: batch/portfolio urban building energy modeling MCP server, built on EnergyPlus"
-authors = [{name = "TensorBuildLab"}]
+version = "1.0.0"
+description = "UBEM-MCP: urban building energy modeling data and simulation for AI assistants (MCP server, Python library and CLI), built on EnergyPlus"
+authors = [{name = "Liang Zhang", email = "liangzhang1@arizona.edu"}, {name = "TensorBuildLab"}]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -40,6 +40,8 @@ ubem-mcp = "ubem_mcp_server.cli:main"
 [project.urls]
 homepage = "https://github.com/TensorBuildLab/UBEM-MCP"
 repository = "https://github.com/TensorBuildLab/UBEM-MCP"
+documentation = "https://github.com/TensorBuildLab/UBEM-MCP#readme"
+issues = "https://github.com/TensorBuildLab/UBEM-MCP/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

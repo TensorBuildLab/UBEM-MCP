@@ -11,4 +11,4 @@ Test suite for UBEM-MCP.
 Run only the fast tests with ``pytest -m "not energyplus"``.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"

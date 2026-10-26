@@ -2,7 +2,7 @@
 
 An open, model-neutral server for **urban building energy modeling (UBEM)** data and simulation, built on EnergyPlus. Through **68 tools** it takes an AI assistant, a script or a person from building footprints and parcel data to a building stock with recorded provenance, archetype or user-supplied EnergyPlus models, background batch runs, district results, retrofit scenarios, comparisons with measured energy use and NREL ComStock/ResStock reference data. It uses only the open Model Context Protocol, so it works with any MCP client and any model, and the same tools are a Python library and a command line.
 
-> **Version**: 0.1.0
+> **Version**: 1.0.0
 > **EnergyPlus Compatibility**: 26.1.0 (default; see [Building against a different EnergyPlus version](#building-against-a-different-energyplus-version))
 > **Python**: 3.10+
 
