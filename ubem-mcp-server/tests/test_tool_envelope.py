@@ -38,10 +38,14 @@ def server(tmp_path, monkeypatch):
     from ubem_mcp_server import server as srv
     from ubem_mcp_server.urban.stock_manager import StockManager
 
+    from ubem_mcp_server.batch_manager import BatchManager
+
     cfg = Config()
     cfg.paths.output_dir = str(tmp_path / "outputs")
     cfg.paths.workspace_root = str(tmp_path)
+    cfg.batch.batch_output_dir = str(tmp_path / "outputs" / "batches")
     monkeypatch.setattr(srv, "stock_manager", StockManager(cfg))
+    monkeypatch.setattr(srv, "batch_manager", BatchManager(cfg))
     return srv
 
 

@@ -14,6 +14,9 @@ defaults:
   run:
     working-directory: ubem-mcp-server
 
+env:
+  UBEM_WORKSPACE_ROOT: ${{ github.workspace }}/ubem-mcp-server
+
 jobs:
   unit:
     name: Unit tests (Python ${{ matrix.python-version }})

@@ -79,7 +79,7 @@ def parse_stream(lines):
     return t
 
 
-def run_task(task_id, model, container, max_turns, label):
+def run_task(task_id, model, container, max_turns, label, timeout=3600):
     run_name = f"claude-code_{label}_{task_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     run_dir = f"{REPO_IN_CONTAINER}/agent_tests/results/runs/{run_name}"
     prep = dexec(container, "/tmp/venv/bin/python", "-m", "agent_tests.harness.common", "prepare", run_dir, task_id)
@@ -100,17 +100,26 @@ def run_task(task_id, model, container, max_turns, label):
         if model:
             cmd += ["--model", model]
         start = time.monotonic()
-        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                              timeout=3600)
+        try:
+            proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                  timeout=timeout)
+            stdout, stderr, code = proc.stdout, proc.stderr, proc.returncode
+        except subprocess.TimeoutExpired as e:
+            # Keep and score what the run produced before the time limit.
+            def text(b):
+                return b.decode("utf-8", "replace") if isinstance(b, bytes) else (b or "")
+            stdout, stderr, code = text(e.stdout), text(e.stderr), None
         duration = round(time.monotonic() - start, 1)
-    transcript = parse_stream(proc.stdout.splitlines())
+    transcript = parse_stream(stdout.splitlines())
     transcript.update({"task": task_id, "duration_s": duration, "prompt": prompt})
-    if proc.returncode and not transcript["error"]:
-        transcript["error"] = f"exit {proc.returncode}: {proc.stderr[-500:]}"
+    if code is None:
+        transcript["error"] = f"timeout after {timeout} s"
+    elif code and not transcript["error"]:
+        transcript["error"] = f"exit {code}: {stderr[-500:]}"
     local = Path(__file__).resolve().parents[1] / "results" / "runs" / run_name
     local.mkdir(parents=True, exist_ok=True)
     (local / "transcript.json").write_text(json.dumps(transcript, indent=1), encoding="utf-8")
-    (local / "stream.jsonl").write_text(proc.stdout, encoding="utf-8")
+    (local / "stream.jsonl").write_text(stdout, encoding="utf-8")
     score = dexec(container, "/tmp/venv/bin/python", "-m", "agent_tests.harness.common", "check", run_dir, task_id,
                   f"{run_dir}/transcript.json")
     if score.returncode:
@@ -127,10 +136,11 @@ def main():
     ap.add_argument("--container", default="ubem-p6")
     ap.add_argument("--max-turns", type=int, default=80)
     ap.add_argument("--repeat", type=int, default=1)
+    ap.add_argument("--timeout", type=int, default=3600, help="seconds before the client is stopped")
     a = ap.parse_args()
     for _ in range(a.repeat):
         for task_id in a.tasks:
-            s = run_task(task_id, a.model, a.container, a.max_turns, a.label or a.model or "default")
+            s = run_task(task_id, a.model, a.container, a.max_turns, a.label or a.model or "default", a.timeout)
             print(json.dumps({k: s[k] for k in ("task", "model", "passed", "checks_passed", "checks_total",
                                                 "tool_calls", "failed_tool_calls", "used_guide", "duration_s")}),
                   flush=True)

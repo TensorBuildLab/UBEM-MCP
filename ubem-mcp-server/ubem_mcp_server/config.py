@@ -40,6 +40,31 @@ class EnergyPlusConfig:
     example_files_path: str = ""
 
 
+CONTAINER_ENERGYPLUS = "/app/software/EnergyPlusV26-1-0"
+
+
+def _find_energyplus_installation() -> str:
+    """The EnergyPlus 26.1 folder: the container's, an `energyplus` on PATH,
+    or the default install folder on Windows, macOS or Linux. Falls back to
+    the container path, which config validation then reports as missing."""
+    import shutil
+
+    candidates = [CONTAINER_ENERGYPLUS]
+    on_path = shutil.which("energyplus")
+    if on_path:
+        candidates.append(os.path.dirname(os.path.realpath(on_path)))
+    candidates += [r"C:\EnergyPlusV26-1-0", "/Applications/EnergyPlus-26-1-0", "/usr/local/EnergyPlus-26-1-0"]
+    for folder in candidates:
+        if os.path.isfile(os.path.join(folder, "Energy+.idd")):
+            return folder
+    return CONTAINER_ENERGYPLUS
+
+
+def _energyplus_executable(installation: str) -> str:
+    exe = os.path.join(installation, "energyplus.exe")
+    return exe if os.path.isfile(exe) else os.path.join(installation, "energyplus")
+
+
 @dataclass
 class PathConfig:
     """Path configuration"""
@@ -58,7 +83,7 @@ class PathConfig:
 class ServerConfig:
     """Server configuration"""
     name: str = "ubem-mcp-server"
-    version: str = "0.1.0"
+    version: str = "1.0.0"
     log_level: str = "INFO"
     simulation_timeout: int = 300  # seconds
     tool_timeout: int = 60  # seconds
@@ -183,6 +208,10 @@ class Config:
         """Workspace and output folders from UBEM_WORKSPACE_ROOT and
         UBEM_OUTPUT_DIR, for use outside the container (library, CLI)."""
         root = os.getenv("UBEM_WORKSPACE_ROOT")
+        if not root and not os.path.isdir(self.paths.workspace_root):
+            # Outside the container the default /workspace path does not exist:
+            # work in the current folder instead.
+            root = os.getcwd()
         if root:
             self.paths.workspace_root = os.path.abspath(root)
             self.paths.output_dir = os.path.join(self.paths.workspace_root, "outputs")
@@ -202,8 +231,8 @@ class Config:
             # Derive installation path from IDD path
             self.energyplus.installation_path = os.path.dirname(ep_idd_path)
             # Set executable path
-            self.energyplus.executable_path = os.path.join(
-                self.energyplus.installation_path, "energyplus"
+            self.energyplus.executable_path = _energyplus_executable(
+                self.energyplus.installation_path
             )
             # Set weather data path
             self.energyplus.weather_data_path = os.path.join(
@@ -214,11 +243,11 @@ class Config:
                 self.energyplus.installation_path, "ExampleFiles"
             )
         else:
-            # Default paths
-            default_installation = "/app/software/EnergyPlusV26-1-0"
+            # Default paths: the container's installation, else a local one
+            default_installation = _find_energyplus_installation()
             self.energyplus.installation_path = default_installation
             self.energyplus.idd_path = os.path.join(default_installation, "Energy+.idd")
-            self.energyplus.executable_path = os.path.join(default_installation, "energyplus")
+            self.energyplus.executable_path = _energyplus_executable(default_installation)
             # Set weather data path
             self.energyplus.weather_data_path = os.path.join(default_installation, "WeatherData")
             # Set example files path

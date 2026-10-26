@@ -54,8 +54,16 @@ class EnergyPlusManager:
     def __init__(self, config: Optional[Config] = None):
         """Initialize the EnergyPlus manager with configuration"""
         self.config = config or get_config()
-        self._initialize_eppy()
-        
+        # EnergyPlus is needed only by the single-model tools, so a missing
+        # installation is reported when one of them is called, not at startup:
+        # data-mode tools then work without EnergyPlus.
+        self._eppy_ready = False
+        try:
+            self._initialize_eppy()
+            self._eppy_ready = True
+        except RuntimeError as e:
+            logger.warning("EnergyPlus single-model tools unavailable until EnergyPlus is installed: %s", e)
+
         # Initialize utilities
         self.diagram_generator = HVACDiagramGenerator()
         self.output_var_manager = OutputVariableManager(self.config)
@@ -87,6 +95,9 @@ class EnergyPlusManager:
     def _resolve_idf_path(self, idf_path: str) -> str:
         """Resolve IDF path (handle relative paths, sample files, example files, etc.)"""
         from .utils.path_utils import resolve_path
+        if not self._eppy_ready:
+            self._initialize_eppy()  # raises a clear error if EnergyPlus is missing
+            self._eppy_ready = True
         return resolve_path(self.config, idf_path, file_types=['.idf'], description="IDF file")
         
     
