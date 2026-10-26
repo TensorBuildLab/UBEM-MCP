@@ -1,0 +1,11 @@
+.git
+**/__pycache__
+**/.venv*
+**/.pytest_cache
+ubem-mcp-server/outputs
+ubem-mcp-server/logs
+ubem-mcp-server/agent_tests/results/runs
+ubem-mcp-server/C:
+paper
+.claude
+prompt.txt

@@ -1,0 +1,42 @@
+name: Image
+
+# Build the ready-to-run image, check that it simulates a small district, and
+# publish it to the GitHub Container Registry when a release is published.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+  pull_request:
+    paths: ["Dockerfile", "ubem-mcp-server/pyproject.toml", ".github/workflows/image.yml"]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/tensorbuildlab/ubem-mcp
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build
+        run: docker build -t ubem-mcp:test .
+      - name: Smoke test - tool list and an eight-building district
+        run: |
+          mkdir -p /tmp/ws && cp ubem-mcp-server/agent_tests/fixtures/campus_small.geojson /tmp/ws/
+          docker run --rm ubem-mcp:test tools | tee /tmp/tools.txt
+          test "$(grep -c . /tmp/tools.txt)" -ge 68
+          run() { docker run --rm -v /tmp/ws:/data ubem-mcp:test "$@"; }
+          run load_building_stock --geojson-path campus_small.geojson --stock-id small --default-year 1960
+          run get_site_weather --stock-id small
+          run simulate_building_stock --stock-id small --model-set-id baseline --max-workers 2 | tee /tmp/sim.json
+          run aggregate_stock_results --stock-id small --model-set-id baseline --make-map false | tee /tmp/agg.json
+          python3 -c "import json; d=json.load(open('/tmp/agg.json')); assert d['ok'] and d['district']['total_kwh'] > 0, d; print('district kWh', d['district']['total_kwh'])"
+      - name: Publish
+        if: github.event_name == 'release'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tag="${GITHUB_REF_NAME#v}"
+          for t in "$tag" latest; do docker tag ubem-mcp:test "$IMAGE:$t"; docker push "$IMAGE:$t"; done

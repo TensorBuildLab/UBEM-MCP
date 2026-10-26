@@ -1,7 +1,10 @@
 """Collect agent-test scores into results/summary.json and results/summary.md.
 
-    python agent_tests/summarize.py
+    python agent_tests/summarize.py [--since 20261025]   # only runs started on or after that date
+
+The run folder name ends with the run's start time (YYYYmmdd_HHMMSS).
 """
+import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
@@ -10,8 +13,13 @@ RESULTS = Path(__file__).resolve().parent / "results"
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--since", default="", help="YYYYmmdd: only runs started on or after this date")
+    a = ap.parse_args()
     rows = []
     for p in sorted((RESULTS / "runs").glob("*/score.json")):
+        if a.since and p.parent.name.rsplit("_", 2)[-2] < a.since:
+            continue
         s = json.loads(p.read_text(encoding="utf-8"))
         s["run"] = p.parent.name
         rows.append(s)
