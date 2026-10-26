@@ -17,7 +17,6 @@ import re
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 # Soft-load .env for local development convenience.
 # Production (Cloud Run, etc.) sets env vars directly — no .env needed.

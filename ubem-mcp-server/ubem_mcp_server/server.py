@@ -1568,7 +1568,7 @@ async def run_batch_simulation(
     Run EnergyPlus simulations for a batch (portfolio) of models in parallel background workers
 
     This is the key UBEM-MCP addition over single-model EnergyPlus-MCP: it runs many
-    IDFs concurrently (one worker process per model, each calling the EnergyPlus
+    IDFs concurrently (one EnergyPlus process per model, each started from the EnergyPlus
     command line) and returns immediately with a batch_id. Any complete IDF works,
     including models built outside UBEM-MCP.
     Poll get_batch_status / get_batch_results to track progress and retrieve results —
@@ -2219,7 +2219,7 @@ async def simulate_building_stock(
     Generate archetype models for a building stock and simulate them all as a background batch
 
     Combines generate_building_models and run_batch_simulation: every selected
-    building gets a model, and the models run in parallel worker processes.
+    building gets a model, and the models run as parallel EnergyPlus processes.
     Returns immediately with a batch_id; wait with get_batch_status(wait_seconds=50) until complete.
 
     Args:
@@ -2365,6 +2365,17 @@ async def aggregate_stock_results(
         stock_manager.aggregate_results, stock_id, model_set_id, outputs=outputs, results_id=results_id,
         emission_factors=emission_factors, make_map=make_map,
     )
+    with_results = (summary.get("coverage") or {}).get("buildings_with_results") or 0
+    missing = summary.get("without_results") or []
+    if not with_results:
+        first = "; ".join(f"{m['building_id']}: {m.get('error') or m.get('status')}" for m in missing[:3])
+        raise ValueError(f"no building of model set {model_set_id!r} has simulation results "
+                         f"({len(missing)} without results{'; first: ' + first if first else ''}); "
+                         f"see get_batch_status for the failure causes")
+    if missing:
+        summary.setdefault("warnings", []).append(
+            f"{len(missing)} of {len(missing) + with_results} buildings have no results; district totals cover "
+            f"only the {with_results} with results (see without_results)")
     return summary
 
 

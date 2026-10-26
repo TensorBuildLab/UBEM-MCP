@@ -5,7 +5,6 @@ import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import pytest
 
@@ -76,7 +75,6 @@ async def test_status_reports_progress_running_and_diagnosis(tmp_path, monkeypat
         return {"success": True, "simulation_seconds": 12.5, "started_at": "2026-10-17T10:00:00",
                 "err_summary": err_parser.parse_err_text(OK_ERR)}
 
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
     manager = bm.BatchManager(cfg)
     models = [str(SAMPLE_DIR / "1ZoneUncontrolled.idf")] * 4 + [str(SAMPLE_DIR / "1ZoneEvapCooler.idf")]
@@ -99,10 +97,12 @@ async def test_status_reports_progress_running_and_diagnosis(tmp_path, monkeypat
     assert {m["duration_seconds"] for m in models if m["status"] == "success"} == {12.5}  # run time, not queue time
 
 
-def test_executor_avoids_fork():
-    ex = bm._make_executor(1)
+def test_executor_uses_threads_not_processes():
+    """Worker processes (forkserver, spawn) re-import the caller's main script;
+    threads that each start an EnergyPlus process do not."""
+    ex = bm._make_executor(2)
     try:
-        assert ex._mp_context.get_start_method() in ("forkserver", "spawn")
+        assert isinstance(ex, ThreadPoolExecutor)
     finally:
         ex.shutdown()
 
@@ -147,7 +147,6 @@ async def test_get_batch_status_can_wait_for_completion(tmp_path, monkeypatch):
         release.wait(5)
         return {"success": True, "simulation_seconds": 1.0}
 
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
     manager = bm.BatchManager(cfg)
     monkeypatch.setattr(server, "batch_manager", manager)

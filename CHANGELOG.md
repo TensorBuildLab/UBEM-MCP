@@ -17,3 +17,9 @@ New in UBEM-MCP:
 - **One envelope for every tool** (`ok`, `warnings`, `error_type`, `error`) as MCP structured content; workflow guides as MCP prompts, resources and a plain tool.
 - **Three entry points**: MCP server (stdio or authenticated streamable HTTP), Python library (`UBEM` class) and `ubem-mcp` command line.
 - **Tests**: unit tests on Python 3.10–3.12, integration tests with real EnergyPlus 26.1 in CI, and agent tasks with two harnesses (Claude Code and a generic MCP client).
+
+Fixed before release:
+
+- Batch workers are threads that each start an EnergyPlus process, instead of forkserver worker processes, which re-imported the caller's main script: an unguarded script ran again in every worker and code read from stdin failed in every worker.
+- `aggregate_stock_results` answers `ok: false` when no building has results, and warns when only some do.
+- The server and library start without EnergyPlus (single-model tools report the missing installation when called); outside the container the workspace defaults to the current folder and EnergyPlus 26.1 is found in its default install folder.

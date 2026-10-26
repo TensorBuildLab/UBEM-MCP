@@ -5,9 +5,12 @@ This module is new to UBEM-MCP (not part of EnergyPlus-MCP, which only runs
 one IDF at a time). See NOTICE.md for the relationship to EnergyPlus-MCP.
 
 Design notes:
-- Each model in a batch runs in its own worker process (ProcessPoolExecutor),
-  which calls the EnergyPlus command line directly rather than going through
-  eppy (see run_energyplus_cli).
+- Each model in a batch runs as its own EnergyPlus process, started by a
+  worker thread that calls the EnergyPlus command line directly rather than
+  going through eppy (see run_energyplus_cli). Threads suffice because the
+  work happens in the EnergyPlus process; unlike worker processes, they never
+  re-import the caller's main script, so the library works from plain scripts
+  without a __main__ guard, from stdin and from notebooks.
 - A batch can take minutes to hours, which would exceed typical MCP client
   call timeouts if a single tool call blocked until every model finished.
   submit_batch() returns a batch_id immediately; the batch runs as a
@@ -18,14 +21,12 @@ import asyncio
 import json
 import logging
 import math
-import multiprocessing
 import os
-import sys
 import re
 import subprocess
 import uuid
 from collections import Counter
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
@@ -41,17 +42,14 @@ _TERMINAL_JOB_STATUSES = {"completed", "completed_with_errors", "failed", "cance
 _TERMINAL_MODEL_STATUSES = {"success", "failed", "cancelled"}
 
 
-_RealProcessPool = ProcessPoolExecutor
-
-
 def _make_executor(workers: int):
-    """Worker pool for EnergyPlus runs. Workers start with forkserver (Linux)
-    or spawn rather than fork: the server process runs threads, and forking a
-    threaded process can deadlock the child."""
-    if ProcessPoolExecutor is _RealProcessPool:
-        method = "forkserver" if sys.platform.startswith("linux") else "spawn"
-        return ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context(method))
-    return ProcessPoolExecutor(max_workers=workers)  # replaced in tests
+    """Worker pool for EnergyPlus runs: one thread per concurrent model. Each
+    thread starts an EnergyPlus process and waits for it (subprocess.run
+    releases the GIL), so the simulations run in parallel. Worker processes
+    would add nothing but trouble: forkserver and spawn re-import the caller's
+    main script in every worker (re-running unguarded scripts, failing for
+    code read from stdin), and fork can deadlock a threaded server."""
+    return ThreadPoolExecutor(max_workers=workers, thread_name_prefix="energyplus")
 
 
 def _safe_name(name: str) -> str:
@@ -100,8 +98,8 @@ def _run_single_model_worker(
     output_directory: str,
     sim_kwargs: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Entry point executed in a worker process. Must stay at module scope
-    (not a method/lambda/closure) so ProcessPoolExecutor can pickle it.
+    """Entry point executed in a worker thread (kept at module scope so tests
+    can replace it).
 
     Runs the EnergyPlus command line directly. EnergyPlusManager.run_simulation
     loads the model with eppy and writes it back out before running, which
@@ -412,7 +410,7 @@ class BatchManager:
                 self._save_manifest(job)
         finally:
             # Best-effort: stops not-yet-started work; cannot kill an
-            # EnergyPlus subprocess already in flight in a worker process.
+            # EnergyPlus process already running.
             executor.shutdown(wait=False, cancel_futures=True)
 
         job.status = self._final_status(job)

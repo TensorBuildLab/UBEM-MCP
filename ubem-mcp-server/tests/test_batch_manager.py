@@ -1,15 +1,13 @@
 """Tests for ubem_mcp_server.batch_manager — the batch (portfolio) simulation
 orchestrator that's new in UBEM-MCP.
 
-These tests never invoke real EnergyPlus or real multiprocessing: they swap
-ProcessPoolExecutor for ThreadPoolExecutor and replace _run_single_model_worker
+These tests never invoke real EnergyPlus: they replace _run_single_model_worker
 with a fake, so batch orchestration logic (status transitions, continue_on_error,
 cancellation, manifest persistence) can be verified quickly and deterministically
 without an EnergyPlus install or pickling concerns.
 """
 import asyncio
 import os
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -70,7 +68,6 @@ async def test_batch_runs_to_completion_with_mocked_worker(tmp_path, monkeypatch
     def fake_worker(config, idf_path, weather_file, output_directory, sim_kwargs):
         return {"success": True, "input_idf": idf_path, "output_directory": output_directory}
 
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
 
     manager = bm.BatchManager(cfg)
@@ -97,7 +94,6 @@ async def test_continue_on_error_false_stops_after_first_failure(tmp_path, monke
             return {"success": False, "error": "boom"}
         return {"success": True}
 
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
 
     manager = bm.BatchManager(cfg)
@@ -135,7 +131,6 @@ async def test_batches_queue_and_workers_are_capped(tmp_path, monkeypatch):
             state["now"] -= 1
         return {"success": True, "input_idf": idf_path, "output_directory": output_directory}
 
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", fake_worker)
     manager = bm.BatchManager(cfg)
     idf = str(SAMPLE_DIR / "1ZoneUncontrolled.idf")
@@ -154,7 +149,6 @@ async def test_batches_queue_and_workers_are_capped(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_cancel_batch_before_start_cancels_all(tmp_path, monkeypatch):
     cfg = _make_config(tmp_path)
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", lambda *a, **k: {"success": True})
 
     manager = bm.BatchManager(cfg)
@@ -171,7 +165,6 @@ async def test_cancel_batch_before_start_cancels_all(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_manifest_persists_and_reloads_after_restart(tmp_path, monkeypatch):
     cfg = _make_config(tmp_path)
-    monkeypatch.setattr(bm, "ProcessPoolExecutor", ThreadPoolExecutor)
     monkeypatch.setattr(bm, "_run_single_model_worker", lambda *a, **k: {"success": True})
 
     manager = bm.BatchManager(cfg)

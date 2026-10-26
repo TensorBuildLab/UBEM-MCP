@@ -367,7 +367,7 @@ curl -i -X POST http://localhost:8000/mcp \
 
 **5. Connect MCP Inspector.** Run the Inspector and point it at `http://localhost:8000/mcp` with transport `Streamable HTTP` and an `Authorization: Bearer <your-token>` header.
 
-**Tests** — transport and auth behavior is covered by `tests/test_config_transport.py` and `tests/test_auth.py`; batch orchestration is covered by `tests/test_batch_manager.py` (mocked worker) and `tests/test_integration_energyplus.py` (real EnergyPlus runs in worker processes). Run with:
+**Tests** — transport and auth behavior is covered by `tests/test_config_transport.py` and `tests/test_auth.py`; batch orchestration is covered by `tests/test_batch_manager.py` (mocked worker) and `tests/test_integration_energyplus.py` (real EnergyPlus runs); `tests/test_library_scripts.py` runs the Python library from plain scripts. Run with:
 ```bash
 uv run pytest tests/                    # everything; EnergyPlus tests skip if EnergyPlus isn't installed
 uv run pytest tests/ -m "not energyplus" # fast tests only
@@ -742,7 +742,7 @@ It also writes a per-building `buildings_comparison.csv`.
 
 This is the key difference from single-model EnergyPlus MCP servers: **run a whole portfolio of buildings and poll for results**, instead of one blocking call per building.
 
-**Why polling, not a single blocking call:** a portfolio of many buildings can take minutes to hours — far longer than an MCP client should have a single tool call block for. Each model runs in its own worker process, which calls the EnergyPlus command line directly; going through eppy, as the single-model `run_simulation` tool does, made each batch run about three times slower. `run_batch_simulation` returns a `batch_id` immediately; you poll `get_batch_status`/`get_batch_results` until it's done.
+**Why polling, not a single blocking call:** a portfolio of many buildings can take minutes to hours — far longer than an MCP client should have a single tool call block for. Each model runs as its own EnergyPlus process, started from the EnergyPlus command line directly; going through eppy, as the single-model `run_simulation` tool does, made each batch run about three times slower. `run_batch_simulation` returns a `batch_id` immediately; you poll `get_batch_status`/`get_batch_results` until it's done.
 
 1. **Discover models in a directory**:
    ```json
@@ -801,7 +801,7 @@ The server follows a layered architecture:
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
 │  EnergyPlus Integration │  Direct interface to simulation engine (per-model,
-│                         │  one worker process per concurrent batch model)
+│                         │  one EnergyPlus process per concurrent batch model)
 └─────────────────────────┘
 ```
 
