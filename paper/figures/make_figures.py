@@ -73,20 +73,31 @@ def fig1(tool_counts):
 
     # urban layer
     box(3, 25.5, 94, 20.5, "#f3f8ef")
-    ax.text(5, 43.6, f"Urban layer ({tool_counts['urban']} tools): named objects, each step taking the previous one's id",
+    ax.text(5, 44.4, f"Urban layer ({tool_counts['urban']} tools): named objects, each step taking the previous one's id",
             fontsize=7.2, weight="bold", va="center")
     chain = [f"Stock{nl}stock_id", f"Site weather{nl}EPW file,{nl}climate zone", f"Model set{nl}model_set_id",
-             f"Batch{nl}batch_id", f"Results{nl}results_id", f"Scenario{nl}retrofit{nl}measures"]
+             f"Batch{nl}batch_id", f"Results{nl}results_id", f"Scenario{nl}new model set{nl}+ comparison"]
     w, gap, x0 = 13.0, 2.6, 5.4
+    y0, h = 31.6, 7.5
     for i, t in enumerate(chain):
         x = x0 + i * (w + gap)
-        box(x, 32.5, w, 7.5, "white", t, size=5.9)
-        if i < len(chain) - 1:
-            arrow(x + w + 0.3, 36.25, x + w + gap - 0.3, 36.25)
-    ax.text(50, 29.6, "data mode · provenance and licences · archetype library · measured data · "
+        box(x, y0, w, h, "white", t, size=5.9)
+        if i < len(chain) - 2:
+            arrow(x + w + 0.3, y0 + h / 2, x + w + gap - 0.3, y0 + h / 2)
+    # a scenario is derived from a baseline model set by retrofit measures, then compared with its results
+    xm, xs = x0 + 2 * (w + gap) + w / 2, x0 + 5 * (w + gap) + w / 2
+    ax.annotate("", xy=(xs, y0 + h + 0.4), xytext=(xm, y0 + h + 0.4),
+                arrowprops=dict(arrowstyle="-|>", lw=0.8, color=DARK, connectionstyle="arc3,rad=-0.08",
+                                shrinkA=0, shrinkB=0))
+    ax.text((xm + xs) / 2, y0 + h + 3.6, "retrofit measures", ha="center", va="center", fontsize=6.0,
+            color="#444444", style="italic")
+    xr = x0 + 4 * (w + gap) + w
+    ax.annotate("", xy=(xr + 0.3, y0 + h / 2), xytext=(xr + gap - 0.3, y0 + h / 2),
+                arrowprops=dict(arrowstyle="-", lw=0.9, color=DARK, ls="--", shrinkA=0, shrinkB=0))
+    ax.text(50, 28.9, "data mode · provenance and licences · archetype library · measured data · "
                       "ComStock/ResStock · project records · guides",
             ha="center", va="center", fontsize=6.0, color="#444444")
-    own(96, 27.3, "own GIS layers and measured energy enter here")
+    own(96, 26.8, "own GIS layers and measured energy enter here")
 
     # batch and single-model layers
     box(3, 10, 45, 12, "#fdf4ea", f"Batch layer ({tool_counts['batch']} tools){nl}any set of EnergyPlus models as a "
