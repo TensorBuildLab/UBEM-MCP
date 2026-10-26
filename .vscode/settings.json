@@ -7,7 +7,7 @@
         "--rm",
         "-i",
         "-v", "${workspaceFolder}:/workspace",
-        "-w", "/workspace/ubem-mcp-server",
+        "-w", "/workspace/src",
         "ubem-mcp-dev",
         "uv", "run", "python", "-m", "ubem_mcp_server.server"
       ]

@@ -1,14 +1,14 @@
 # Paper materials
 
-Everything behind the numbers, tables and figures of the SoftwareX paper on UBEM-MCP v1.0.0, "UBEM-MCP: Urban building energy modeling data and simulation for AI assistants". All examples run through the UBEM-MCP Python library, which calls the same code as the MCP tools. Scripts live in `ubem-mcp-server/scripts/`; run them inside the dev container from `ubem-mcp-server/` (see the repository README).
+Everything behind the numbers, tables and figures of the SoftwareX paper on UBEM-MCP v1.0.0, "UBEM-MCP: Urban building energy modeling data and simulation for AI assistants". All examples run through the UBEM-MCP Python library, which calls the same code as the MCP tools. Scripts live in `src/scripts/`; run them inside the dev container from `src/` (see the repository README).
 
 ## Figures
 
 ```bash
-python paper/figures/make_figures.py      # needs matplotlib; writes paper/figures/fig*.png and fig*.pdf
+python paper/figures/make_figures.py      # needs matplotlib; writes fig*.png, fig*.pdf and graphical_abstract.* in paper/figures/
 ```
 
-The script reads only the files in `results/`. Fig. 3 draws footprints from `ubem-mcp-server/agent_tests/fixtures/campus.geojson` (© OpenStreetMap contributors, ODbL).
+The script reads only the files in `results/`. Fig. 3 draws footprints from `src/agent_tests/fixtures/campus.geojson` (© OpenStreetMap contributors, ODbL).
 
 ## Where each result comes from
 

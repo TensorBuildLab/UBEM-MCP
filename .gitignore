@@ -220,8 +220,8 @@ __marimo__/
 # --- UBEM-MCP project-specific ---
 
 # Simulation outputs and batch job manifests/logs
-ubem-mcp-server/outputs/
-ubem-mcp-server/logs/
+src/outputs/
+src/logs/
 
 # Session scratch file (not project content)
 /prompt.txt
@@ -230,15 +230,15 @@ ubem-mcp-server/logs/
 /.claude/
 
 # Downloaded DOE Reference Building workbooks (scripts/build_reference_library.py)
-ubem-mcp-server/.refbldg_cache/
-ubem-mcp-server/.resstd_cache/
+src/.refbldg_cache/
+src/.resstd_cache/
 
 # agent-test run folders (transcripts and outputs); summaries are kept
-ubem-mcp-server/agent_tests/results/runs/
+src/agent_tests/results/runs/
 
 # Manuscript and submission files (kept out of the public repository)
 paper/manuscript/
 paper/submission/
 
 # Stray folder created by a Windows path passed to a Linux tool
-ubem-mcp-server/C:/
+src/C:/

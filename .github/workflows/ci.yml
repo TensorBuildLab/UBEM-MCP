@@ -12,10 +12,10 @@ concurrency:
 
 defaults:
   run:
-    working-directory: ubem-mcp-server
+    working-directory: src
 
 env:
-  UBEM_WORKSPACE_ROOT: ${{ github.workspace }}/ubem-mcp-server
+  UBEM_WORKSPACE_ROOT: ${{ github.workspace }}/src
 
 jobs:
   unit:

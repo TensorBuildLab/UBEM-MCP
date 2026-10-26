@@ -21,6 +21,8 @@ New in UBEM-MCP:
 
 Fixed before release:
 
+- Repository layout follows the SoftwareX requirements: the source code is under `src/` (formerly `ubem-mcp-server/`), and the license files are `LICENSE.txt` (UBEM-MCP) and `LICENSE-EnergyPlus-MCP.txt` / `COPYRIGHT-EnergyPlus-MCP.txt` (code carried over from EnergyPlus-MCP).
+- `paper/figures/make_figures.py` reads the current result file names, embeds fonts as TrueType, and also draws the graphical abstract.
 - Batch workers are threads that each start an EnergyPlus process, instead of forkserver worker processes, which re-imported the caller's main script: an unguarded script ran again in every worker and code read from stdin failed in every worker.
 - `aggregate_stock_results` answers `ok: false` when no building has results, and warns when only some do.
 - `cancel_batch` stops EnergyPlus runs in progress; a server that stops (for example when its MCP client disconnects) stops its unfinished batches and records them as cancelled, and a batch record left 'running' by a stopped server reads as cancelled.

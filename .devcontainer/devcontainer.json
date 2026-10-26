@@ -2,7 +2,7 @@
   "name": "UBEM-MCP Development",
   "dockerFile": "Dockerfile",
   "context": ".",
-  "workspaceFolder": "/workspace/ubem-mcp-server",
+  "workspaceFolder": "/workspace/src",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "forwardPorts": [6274, 8080, 3000],
   "portsAttributes": {
@@ -22,7 +22,7 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "python.defaultInterpreterPath": "/workspace/ubem-mcp-server/.venv/bin/python"
+        "python.defaultInterpreterPath": "/workspace/src/.venv/bin/python"
       },
       "extensions": [
         "ms-python.python",

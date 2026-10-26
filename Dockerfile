@@ -34,7 +34,7 @@ ENV EPLUS_IDD_PATH=${EPLUS_PREFIX}/Energy+.idd \
     UBEM_WORKSPACE_ROOT=/data \
     PYTHONUNBUFFERED=1
 
-COPY ubem-mcp-server /opt/ubem-mcp-server
+COPY src /opt/ubem-mcp-server
 RUN pip install --no-cache-dir /opt/ubem-mcp-server && rm -rf /opt/ubem-mcp-server/tests
 
 WORKDIR /data

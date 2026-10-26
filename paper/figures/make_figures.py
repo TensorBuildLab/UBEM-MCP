@@ -1,10 +1,10 @@
 """
 Make the manuscript figures from the result files in paper/results/.
 
-    python paper/figures/make_figures.py          # writes fig*.png (600 dpi) and fig*.pdf next to this file
+    python paper/figures/make_figures.py   # writes fig*.png (600 dpi), fig*.pdf and the graphical abstract here
 
 Needs matplotlib only. Fig. 3 draws building footprints from
-ubem-mcp-server/agent_tests/fixtures/campus.geojson (© OpenStreetMap
+src/agent_tests/fixtures/campus.geojson (© OpenStreetMap
 contributors, ODbL).
 """
 
@@ -21,11 +21,12 @@ from matplotlib.patches import FancyBboxPatch, Polygon
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE.parent / "results"
-CAMPUS_GEOJSON = HERE.parents[1] / "ubem-mcp-server" / "agent_tests" / "fixtures" / "campus.geojson"
+CAMPUS_GEOJSON = HERE.parents[1] / "src" / "agent_tests" / "fixtures" / "campus.geojson"
 
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 8, "axes.linewidth": 0.6,
                      "axes.spines.top": False, "axes.spines.right": False, "savefig.bbox": "tight",
-                     "savefig.pad_inches": 0.03})
+                     "savefig.pad_inches": 0.03,
+                     "pdf.fonttype": 42, "ps.fonttype": 42})  # embed fonts as TrueType
 BLUE, ORANGE, GREY, DARK = "#2066a8", "#d55e00", "#9a9a9a", "#222222"
 
 
@@ -94,7 +95,7 @@ def fig1(tool_counts):
     xr = x0 + 4 * (w + gap) + w
     ax.annotate("", xy=(xr + 0.3, y0 + h / 2), xytext=(xr + gap - 0.3, y0 + h / 2),
                 arrowprops=dict(arrowstyle="-", lw=0.9, color=DARK, ls="--", shrinkA=0, shrinkB=0))
-    ax.text(50, 28.9, "data mode · provenance and licences · archetype library · measured data · "
+    ax.text(50, 28.9, "data mode · provenance and licenses · archetype library · measured data · "
                       "ComStock/ResStock · project records · guides",
             ha="center", va="center", fontsize=6.0, color="#444444")
     own(96, 26.8, "own GIS layers and measured energy enter here")
@@ -289,12 +290,62 @@ def fig4(before_csv, after_csv, suspect=("g0063",)):
     save(fig, "fig4_measured")
 
 
+# --------------------------------------------------------------------------- #
+# Graphical abstract (SoftwareX: at least 1328 px wide, readable at 13 cm)
+# --------------------------------------------------------------------------- #
+
+def graphical_abstract(tool_counts, campus_json, agent_json):
+    campus = json.loads(campus_json.read_text(encoding="utf-8"))["comparison"]["district"]
+    runs = json.loads(agent_json.read_text(encoding="utf-8"))["by_task"]
+    short = [r for r in runs if r["task"] != "S41_campus"]
+    nl = chr(10)
+    fig, ax = plt.subplots(figsize=(5.12, 2.6))  # 13 cm wide
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 52)
+    ax.axis("off")
+
+    def box(x, y, w, h, fc, text, size=6.6, weight="normal"):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.3,rounding_size=1.2", fc=fc, ec=DARK, lw=0.7))
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=size, weight=weight, color=DARK,
+                linespacing=1.3)
+
+    def arrow(x0, y0, x1, y1):
+        ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                    arrowprops=dict(arrowstyle="-|>", lw=0.9, color=DARK, shrinkA=0, shrinkB=0))
+
+    for i, t in enumerate(["AI assistant" + nl + "(any MCP" + nl + "client)", "Python" + nl + "script", "Command" + nl + "line"]):
+        y = 36 - i * 15
+        box(1, y, 15, 11, "#eef3fa", t)
+        arrow(16.8, y + 5.5, 21.2, 26)
+    n = sum(tool_counts.values())
+    ax.add_patch(FancyBboxPatch((22, 2), 34, 48, boxstyle="round,pad=0.3,rounding_size=1.2", fc="#f3f8ef", ec=DARK,
+                                lw=0.8))
+    ax.text(39, 46.5, f"UBEM-MCP: {n} tools", ha="center", va="center", fontsize=8, weight="bold", color=DARK)
+    steps = ["Building stock, provenance", "Site weather", "EnergyPlus models", "Background batch",
+             "District results", "Retrofit scenario", "Measured-data check"]
+    for i, t in enumerate(steps):
+        y = 40.5 - i * 5.6
+        ax.text(39, y, t, ha="center", va="center", fontsize=6.6, color=DARK)
+        if i < len(steps) - 1:
+            arrow(39, y - 1.6, 39, y - 3.9)
+    arrow(56.8, 26, 60.2, 26)
+    pk = campus["peak_kw"]["electricity"]
+    result = (f"106-building campus:{nl}site energy −{campus['savings_pct']:.1f}%,{nl}"
+              f"electric peak +{pk['change_pct']:.1f}%,{nl}moved to a winter morning")
+    box(61, 27, 38, 20, "#fdf4ea", result)
+    agents = (f"Asked in plain language, an AI{nl}assistant reproduced the study{nl}exactly (third of three runs);{nl}"
+              f"{sum(r['passed'] for r in short)} of {sum(r['runs'] for r in short)} shorter tasks passed")
+    box(61, 3, 38, 20, "#f4f0f8", agents)
+    save(fig, "graphical_abstract")
+
+
 def main():
     counts = json.loads((RESULTS / "tool_counts.json").read_text(encoding="utf-8"))
+    graphical_abstract(counts, RESULTS / "campus_electrification.json", RESULTS / "agent_runs.json")
     fig1(counts)
-    fig2(RESULTS / "section_5_2_archetypes_tucson.json")
+    fig2(RESULTS / "archetypes_2B_tucson.json")
     fig3(RESULTS / "campus_buildings_comparison.csv", RESULTS / "campus_district_hourly_baseline.csv",
-         RESULTS / "campus_district_hourly_electrified.csv", RESULTS / "section_4_1_campus.json")
+         RESULTS / "campus_district_hourly_electrified.csv", RESULTS / "campus_electrification.json")
     fig4(RESULTS / "seattle_meters_archetype_fuel.csv", RESULTS / "seattle_meters_fuel_from_data.csv")
 
 

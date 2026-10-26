@@ -77,5 +77,5 @@ USER vscode
 # ----------------------------------------------------------------------------- 
 # 6. Workspace location and default shell
 # ----------------------------------------------------------------------------- 
-WORKDIR /workspace/ubem-mcp-server
+WORKDIR /workspace/src
 CMD ["/bin/bash"]

@@ -69,11 +69,11 @@ Years (TMYx), https://climate.onebuilding.org), whose terms apply to them.
 
 Two BSD-3-Clause licenses apply within this repository, covering different files:
 
-- **[LICENSE](LICENSE)** — BSD-3-Clause, Copyright (c) 2026 TensorBuildLab.
+- **[LICENSE.txt](LICENSE.txt)** — BSD-3-Clause, Copyright (c) 2026 TensorBuildLab.
   Covers UBEM-MCP's own original code: `batch_manager.py`, the `urban/` package,
   the batch/portfolio and building-stock tools in `server.py`, the tests and CI
   added in UBEM-MCP, and other TensorBuildLab-authored additions.
-- **[License.txt](License.txt)** / **[Copyright.txt](Copyright.txt)** — BSD-3-Clause-LBNL,
+- **[LICENSE-EnergyPlus-MCP.txt](LICENSE-EnergyPlus-MCP.txt)** / **[COPYRIGHT-EnergyPlus-MCP.txt](COPYRIGHT-EnergyPlus-MCP.txt)** — BSD-3-Clause-LBNL,
   Copyright (c) 2025 The Regents of the University of California, through Lawrence
   Berkeley National Laboratory. Covers the code carried over from EnergyPlus-MCP
   (see the header of each source file for a pointer back to this notice).
@@ -107,6 +107,6 @@ EnergyPlus-MCP paper this project is built on:
 
 ## Third-party data in this repository
 
-- `ubem-mcp-server/agent_tests/fixtures/campus.geojson` and `campus_small.geojson`: building footprints © OpenStreetMap contributors, available under the Open Database License 1.0 (https://opendatacommons.org/licenses/odbl/). Fig. 3 of the paper draws these footprints.
-- `ubem-mcp-server/ubem_mcp_server/urban/data/`: archetype parameters derived from the U.S. DOE Commercial Reference Buildings and the DOE residential prototype building models (Open Energy Data Initiative, CC BY 4.0; see each file's `source` entry for the reference and file hashes).
+- `src/agent_tests/fixtures/campus.geojson` and `campus_small.geojson`: building footprints © OpenStreetMap contributors, available under the Open Database License 1.0 (https://opendatacommons.org/licenses/odbl/). Fig. 3 of the paper draws these footprints.
+- `src/ubem_mcp_server/urban/data/`: archetype parameters derived from the U.S. DOE Commercial Reference Buildings and the DOE residential prototype building models (Open Energy Data Initiative, CC BY 4.0; see each file's `source` entry for the reference and file hashes).
 - Parcels, benchmarking data, weather files and ComStock/ResStock results are downloaded at run time by the scripts that use them and are not redistributed here; each example records their source and licence with its outputs.

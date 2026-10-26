@@ -58,7 +58,7 @@ UBEM studies chain the same steps: gather building data, fill what is missing, a
 - **Expertise the agent can look up**: server instructions, workflow guides and catalogues ship inside the server for every client.
 - **Open at every layer**: your own GIS layers, your own EnergyPlus models, the single-model tools of EnergyPlus-MCP.
 - **Reproducible by record**: input hashes, software versions and recipes, exported and rerun with one tool each.
-- **Agent behaviour is tested**: one agent task per use case, scored only from the server's outputs and the final answer, with harnesses for Claude Code and for any OpenAI-compatible model API (`ubem-mcp-server/agent_tests/`).
+- **Agent behaviour is tested**: one agent task per use case, scored only from the server's outputs and the final answer, with harnesses for Claude Code and for any OpenAI-compatible model API (`src/agent_tests/`).
 
 ## What it is for
 
@@ -167,7 +167,7 @@ Choose the appropriate setup for your AI assistant or IDE:
            "--rm",
            "-i",
            "-v", "/path/to/UBEM-MCP:/workspace",
-           "-w", "/workspace/ubem-mcp-server",
+           "-w", "/workspace/src",
            "ubem-mcp-dev",
            "uv", "run", "python", "-m", "ubem_mcp_server.server"
          ]
@@ -203,7 +203,7 @@ VS Code 1.102+ ships native MCP support. Config goes in `.vscode/mcp.json` at th
            "--rm",
            "-i",
            "-v", "${workspaceFolder}:/workspace",
-           "-w", "/workspace/ubem-mcp-server",
+           "-w", "/workspace/src",
            "ubem-mcp-dev",
            "uv", "run", "python", "-m", "ubem_mcp_server.server"
          ]
@@ -237,7 +237,7 @@ VS Code 1.102+ ships native MCP support. Config goes in `.vscode/mcp.json` at th
            "--rm",
            "-i",
            "-v", "/path/to/UBEM-MCP:/workspace",
-           "-w", "/workspace/ubem-mcp-server",
+           "-w", "/workspace/src",
            "ubem-mcp-dev",
            "uv", "run", "python", "-m", "ubem_mcp_server.server"
          ]
@@ -292,7 +292,7 @@ cd UBEM-MCP
 docker build -t ubem-mcp-dev -f .devcontainer/Dockerfile .devcontainer
 
 # Run container
-docker run -it --rm -v "$(pwd)":/workspace -w /workspace/ubem-mcp-server ubem-mcp-dev bash
+docker run -it --rm -v "$(pwd)":/workspace -w /workspace/src ubem-mcp-dev bash
 
 # Inside container, install dependencies
 uv sync --extra dev
@@ -310,7 +310,7 @@ For local development (requires EnergyPlus installation):
 ```bash
 # Clone and install
 git clone https://github.com/TensorBuildLab/UBEM-MCP.git
-cd UBEM-MCP/ubem-mcp-server
+cd UBEM-MCP/src
 uv sync --extra dev
 
 # Run server for testing
@@ -332,7 +332,7 @@ By default the server runs over **stdio**, which is what every MCP client config
 openssl rand -hex 32
 ```
 
-**2. Create `.env` in `ubem-mcp-server/`** (gitignored). Copy from [.env.example](ubem-mcp-server/.env.example) and fill in your values:
+**2. Create `.env` in `src/`** (gitignored). Copy from [.env.example](src/.env.example) and fill in your values:
 
 ```bash
 # EPLUS_IDD_PATH — ONLY set this for the Local variant.
@@ -357,8 +357,8 @@ MCP_TOKENS=[{"label":"local-dev","token":"<paste-32+-char-hex-here>"}]
 docker run --rm \
   -p 8000:8000 \
   -v "$(pwd)":/workspace \
-  -w /workspace/ubem-mcp-server \
-  --env-file ubem-mcp-server/.env \
+  -w /workspace/src \
+  --env-file src/.env \
   ubem-mcp-dev \
   uv run python -m ubem_mcp_server.server
 ```
@@ -366,7 +366,7 @@ docker run --rm \
 *Local:* (requires a host EnergyPlus install matching whatever `EPLUS_IDD_PATH` is set to in `.env`)
 
 ```bash
-cd ubem-mcp-server
+cd src
 uv run python -m ubem_mcp_server.server
 ```
 
@@ -420,8 +420,8 @@ docker build \
 
 **Heads up — three other places reference the install path** (`/app/software/EnergyPlusV26-1-0`) and don't read the Dockerfile ARG, so if you override `EPLUS_PREFIX` you'll also need to update:
 
-- `ubem-mcp-server/ubem_mcp_server/config.py` — `version` and `default_installation`
-- `ubem-mcp-server/.vscode/mcp.json` — the two `EnergyPlusV26-1-0` strings
+- `src/ubem_mcp_server/config.py` — `version` and `default_installation`
+- `src/.vscode/mcp.json` — the two `EnergyPlusV26-1-0` strings
 - The client config JSON you created for Claude Desktop / VS Code / Cursor — only if it sets `EPLUS_IDD_PATH` explicitly
 
 ## Available Tools
@@ -610,7 +610,7 @@ Test tools interactively (requires Node.js 18+):
 npx @modelcontextprotocol/inspector \
   docker run --rm -i \
     -v "$(pwd):/workspace" \
-    -w /workspace/ubem-mcp-server \
+    -w /workspace/src \
     ubem-mcp-dev \
     uv run python -m ubem_mcp_server.server
 ```
@@ -690,7 +690,7 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
   - Walls shared with an adjacent building are adiabatic party walls. The nearest walls of surrounding buildings are added as shading.
 - **Constructions, loads and schedules**:
   - Commercial buildings use the DOE Commercial Reference Buildings: 16 types × 3 vintages × 16 climate zones.
-  - Single-family houses use the DOE/PNNL IECC 2006 single-family prototype. See [the data README](ubem-mcp-server/ubem_mcp_server/urban/data/README.md) for sources and licenses.
+  - Single-family houses use the DOE/PNNL IECC 2006 single-family prototype. See [the data README](src/ubem_mcp_server/urban/data/README.md) for sources and licenses.
 - **HVAC**:
   - The reference system type is expressed with EnergyPlus HVACTemplate objects and autosized: packaged single-zone, PTAC, packaged VAV, or central VAV with chiller and boiler.
   - Or use `hvac="ideal"` for ideal loads.
@@ -852,7 +852,7 @@ The server follows a layered architecture:
 
 **Project Structure:**
 ```
-ubem-mcp-server/
+src/
 ├── ubem_mcp_server/
 │   ├── server.py              # FastMCP server with tools
 │   ├── energyplus_tools.py    # Core EnergyPlus integration (single model)
@@ -862,7 +862,8 @@ ubem-mcp-server/
 │   └── utils/                 # Specialized utilities
 ├── scripts/                    # Archetype-library builders, validation and scaling benchmarks
 ├── sample_files/               # Sample IDF and weather files
-├── tests/                      # Unit tests
+├── tests/                      # Unit and integration tests
+├── agent_tests/                # Agent tasks, harnesses and results
 └── pyproject.toml              # Dependencies
 ```
 
@@ -871,7 +872,7 @@ ubem-mcp-server/
 The server auto-detects EnergyPlus installation and uses sensible defaults. Configuration can be customized via environment variables:
 
 - `EPLUS_IDD_PATH`: Path to EnergyPlus IDD file
-- `UBEM_WORKSPACE_ROOT`: Folder that relative input paths are resolved against (default in the container: `/workspace/ubem-mcp-server`); outputs go to `<workspace>/outputs`
+- `UBEM_WORKSPACE_ROOT`: Folder that relative input paths are resolved against (default in the container: `/workspace/src`); outputs go to `<workspace>/outputs`
 - `UBEM_OUTPUT_DIR`: Where stocks, models, batches and results are written, if not under the workspace
 - `UBEM_LOG_LEVEL`: Logging level (default `INFO`; the command line uses `WARNING` unless `--verbose`)
 - `UBEM_BATCH_MAX_WORKERS`: Max concurrent simulation processes for batch jobs (default: CPU count)
@@ -918,9 +919,9 @@ If you use UBEM-MCP, please cite the software (see [CITATION.cff](CITATION.cff);
 
 This repository uses two BSD-3-Clause licenses side by side:
 
-- [LICENSE](LICENSE) (TensorBuildLab) covers UBEM-MCP's own original code, including the batch simulation feature.
-- [License.txt](License.txt) / [Copyright.txt](Copyright.txt) (LBNL) covers the code carried over from EnergyPlus-MCP.
+- [LICENSE.txt](LICENSE.txt) (TensorBuildLab) covers UBEM-MCP's own original code, including the batch simulation feature.
+- [LICENSE-EnergyPlus-MCP.txt](LICENSE-EnergyPlus-MCP.txt) / [COPYRIGHT-EnergyPlus-MCP.txt](COPYRIGHT-EnergyPlus-MCP.txt) (LBNL) covers the code carried over from EnergyPlus-MCP.
 
 See [NOTICE.md](NOTICE.md) for exactly which files each license covers and the relationship between this project and EnergyPlus-MCP.
 
-**Government Rights Notice**: The EnergyPlus-MCP portions of this software were developed under funding from the U.S. Department of Energy, and the U.S. Government consequently retains certain rights as described in [License.txt](License.txt).
+**Government Rights Notice**: The EnergyPlus-MCP portions of this software were developed under funding from the U.S. Department of Energy, and the U.S. Government consequently retains certain rights as described in [LICENSE-EnergyPlus-MCP.txt](LICENSE-EnergyPlus-MCP.txt).

@@ -7,7 +7,7 @@ on:
     types: [published]
   workflow_dispatch:
   pull_request:
-    paths: ["Dockerfile", "ubem-mcp-server/pyproject.toml", ".github/workflows/image.yml"]
+    paths: ["Dockerfile", "src/pyproject.toml", ".github/workflows/image.yml"]
 
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
         run: docker build -t ubem-mcp:test .
       - name: Smoke test - tool list and an eight-building district
         run: |
-          mkdir -p /tmp/ws && cp ubem-mcp-server/agent_tests/fixtures/campus_small.geojson /tmp/ws/
+          mkdir -p /tmp/ws && cp src/agent_tests/fixtures/campus_small.geojson /tmp/ws/
           docker run --rm ubem-mcp:test tools | tee /tmp/tools.txt
           test "$(grep -c . /tmp/tools.txt)" -ge 68
           run() { docker run --rm -v /tmp/ws:/data ubem-mcp:test "$@"; }
