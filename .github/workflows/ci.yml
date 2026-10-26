@@ -26,8 +26,8 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --extra dev
@@ -44,8 +44,8 @@ jobs:
             eplus-hash: "6f2e40d102"
             eplus-prefix: /app/software/EnergyPlusV26-1-0
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.12"
       - name: Prepare EnergyPlus directory
@@ -54,7 +54,7 @@ jobs:
           sudo chown "$USER" "${{ matrix.eplus-prefix }}"
       - name: Cache EnergyPlus
         id: eplus-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ matrix.eplus-prefix }}
           key: energyplus-${{ matrix.eplus-ver }}-${{ matrix.eplus-hash }}-ubuntu24.04
