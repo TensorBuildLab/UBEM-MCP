@@ -57,6 +57,7 @@ UBEM studies chain the same steps: gather building data, fill what is missing, a
 - **Expertise the agent can look up**: server instructions, workflow guides and catalogues ship inside the server for every client.
 - **Open at every layer**: your own GIS layers, your own EnergyPlus models, the single-model tools of EnergyPlus-MCP.
 - **Reproducible by record**: input hashes, software versions and recipes, exported and rerun with one tool each.
+- **Agent behaviour is tested**: one agent task per use case, scored only from the server's outputs and the final answer, with harnesses for Claude Code and for any OpenAI-compatible model API (`ubem-mcp-server/agent_tests/`).
 
 ## What it is for
 
@@ -403,7 +404,7 @@ docker build \
 
 The server provides **68 tools** organized into **15 categories**. It uses only the open MCP standard, so it works with any MCP client and any model.
 
-**Responses.** The 23 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
+**Responses.** The 33 tools new in UBEM-MCP return one structured object (MCP structured content, with the same JSON as text):
 
 ```json
 {"ok": true, "warnings": [], "...": "tool data", "next_steps": ["poll get_batch_status(...) until is_complete"]}
@@ -475,7 +476,7 @@ Responses are summaries kept under 20,000 characters (lists are paged with `limi
 - `get_batch_status` - Poll overall/per-status progress of a batch job
 - `get_batch_results` - Get per-model results (success/failure, duration, output paths)
 - `list_batches` - List all known batch jobs (in-memory + persisted on disk)
-- `cancel_batch` - Cancel a batch job (best-effort for models already running)
+- `cancel_batch` - Cancel a batch job: models not yet started never run, and running EnergyPlus processes are stopped
 
 ### 🗂️ Model Config & Loading (9 tools)
 - `load_idf_model` - Load and validate IDF files
@@ -524,7 +525,25 @@ Responses are summaries kept under 20,000 characters (lists are paged with `limi
 
 ## Usage Examples
 
-### Basic Workflow
+### Quick start: a small district
+
+With the server running in an MCP client, ask in plain language, for example: *"Simulate the buildings in agent_tests/fixtures/campus_small.geojson and give me the district's annual energy use and peak demand."* The assistant calls the tools below; from a script, the Python library calls the same tools:
+
+```python
+from ubem_mcp_server.api import UBEM
+
+u = UBEM(workspace="my_study")   # a folder holding a copy of agent_tests/fixtures/campus_small.geojson
+u.load_building_stock(geojson_path="campus_small.geojson", stock_id="small", default_year=1960)
+u.get_site_weather(stock_id="small")                 # nearest weather station and climate zone
+run = u.simulate_building_stock(stock_id="small", model_set_id="baseline")
+u.wait(run["batch"]["batch_id"], progress=lambda s: print(s["counts"]))
+summary = u.aggregate_stock_results(batch_id=run["batch"]["batch_id"])
+print(summary["district"]["total_kwh"], summary["district"]["peak_kw"])
+```
+
+The command line does the same: `ubem-mcp load_building_stock --geojson-path campus_small.geojson --stock-id small`, then `ubem-mcp simulate_building_stock --stock-id small` (it waits for the batch) and `ubem-mcp aggregate_stock_results --stock-id small --model-set-id <id>`.
+
+### Single-model workflow (inherited from EnergyPlus-MCP)
 
 1. **Load a model**:
    ```json
@@ -658,10 +677,12 @@ Each building in a stock becomes an EnergyPlus model built from its footprint an
 
 Without `climate_zone` or `weather_file`, the stock's site weather is used (see [Site Weather](#site-weather)). This returns a `batch_id`; poll it with `get_batch_status`, then aggregate the results (see [District Results](#district-results)). Each model set's `manifest.json` lists, per building, the model file, zoning, party walls, shading and every modeling assumption applied.
 
-**Validation.** `scripts/validate_archetypes.py` generates models with the reference buildings' own dimensions and compares their simulated site energy with the DOE reference results for the same climate zone. With Phoenix TMY3 weather (climate zone 2B, which covers Tucson), small and medium offices, stand-alone retail, the mid-rise apartment and the single-family house are within about ±11% of the reference EUI.
+**Validation.** `scripts/validate_archetypes.py` generates models with the reference buildings' own dimensions and compares their simulated site energy (without refrigeration) with the DOE reference results for the same climate zone. With the Tucson TMYx 2011–2025 weather file (climate zone 2B), 35 of 49 cases are within ±20% of the reference EUI and the median absolute difference is 10.1%; San Francisco (3C) and Baltimore (4A) give 11.8% and 13.5% (`paper/results/archetypes_*.json`, Fig. 2 of the paper).
 
 Known differences:
-- Warehouses run higher (+31% in 2B), because the whole floor is cooled while the reference cools only office and fine-storage areas.
+- Hospitals and outpatient clinics run about 50% low: one space type per building leaves out the reheat and humidification of their many space types.
+- Warehouses run higher (+21% to +47% in 2B), because the whole floor is cooled while the reference cools only office and fine-storage areas.
+- The two older large-hotel vintages and the two newer secondary-school vintages run 28–36% low.
 - The single-family infiltration model overstates heating in windy, heating-dominated climates.
 - Elevators, commercial refrigeration and kitchen exhaust are not modeled.
 
@@ -786,7 +807,7 @@ Per-model overrides are supported by passing dicts instead of plain path strings
   }
 }
 ```
-With `continue_on_error: false`, the first model failure cancels remaining not-yet-started models in the batch (best-effort — an EnergyPlus subprocess already running in a worker can't be forcibly killed).
+With `continue_on_error: false`, the first model failure cancels the models not yet started. `cancel_batch` also stops EnergyPlus runs in progress, and when the server stops (for example when the MCP client disconnects) it stops unfinished batches and records them as cancelled.
 
 ## Architecture
 
@@ -796,7 +817,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  68 tools in 11 families
+│     Tools Layer         │  68 tools in 15 categories
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤

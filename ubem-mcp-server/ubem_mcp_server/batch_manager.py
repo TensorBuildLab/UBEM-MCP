@@ -23,7 +23,10 @@ import logging
 import math
 import os
 import re
+import signal
 import subprocess
+import threading
+import time
 import uuid
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -40,6 +43,44 @@ logger = logging.getLogger(__name__)
 
 _TERMINAL_JOB_STATUSES = {"completed", "completed_with_errors", "failed", "cancelled"}
 _TERMINAL_MODEL_STATUSES = {"success", "failed", "cancelled"}
+
+
+# EnergyPlus processes now running, by output directory, so that a cancelled
+# batch or a stopping server can stop them instead of leaving them running.
+_RUNNING: Dict[str, subprocess.Popen] = {}
+_RUNNING_LOCK = threading.Lock()
+
+
+def _signal(proc: subprocess.Popen, sig: int) -> None:
+    """Send `sig` to an EnergyPlus run and the helper programs it started
+    (ExpandObjects, ReadVarsESO): each run has its own process group on POSIX."""
+    try:
+        if os.name == "posix":
+            os.killpg(proc.pid, sig)
+        elif sig == getattr(signal, "SIGKILL", None):
+            proc.kill()
+        else:
+            proc.terminate()
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+
+
+def terminate_runs(output_directories: Optional[set] = None, wait: float = 0.0) -> int:
+    """Stop running EnergyPlus processes (all, or those writing to the given
+    output directories). With wait > 0, wait that long and kill any still
+    running. Returns how many runs were signalled."""
+    with _RUNNING_LOCK:
+        procs = [p for d, p in _RUNNING.items() if output_directories is None or d in output_directories]
+    for p in procs:
+        _signal(p, signal.SIGTERM)
+    if wait > 0:
+        deadline = time.monotonic() + wait
+        for p in procs:
+            try:
+                p.wait(timeout=max(0.0, deadline - time.monotonic()))
+            except subprocess.TimeoutExpired:
+                _signal(p, getattr(signal, "SIGKILL", signal.SIGTERM))
+    return len(procs)
 
 
 def _make_executor(workers: int):
@@ -154,9 +195,17 @@ def run_energyplus_cli(
 
     start = datetime.now()
     # ExpandObjects writes its intermediate files to the working directory,
-    # so each run works in its own output directory.
-    proc = subprocess.run(cmd, cwd=output_directory, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                          text=True, errors="replace")
+    # so each run works in its own output directory. Each run gets its own
+    # process group so that stopping it also stops the helpers it started.
+    proc = subprocess.Popen(cmd, cwd=output_directory, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                            text=True, errors="replace", start_new_session=(os.name == "posix"))
+    with _RUNNING_LOCK:
+        _RUNNING[output_directory] = proc
+    try:
+        _, stderr = proc.communicate()
+    finally:
+        with _RUNNING_LOCK:
+            _RUNNING.pop(output_directory, None)
     end = datetime.now()
     result: Dict[str, Any] = {
         "success": proc.returncode == 0,
@@ -176,7 +225,7 @@ def run_energyplus_cli(
     if err_summary is not None:
         result["err_summary"] = err_summary
     if proc.returncode != 0:
-        details = err_file.read_text(errors="replace") if err_file.exists() else proc.stderr
+        details = err_file.read_text(errors="replace") if err_file.exists() else stderr
         first = next((m["message"] for m in (err_summary or {}).get("messages", [])), None)
         result["error"] = f"EnergyPlus exited with code {proc.returncode}" + (f": {first}" if first else "")
         result["error_details"] = details[-4000:]
@@ -216,6 +265,7 @@ class BatchManager:
         # config.batch.max_workers EnergyPlus processes however many batches
         # an agent submits. Created on first use, inside the event loop.
         self._run_lock: Optional[asyncio.Lock] = None
+        self._executors: Dict[str, Any] = {}  # batch_id -> worker pool of a running batch
 
     # ------------------------------------------------------------------ #
     # Submission
@@ -344,6 +394,7 @@ class BatchManager:
         loop = asyncio.get_running_loop()
         workers = max(1, job.max_workers)
         executor = _make_executor(workers)
+        self._executors[batch_id] = executor
         futures: Dict[asyncio.Future, ModelSpec] = {}
         in_flight: List[ModelSpec] = list(pending_specs)  # submission order = start order (FIFO pool)
 
@@ -374,6 +425,12 @@ class BatchManager:
                 done, remaining = await asyncio.wait(remaining, return_when=asyncio.FIRST_COMPLETED)
                 for fut in done:
                     spec = futures[fut]
+                    if fut.cancelled():  # dropped before it started (cancel_batch or shutdown)
+                        if spec in in_flight:
+                            in_flight.remove(spec)
+                        spec.status = "cancelled"
+                        spec.completed_at = spec.completed_at or datetime.now().isoformat()
+                        continue
                     try:
                         result = fut.result()
                     except Exception as e:  # noqa: BLE001
@@ -392,6 +449,9 @@ class BatchManager:
                     spec.result = result
                     if result.get("success"):
                         spec.status = "success"
+                    elif job.cancel_requested:  # stopped by cancel_batch or a server shutdown
+                        spec.status = "cancelled"
+                        spec.error = job.error or "cancelled while running"
                     else:
                         spec.status = "failed"
                         spec.error = result.get("error", "simulation failed")
@@ -409,9 +469,10 @@ class BatchManager:
 
                 self._save_manifest(job)
         finally:
-            # Best-effort: stops not-yet-started work; cannot kill an
-            # EnergyPlus process already running.
+            # Models not yet started are dropped; running ones were stopped
+            # by cancel_batch or shutdown, or have finished.
             executor.shutdown(wait=False, cancel_futures=True)
+            self._executors.pop(batch_id, None)
 
         job.status = self._final_status(job)
         self._save_manifest(job)
@@ -461,18 +522,53 @@ class BatchManager:
         return summaries
 
     def cancel_batch(self, batch_id: str) -> Dict[str, Any]:
+        """Cancel a batch: models not yet started never run, and EnergyPlus
+        runs already in progress are stopped."""
         job = self._get_job(batch_id)
         job.cancel_requested = True
         for spec in job.models:
             if spec.status == "queued":
                 spec.status = "cancelled"
                 spec.completed_at = datetime.now().isoformat()
+        executor = self._executors.get(batch_id)
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
+        stopped = terminate_runs({m.output_directory for m in job.models if m.status == "running"})
         if job.status not in _TERMINAL_JOB_STATUSES:
             all_terminal = all(m.status in _TERMINAL_MODEL_STATUSES for m in job.models)
             if all_terminal:
                 job.status = self._final_status(job)
         self._save_manifest(job)
-        return self._status_summary(job)
+        out = self._status_summary(job)
+        out["running_models_stopped"] = stopped
+        return out
+
+    def shutdown(self, reason: str = "the server stopped before the batch finished") -> int:
+        """Stop every unfinished batch: drop models not yet started, stop
+        running EnergyPlus processes and record the batches as cancelled, so
+        no simulation outlives the server and no record says 'running' after
+        it. Returns the number of EnergyPlus runs stopped."""
+        unfinished = [j for j in self._jobs.values() if j.status not in _TERMINAL_JOB_STATUSES]
+        for job in unfinished:
+            job.cancel_requested = True
+            job.error = reason
+            executor = self._executors.get(job.batch_id)
+            if executor is not None:
+                executor.shutdown(wait=False, cancel_futures=True)
+        stopped = terminate_runs(wait=10.0)
+        now = datetime.now().isoformat()
+        for job in unfinished:
+            for spec in job.models:
+                if spec.status in ("queued", "running"):
+                    spec.status = "cancelled"
+                    spec.error = reason
+                    spec.completed_at = now
+            job.status = "cancelled"
+            self._save_manifest(job)
+        if unfinished:
+            logger.info("Stopped %d unfinished batch(es) and %d EnergyPlus run(s): %s",
+                        len(unfinished), stopped, reason)
+        return stopped
 
     def _status_summary(self, job: BatchJob) -> Dict[str, Any]:
         counts = Counter(m.status for m in job.models)
@@ -586,5 +682,14 @@ class BatchManager:
         job = self._load_manifest(batch_id)
         if job is None:
             raise KeyError(f"Unknown batch_id: {batch_id}")
+        if job.status not in _TERMINAL_JOB_STATUSES:
+            # Read from disk, so the process that ran it is gone: it will not finish.
+            reason = "the server that ran this batch stopped before it finished; submit it again"
+            for spec in job.models:
+                if spec.status in ("queued", "running"):
+                    spec.status = "cancelled"
+                    spec.error = reason
+            job.status, job.error = "cancelled", reason
+            self._save_manifest(job)
         self._jobs[batch_id] = job
         return job

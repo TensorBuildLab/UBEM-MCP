@@ -1700,9 +1700,8 @@ async def cancel_batch(batch_id: str) -> Dict[str, Any]:
         batch_id: Batch ID returned by run_batch_simulation
 
     Returns:
-        JSON string with updated batch status. Models not yet started are cancelled;
-        this is best-effort for models already running (an in-flight EnergyPlus
-        subprocess in a worker cannot be forcibly killed from here).
+        JSON with the updated batch status. Models not yet started never run, and
+        EnergyPlus runs in progress are stopped (running_models_stopped says how many).
     """
     result = batch_manager.cancel_batch(batch_id)
     return result
@@ -2855,6 +2854,9 @@ def main() -> None:
         logger.error(f"Server error: {e}", exc_info=True)
         raise
     finally:
+        # The client disconnected (stdio closed) or the server was stopped:
+        # stop unfinished batches so no EnergyPlus run outlives the server.
+        batch_manager.shutdown("the MCP server stopped (client disconnected) before the batch finished")
         logger.info("Server stopped")
 
 

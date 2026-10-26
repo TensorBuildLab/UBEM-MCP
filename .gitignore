@@ -239,3 +239,6 @@ ubem-mcp-server/agent_tests/results/runs/
 # Manuscript and submission files (kept out of the public repository)
 paper/manuscript/
 paper/submission/
+
+# Stray folder created by a Windows path passed to a Linux tool
+ubem-mcp-server/C:/
