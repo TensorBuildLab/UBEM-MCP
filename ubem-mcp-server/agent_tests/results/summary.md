@@ -1,7 +1,8 @@
 | Client | Model | Task | Runs passed | Checks | Tool calls (mean) | Failed calls | Guide used | Time (s) |
 |---|---|---|---|---|---|---|---|---|
-| claude-code | claude-opus-5-5 | U1_district | 1/1 | 4/4 | 8.0 | 0 | 0/1 | 173 |
-| claude-code | claude-opus-5-5 | U2_retrofit | 1/1 | 2/2 | 13.0 | 0 | 0/1 | 284 |
-| claude-code | claude-opus-5-5 | U3_data | 1/1 | 6/6 | 4.0 | 0 | 0/1 | 40 |
-| claude-code | claude-opus-5-5 | U3_resstock | 1/1 | 4/4 | 4.0 | 0 | 0/1 | 39 |
-| claude-code | claude-opus-5-5 | U4_validate | 1/1 | 3/3 | 12.0 | 1 | 0/1 | 185 |
+| claude-code | claude-opus-5-5 | S41_campus | 1/3 | 2/6 | 106.7 | 0 | 0/3 | 5379 |
+| claude-code | claude-opus-5-5 | U1_district | 3/3 | 12/12 | 12.3 | 0 | 0/3 | 517 |
+| claude-code | claude-opus-5-5 | U2_retrofit | 3/3 | 6/6 | 22.7 | 0 | 0/3 | 906 |
+| claude-code | claude-opus-5-5 | U3_data | 3/3 | 18/18 | 4.3 | 0 | 0/3 | 57 |
+| claude-code | claude-opus-5-5 | U3_resstock | 3/3 | 12/12 | 4.0 | 0 | 0/3 | 84 |
+| claude-code | claude-opus-5-5 | U4_validate | 3/3 | 9/9 | 17.3 | 3 | 0/3 | 537 |

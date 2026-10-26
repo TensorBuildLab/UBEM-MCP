@@ -14,7 +14,7 @@ New in UBEM-MCP:
 - **Measured data**: bills, meters or benchmarking tables matched to buildings and compared with models using ASHRAE Guideline 14 statistics, by fuel and archetype.
 - **ComStock and ResStock**: county-level reference data, weighted queries and benchmarks.
 - **Project records**: input hashes, software versions and recipes; one tool reruns a study and checks that its models match.
-- **One envelope for every tool** (`ok`, `warnings`, `error_type`, `error`) as MCP structured content; workflow guides as MCP prompts, resources and a plain tool.
+- **One envelope on every new tool** (`ok`, `warnings`, `error_type`, `error`) as MCP structured content, on the 33 tools added in UBEM-MCP; workflow guides as MCP prompts, resources and a plain tool.
 - **Three entry points**: MCP server (stdio or authenticated streamable HTTP), Python library (`UBEM` class) and `ubem-mcp` command line.
 - **Ready-to-run image** `ghcr.io/tensorbuildlab/ubem-mcp` with EnergyPlus 26.1, built and tested by `.github/workflows/image.yml` and published with each release.
 - **Tests**: unit tests on Python 3.10–3.12, integration tests with real EnergyPlus 26.1 in CI, and agent tasks with two harnesses (Claude Code and a generic MCP client).

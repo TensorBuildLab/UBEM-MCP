@@ -1,0 +1,829 @@
+{
+ "about": "Agent runs reported in paper Section 3.1 (Claude Code headless, model claude-opus-5-5, UBEM-MCP v1.0.0 as the only tool server; runs started 25-26 October 2026). Produced by agent_tests/summarize.py --since 20261025; per-run transcripts are not committed.",
+ "s41_notes": {
+  "claude-code_claude-opus-5-5_S41_campus_20261025_221413": "harness default of 80 turns; stopped by the turn limit while polling the scenario batch",
+  "claude-code_claude-opus-5-5_S41_campus_20261026_000817": "--max-turns 300; baseline reproduced exactly; read the original prompt as putting both heat-pump measures in the houses only and said so, so the scenario differs",
+  "claude-code_claude-opus-5-5_S41_campus_20261026_015736": "--max-turns 300 and the reworded prompt now in tasks.json (which buildings get which measure); reproduced Table 4 exactly",
+  "scoring": "campus_reproduced now accepts two aggregated results as well as a compare_retrofit_scenario output; the first two runs were rescored and their verdicts did not change",
+  "concurrency": "the second S41 run shared the laptop with the short tasks; the first and third ran alone"
+ },
+ "by_task": [
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "S41_campus",
+   "runs": 3,
+   "passed": 1,
+   "checks_passed": 2,
+   "checks_total": 6,
+   "mean_tool_calls": 106.7,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 5379,
+   "failed_checks": [
+    "answer_campus_numbers",
+    "campus_reproduced"
+   ]
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U1_district",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 12,
+   "checks_total": 12,
+   "mean_tool_calls": 12.3,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 517,
+   "failed_checks": []
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U2_retrofit",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "mean_tool_calls": 22.7,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 906,
+   "failed_checks": []
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U3_data",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 18,
+   "checks_total": 18,
+   "mean_tool_calls": 4.3,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 57,
+   "failed_checks": []
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U3_resstock",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 12,
+   "checks_total": 12,
+   "mean_tool_calls": 4.0,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 84,
+   "failed_checks": []
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U4_validate",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 9,
+   "checks_total": 9,
+   "mean_tool_calls": 17.3,
+   "failed_tool_calls": 3,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 537,
+   "failed_checks": []
+  }
+ ],
+ "runs": [
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": false,
+   "checks_passed": 0,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": false,
+     "detail": "no baseline and scenario results"
+    },
+    "answer_campus_numbers": {
+     "passed": false,
+     "detail": "missing: baseline GWh, scenario GWh, gas change %, scenario peak MW"
+    }
+   },
+   "tool_calls": 82,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_results",
+    "get_batch_status",
+    "get_site_weather",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 4100.6,
+   "turns": 81,
+   "error": "error_max_turns",
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261025_221413"
+  },
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": false,
+   "checks_passed": 0,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": false,
+     "detail": "baseline 36.489 vs 36.489 GWh, scenario 30.919 vs 28.916 GWh"
+    },
+    "answer_campus_numbers": {
+     "passed": false,
+     "detail": "missing: scenario GWh, gas change %, scenario peak MW"
+    }
+   },
+   "tool_calls": 127,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_results",
+    "get_batch_status",
+    "get_error_logs",
+    "get_server_logs",
+    "get_server_status",
+    "list_batches",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 6378.2,
+   "turns": 128,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261026_000817"
+  },
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": true,
+     "detail": "baseline 36.489 vs 36.489 GWh, scenario 28.916 vs 28.916 GWh"
+    },
+    "answer_campus_numbers": {
+     "passed": true,
+     "detail": "all stated"
+    }
+   },
+   "tool_calls": 111,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_results",
+    "get_batch_status",
+    "get_site_weather",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 5657.9,
+   "turns": 112,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261026_015736"
+  },
+  {
+   "task": "U1_district",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "district_simulated": {
+     "passed": true,
+     "detail": "8 buildings with results"
+    },
+    "answer_district_total": {
+     "passed": true,
+     "detail": "expected 7047.9 MWh"
+    },
+    "answer_peak_electricity": {
+     "passed": true,
+     "detail": "expected 2064 kW"
+    },
+    "mentions_assumptions": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 11,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 471.1,
+   "turns": 12,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U1_district_20261025_232240"
+  },
+  {
+   "task": "U1_district",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "district_simulated": {
+     "passed": true,
+     "detail": "8 buildings with results"
+    },
+    "answer_district_total": {
+     "passed": true,
+     "detail": "expected 7047.9 MWh"
+    },
+    "answer_peak_electricity": {
+     "passed": true,
+     "detail": "expected 2064 kW"
+    },
+    "mentions_assumptions": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 12,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 492.2,
+   "turns": 13,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U1_district_20261025_235651"
+  },
+  {
+   "task": "U1_district",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "district_simulated": {
+     "passed": true,
+     "detail": "8 buildings with results"
+    },
+    "answer_district_total": {
+     "passed": true,
+     "detail": "expected 7047.9 MWh"
+    },
+    "answer_peak_electricity": {
+     "passed": true,
+     "detail": "expected 2064 kW"
+    },
+    "mentions_assumptions": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 14,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 588.3,
+   "turns": 15,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U1_district_20261026_003208"
+  },
+  {
+   "task": "U2_retrofit",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "scenario_compared": {
+     "passed": true,
+     "detail": "comparison found"
+    },
+    "answer_scenario_savings": {
+     "passed": true,
+     "detail": "expected 15.4%"
+    }
+   },
+   "tool_calls": 22,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_status",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 842.8,
+   "turns": 23,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261025_233036"
+  },
+  {
+   "task": "U2_retrofit",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "scenario_compared": {
+     "passed": true,
+     "detail": "comparison found"
+    },
+    "answer_scenario_savings": {
+     "passed": true,
+     "detail": "expected 15.4%"
+    }
+   },
+   "tool_calls": 23,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_status",
+    "get_site_weather",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 861.4,
+   "turns": 24,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261026_000510"
+  },
+  {
+   "task": "U2_retrofit",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "scenario_compared": {
+     "passed": true,
+     "detail": "comparison found"
+    },
+    "answer_scenario_savings": {
+     "passed": true,
+     "detail": "expected 15.4%"
+    }
+   },
+   "tool_calls": 23,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_status",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 1014.1,
+   "turns": 24,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261026_004202"
+  },
+  {
+   "task": "U3_data",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "checks": {
+    "no_simulation": {
+     "passed": true,
+     "detail": "0 model sets"
+    },
+    "data_stock_complete": {
+     "passed": true,
+     "detail": "data stock with 10 structures"
+    },
+    "export_with_parcel": {
+     "passed": true,
+     "detail": "parcels_inventory_export.csv"
+    },
+    "answer_structure_count": {
+     "passed": true,
+     "detail": "expected 10"
+    },
+    "answer_known_year_share": {
+     "passed": true,
+     "detail": "expected 70%"
+    },
+    "mentions_personal_columns": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "export_stock",
+    "load_building_stock",
+    "query_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 55.5,
+   "turns": 5,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_data_20261025_234443"
+  },
+  {
+   "task": "U3_data",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "checks": {
+    "no_simulation": {
+     "passed": true,
+     "detail": "0 model sets"
+    },
+    "data_stock_complete": {
+     "passed": true,
+     "detail": "data stock with 10 structures"
+    },
+    "export_with_parcel": {
+     "passed": true,
+     "detail": "parcels_inventory_export.csv"
+    },
+    "answer_structure_count": {
+     "passed": true,
+     "detail": "expected 10"
+    },
+    "answer_known_year_share": {
+     "passed": true,
+     "detail": "expected 70%"
+    },
+    "mentions_personal_columns": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 5,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "export_stock",
+    "load_building_stock",
+    "query_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 53.8,
+   "turns": 6,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_data_20261026_001937"
+  },
+  {
+   "task": "U3_data",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "checks": {
+    "no_simulation": {
+     "passed": true,
+     "detail": "0 model sets"
+    },
+    "data_stock_complete": {
+     "passed": true,
+     "detail": "data stock with 10 structures"
+    },
+    "export_with_parcel": {
+     "passed": true,
+     "detail": "parcels_inventory_export.csv"
+    },
+    "answer_structure_count": {
+     "passed": true,
+     "detail": "expected 10"
+    },
+    "answer_known_year_share": {
+     "passed": true,
+     "detail": "expected 70%"
+    },
+    "mentions_personal_columns": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "export_stock",
+    "load_building_stock",
+    "query_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 61.3,
+   "turns": 5,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_data_20261026_005903"
+  },
+  {
+   "task": "U3_resstock",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "resstock_fetched": {
+     "passed": true,
+     "detail": "ResStock Pima County baseline downloaded"
+    },
+    "answer_sfd_count": {
+     "passed": true,
+     "detail": "expected 280056"
+    },
+    "answer_sfd_eui": {
+     "passed": true,
+     "detail": "expected 102.8 (median 110.2) kWh/m2"
+    },
+    "answer_heat_pump_savings": {
+     "passed": true,
+     "detail": "expected 14.8% (all homes 14.1%)"
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "fetch_comstock_resstock",
+    "query_comstock_resstock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 89.5,
+   "turns": 5,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261025_234542"
+  },
+  {
+   "task": "U3_resstock",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "resstock_fetched": {
+     "passed": true,
+     "detail": "ResStock Pima County baseline downloaded"
+    },
+    "answer_sfd_count": {
+     "passed": true,
+     "detail": "expected 280056"
+    },
+    "answer_sfd_eui": {
+     "passed": true,
+     "detail": "expected 102.8 (median 110.2) kWh/m2"
+    },
+    "answer_heat_pump_savings": {
+     "passed": true,
+     "detail": "expected 14.8% (all homes 14.1%)"
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "fetch_comstock_resstock",
+    "query_comstock_resstock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 82.1,
+   "turns": 5,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261026_002036"
+  },
+  {
+   "task": "U3_resstock",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "resstock_fetched": {
+     "passed": true,
+     "detail": "ResStock Pima County baseline downloaded"
+    },
+    "answer_sfd_count": {
+     "passed": true,
+     "detail": "expected 280056"
+    },
+    "answer_sfd_eui": {
+     "passed": true,
+     "detail": "expected 102.8 (median 110.2) kWh/m2"
+    },
+    "answer_heat_pump_savings": {
+     "passed": true,
+     "detail": "expected 14.8% (all homes 14.1%)"
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "fetch_comstock_resstock",
+    "query_comstock_resstock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 80.0,
+   "turns": 5,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261026_010010"
+  },
+  {
+   "task": "U4_validate",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 3,
+   "checks_total": 3,
+   "checks": {
+    "measured_compared": {
+     "passed": true,
+     "detail": "8 meters compared"
+    },
+    "answer_measured_district_error": {
+     "passed": true,
+     "detail": "expected -31.6%"
+    },
+    "mentions_weather_year": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 18,
+   "failed_tool_calls": 1,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_to_measured",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "load_measured_energy",
+    "query_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 549.9,
+   "turns": 19,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261025_234735"
+  },
+  {
+   "task": "U4_validate",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 3,
+   "checks_total": 3,
+   "checks": {
+    "measured_compared": {
+     "passed": true,
+     "detail": "8 meters compared"
+    },
+    "answer_measured_district_error": {
+     "passed": true,
+     "detail": "expected -31.6%"
+    },
+    "mentions_weather_year": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 18,
+   "failed_tool_calls": 1,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_to_measured",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "load_measured_energy",
+    "query_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 583.1,
+   "turns": 19,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261026_002221"
+  },
+  {
+   "task": "U4_validate",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 3,
+   "checks_total": 3,
+   "checks": {
+    "measured_compared": {
+     "passed": true,
+     "detail": "8 meters compared"
+    },
+    "answer_measured_district_error": {
+     "passed": true,
+     "detail": "expected -31.6%"
+    },
+    "mentions_weather_year": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 16,
+   "failed_tool_calls": 1,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_to_measured",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "load_measured_energy",
+    "query_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 477.7,
+   "turns": 17,
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261026_010149"
+  }
+ ]
+}

@@ -102,6 +102,32 @@ def comparison(out: Path) -> Optional[Dict[str, Any]]:
     return _json(hits[-1]) if hits else None
 
 
+def scenario_summary(out: Path) -> Optional[Dict[str, Any]]:
+    """The latest aggregated results of a scenario model set (one derived by retrofit measures)."""
+    hits = [p for p in out.glob("stocks/*/models/*/results/*/summary.json")
+            if (p.parents[2] / "manifest.json").exists() and _json(p.parents[2] / "manifest.json").get("scenario")]
+    hits.sort(key=lambda p: p.stat().st_mtime)
+    return _json(hits[-1]) if hits else None
+
+
+def district_pair(out: Path) -> Optional[Dict[str, Any]]:
+    """Baseline and scenario district results, from a comparison or, if the agent aggregated
+    the two model sets separately instead, from the two aggregated results."""
+    c = comparison(out)
+    if c:
+        d = c["district"]
+        peaks = d["peak_kw"]["electricity"]
+        return {"baseline_kwh": d["baseline_kwh"], "scenario_kwh": d["scenario_kwh"],
+                "baseline_peak_hour": peaks["baseline"]["hour_of_year"],
+                "scenario_peak_hour": peaks["scenario"]["hour_of_year"]}
+    b, s = baseline_summary(out), scenario_summary(out)
+    if not (b and s):
+        return None
+    return {"baseline_kwh": b["district"]["total_kwh"], "scenario_kwh": s["district"]["total_kwh"],
+            "baseline_peak_hour": b["district"]["peak_kw"]["electricity"]["hour_of_year"],
+            "scenario_peak_hour": s["district"]["peak_kw"]["electricity"]["hour_of_year"]}
+
+
 def measured_comparison(out: Path) -> Optional[Dict[str, Any]]:
     hits = sorted(out.glob("stocks/*/measured/*/comparison/*/summary.json"), key=lambda p: p.stat().st_mtime)
     return _json(hits[-1]) if hits else None
@@ -262,14 +288,12 @@ def _campus_expected():
 
 
 def _c_campus_reproduced(out, ans):
-    """The agent's comparison equals the published Section 3.1 run (to 0.1%)."""
-    c, e = comparison(out), _campus_expected()
-    if not c:
-        return False, "no comparison"
-    d = c["district"]
+    """The agent's baseline and scenario equal the published Section 3.1 run (to 0.1%)."""
+    d, e = district_pair(out), _campus_expected()
+    if not d:
+        return False, "no baseline and scenario results"
     ok = all(abs(d[k] - e[k]) <= 0.001 * e[k] for k in ("baseline_kwh", "scenario_kwh"))
-    peaks = d["peak_kw"]["electricity"]
-    ok = ok and all(peaks[w]["hour_of_year"] == e["peak_electricity_kw"][w]["hour_of_year"]
+    ok = ok and all(d[f"{w}_peak_hour"] == e["peak_electricity_kw"][w]["hour_of_year"]
                     for w in ("baseline", "scenario"))
     return ok, (f"baseline {d['baseline_kwh'] / 1e6:.3f} vs {e['baseline_kwh'] / 1e6:.3f} GWh, "
                 f"scenario {d['scenario_kwh'] / 1e6:.3f} vs {e['scenario_kwh'] / 1e6:.3f} GWh")

@@ -32,6 +32,10 @@ The server runs in the development container (`ubem-p6`), which has EnergyPlus.
 # Claude Code, from the host
 python agent_tests/harness/claude_code.py U1_district U3_data --model sonnet --repeat 3
 
+# The paper's Section 3.1 reproduction: two district batches, about 1-2 h on a laptop.
+# The agent polls each batch until it finishes, so it needs more turns than the default 80.
+python agent_tests/harness/claude_code.py S41_campus --model claude-opus-5-5 --max-turns 300 --timeout 18000
+
 # Generic client with any OpenAI-compatible model, inside the container
 docker exec -e UBEM_AGENT_API_KEY -e UBEM_AGENT_MODEL=gpt-5-mini -e UBEM_AGENT_BASE_URL=https://api.openai.com/v1 \
   -w /workspace/ubem-mcp-server ubem-p6 /tmp/venv/bin/python -m agent_tests.harness.generic_client U1_district \

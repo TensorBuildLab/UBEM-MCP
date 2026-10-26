@@ -54,7 +54,7 @@ UBEM studies chain the same steps: gather building data, fill what is missing, a
 - **Every value says where it came from**: inferred attributes are marked, assumptions are listed per building, sources and licences travel with the data, and personal columns are dropped on load.
 - **Data first, models optional**: inventories can be loaded, joined, queried and exported without running a model.
 - **Long jobs in the background**: batches return at once; status reports progress, time left and grouped failure causes.
-- **Answers sized for an agent**: one structured envelope, summaries instead of raw output, paged lists.
+- **Answers sized for an agent**: one structured envelope on the 33 new tools, summaries instead of raw output, paged lists.
 - **Expertise the agent can look up**: server instructions, workflow guides and catalogues ship inside the server for every client.
 - **Open at every layer**: your own GIS layers, your own EnergyPlus models, the single-model tools of EnergyPlus-MCP.
 - **Reproducible by record**: input hashes, software versions and recipes, exported and rerun with one tool each.

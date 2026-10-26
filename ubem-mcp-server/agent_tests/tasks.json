@@ -75,7 +75,7 @@
       "files": [
         "campus.geojson"
       ],
-      "prompt": "campus.geojson has OpenStreetMap footprints for the University of Arizona main campus and the adjacent housing in Tucson. Treat buildings with no year built as built in 1960. Simulate their current annual energy use, then an electrification scenario: heat pumps for space heating (COP 3.3), heat-pump water heaters (COP 3.0) in the single-family houses, and lighting power cut by 40%. Give the district's site energy, electricity and natural gas in GWh per year before and after, the percent change of each, and the electric peak in MW with its date and hour before and after.",
+      "prompt": "campus.geojson has OpenStreetMap footprints for the University of Arizona main campus and the adjacent housing in Tucson. Treat buildings with no year built as built in 1960. Simulate their current annual energy use, then an electrification scenario: heat pumps for space heating (COP 3.3) in all buildings, heat-pump water heaters (COP 3.0) in the single-family houses only, and lighting power cut by 40% in all buildings. Give the district's site energy, electricity and natural gas in GWh per year before and after, the percent change of each, and the electric peak in MW with its date and hour before and after.",
       "checks": [
         "campus_reproduced",
         "answer_campus_numbers"

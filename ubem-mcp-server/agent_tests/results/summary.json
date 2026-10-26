@@ -3,80 +3,312 @@
   {
    "client": "claude-code",
    "model": "claude-opus-5-5",
-   "task": "U1_district",
-   "runs": 1,
+   "task": "S41_campus",
+   "runs": 3,
    "passed": 1,
-   "checks_passed": 4,
-   "checks_total": 4,
-   "mean_tool_calls": 8.0,
+   "checks_passed": 2,
+   "checks_total": 6,
+   "mean_tool_calls": 106.7,
    "failed_tool_calls": 0,
    "non_ubem_tool_calls": 0,
    "used_guide": 0,
-   "mean_duration_s": 173,
+   "mean_duration_s": 5379,
+   "failed_checks": [
+    "answer_campus_numbers",
+    "campus_reproduced"
+   ]
+  },
+  {
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "task": "U1_district",
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 12,
+   "checks_total": 12,
+   "mean_tool_calls": 12.3,
+   "failed_tool_calls": 0,
+   "non_ubem_tool_calls": 0,
+   "used_guide": 0,
+   "mean_duration_s": 517,
    "failed_checks": []
   },
   {
    "client": "claude-code",
    "model": "claude-opus-5-5",
    "task": "U2_retrofit",
-   "runs": 1,
-   "passed": 1,
-   "checks_passed": 2,
-   "checks_total": 2,
-   "mean_tool_calls": 13.0,
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "mean_tool_calls": 22.7,
    "failed_tool_calls": 0,
    "non_ubem_tool_calls": 0,
    "used_guide": 0,
-   "mean_duration_s": 284,
+   "mean_duration_s": 906,
    "failed_checks": []
   },
   {
    "client": "claude-code",
    "model": "claude-opus-5-5",
    "task": "U3_data",
-   "runs": 1,
-   "passed": 1,
-   "checks_passed": 6,
-   "checks_total": 6,
-   "mean_tool_calls": 4.0,
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 18,
+   "checks_total": 18,
+   "mean_tool_calls": 4.3,
    "failed_tool_calls": 0,
    "non_ubem_tool_calls": 0,
    "used_guide": 0,
-   "mean_duration_s": 40,
+   "mean_duration_s": 57,
    "failed_checks": []
   },
   {
    "client": "claude-code",
    "model": "claude-opus-5-5",
    "task": "U3_resstock",
-   "runs": 1,
-   "passed": 1,
-   "checks_passed": 4,
-   "checks_total": 4,
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 12,
+   "checks_total": 12,
    "mean_tool_calls": 4.0,
    "failed_tool_calls": 0,
    "non_ubem_tool_calls": 0,
    "used_guide": 0,
-   "mean_duration_s": 39,
+   "mean_duration_s": 84,
    "failed_checks": []
   },
   {
    "client": "claude-code",
    "model": "claude-opus-5-5",
    "task": "U4_validate",
-   "runs": 1,
-   "passed": 1,
-   "checks_passed": 3,
-   "checks_total": 3,
-   "mean_tool_calls": 12.0,
-   "failed_tool_calls": 1,
+   "runs": 3,
+   "passed": 3,
+   "checks_passed": 9,
+   "checks_total": 9,
+   "mean_tool_calls": 17.3,
+   "failed_tool_calls": 3,
    "non_ubem_tool_calls": 0,
    "used_guide": 0,
-   "mean_duration_s": 185,
+   "mean_duration_s": 537,
    "failed_checks": []
   }
  ],
  "runs": [
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": false,
+   "checks_passed": 0,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": false,
+     "detail": "no baseline and scenario results"
+    },
+    "answer_campus_numbers": {
+     "passed": false,
+     "detail": "missing: baseline GWh, scenario GWh, gas change %, scenario peak MW"
+    }
+   },
+   "tool_calls": 82,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_results",
+    "get_batch_status",
+    "get_site_weather",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 4100.6,
+   "turns": 81,
+   "usage": {
+    "input_tokens": 160,
+    "cache_creation_input_tokens": 90998,
+    "cache_read_input_tokens": 5399764,
+    "output_tokens": 9075,
+    "output_tokens_details": {
+     "thinking_tokens": 702
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 90998,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 95,
+      "cache_read_input_tokens": 90497,
+      "cache_creation_input_tokens": 501,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 501
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": "error_max_turns",
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261025_221413"
+  },
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": false,
+   "checks_passed": 0,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": false,
+     "detail": "baseline 36.489 vs 36.489 GWh, scenario 30.919 vs 28.916 GWh"
+    },
+    "answer_campus_numbers": {
+     "passed": false,
+     "detail": "missing: scenario GWh, gas change %, scenario peak MW"
+    }
+   },
+   "tool_calls": 127,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_results",
+    "get_batch_status",
+    "get_error_logs",
+    "get_server_logs",
+    "get_server_status",
+    "list_batches",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 6378.2,
+   "turns": 128,
+   "usage": {
+    "input_tokens": 250,
+    "cache_creation_input_tokens": 79032,
+    "cache_read_input_tokens": 10116028,
+    "output_tokens": 15005,
+    "output_tokens_details": {
+     "thinking_tokens": 1175
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 79032,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1494,
+      "cache_read_input_tokens": 113845,
+      "cache_creation_input_tokens": 3050,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 3050
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261026_000817"
+  },
+  {
+   "task": "S41_campus",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "campus_reproduced": {
+     "passed": true,
+     "detail": "baseline 36.489 vs 36.489 GWh, scenario 28.916 vs 28.916 GWh"
+    },
+    "answer_campus_numbers": {
+     "passed": true,
+     "detail": "all stated"
+    }
+   },
+   "tool_calls": 111,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_results",
+    "get_batch_status",
+    "get_site_weather",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 5657.9,
+   "turns": 112,
+   "usage": {
+    "input_tokens": 222,
+    "cache_creation_input_tokens": 71865,
+    "cache_read_input_tokens": 8450573,
+    "output_tokens": 12755,
+    "output_tokens_details": {
+     "thinking_tokens": 488
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 71865,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1121,
+      "cache_read_input_tokens": 107736,
+      "cache_creation_input_tokens": 1992,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1992
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_S41_campus_20261026_015736"
+  },
   {
    "task": "U1_district",
    "client": "claude-code",
@@ -102,7 +334,7 @@
      "detail": ""
     }
    },
-   "tool_calls": 8,
+   "tool_calls": 11,
    "failed_tool_calls": 0,
    "distinct_tools": [
     "aggregate_stock_results",
@@ -114,15 +346,15 @@
    ],
    "used_guide": false,
    "non_ubem_tool_calls": 0,
-   "duration_s": 172.9,
-   "turns": 9,
+   "duration_s": 471.1,
+   "turns": 12,
    "usage": {
-    "input_tokens": 18,
-    "cache_creation_input_tokens": 11262,
-    "cache_read_input_tokens": 386307,
-    "output_tokens": 2119,
+    "input_tokens": 24,
+    "cache_creation_input_tokens": 53654,
+    "cache_read_input_tokens": 528897,
+    "output_tokens": 2399,
     "output_tokens_details": {
-     "thinking_tokens": 127
+     "thinking_tokens": 128
     },
     "server_tool_use": {
      "web_search_requests": 0,
@@ -130,19 +362,19 @@
     },
     "service_tier": "standard",
     "cache_creation": {
-     "ephemeral_1h_input_tokens": 11262,
+     "ephemeral_1h_input_tokens": 53654,
      "ephemeral_5m_input_tokens": 0
     },
     "inference_geo": "global",
     "iterations": [
      {
       "input_tokens": 2,
-      "output_tokens": 1392,
-      "cache_read_input_tokens": 46057,
-      "cache_creation_input_tokens": 2473,
+      "output_tokens": 1351,
+      "cache_read_input_tokens": 51091,
+      "cache_creation_input_tokens": 2563,
       "cache_creation": {
        "ephemeral_5m_input_tokens": 0,
-       "ephemeral_1h_input_tokens": 2473
+       "ephemeral_1h_input_tokens": 2563
       },
       "type": "message"
      }
@@ -151,7 +383,159 @@
     "fallback_credit": null
    },
    "error": null,
-   "run": "claude-code_default_U1_district_20261017_190745"
+   "run": "claude-code_claude-opus-5-5_U1_district_20261025_232240"
+  },
+  {
+   "task": "U1_district",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "district_simulated": {
+     "passed": true,
+     "detail": "8 buildings with results"
+    },
+    "answer_district_total": {
+     "passed": true,
+     "detail": "expected 7047.9 MWh"
+    },
+    "answer_peak_electricity": {
+     "passed": true,
+     "detail": "expected 2064 kW"
+    },
+    "mentions_assumptions": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 12,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 492.2,
+   "turns": 13,
+   "usage": {
+    "input_tokens": 24,
+    "cache_creation_input_tokens": 16089,
+    "cache_read_input_tokens": 571568,
+    "output_tokens": 2457,
+    "output_tokens_details": {
+     "thinking_tokens": 135
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 16089,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1254,
+      "cache_read_input_tokens": 51449,
+      "cache_creation_input_tokens": 2503,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 2503
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U1_district_20261025_235651"
+  },
+  {
+   "task": "U1_district",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "district_simulated": {
+     "passed": true,
+     "detail": "8 buildings with results"
+    },
+    "answer_district_total": {
+     "passed": true,
+     "detail": "expected 7047.9 MWh"
+    },
+    "answer_peak_electricity": {
+     "passed": true,
+     "detail": "expected 2064 kW"
+    },
+    "mentions_assumptions": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 14,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 588.3,
+   "turns": 15,
+   "usage": {
+    "input_tokens": 28,
+    "cache_creation_input_tokens": 17023,
+    "cache_read_input_tokens": 675591,
+    "output_tokens": 2853,
+    "output_tokens_details": {
+     "thinking_tokens": 209
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 17023,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1457,
+      "cache_read_input_tokens": 52350,
+      "cache_creation_input_tokens": 2536,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 2536
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U1_district_20261026_003208"
   },
   {
    "task": "U2_retrofit",
@@ -170,7 +554,76 @@
      "detail": "expected 15.4%"
     }
    },
-   "tool_calls": 13,
+   "tool_calls": 22,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_status",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 842.8,
+   "turns": 23,
+   "usage": {
+    "input_tokens": 42,
+    "cache_creation_input_tokens": 62029,
+    "cache_read_input_tokens": 1033100,
+    "output_tokens": 3477,
+    "output_tokens_details": {
+     "thinking_tokens": 211
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 62029,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1028,
+      "cache_read_input_tokens": 60324,
+      "cache_creation_input_tokens": 1705,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1705
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261025_233036"
+  },
+  {
+   "task": "U2_retrofit",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "scenario_compared": {
+     "passed": true,
+     "detail": "comparison found"
+    },
+    "answer_scenario_savings": {
+     "passed": true,
+     "detail": "expected 15.4%"
+    }
+   },
+   "tool_calls": 23,
    "failed_tool_calls": 0,
    "distinct_tools": [
     "aggregate_stock_results",
@@ -184,15 +637,15 @@
    ],
    "used_guide": false,
    "non_ubem_tool_calls": 0,
-   "duration_s": 284.5,
-   "turns": 14,
+   "duration_s": 861.4,
+   "turns": 24,
    "usage": {
-    "input_tokens": 24,
-    "cache_creation_input_tokens": 16991,
-    "cache_read_input_tokens": 544105,
-    "output_tokens": 2427,
+    "input_tokens": 44,
+    "cache_creation_input_tokens": 24905,
+    "cache_read_input_tokens": 1136228,
+    "output_tokens": 3380,
     "output_tokens_details": {
-     "thinking_tokens": 242
+     "thinking_tokens": 173
     },
     "server_tool_use": {
      "web_search_requests": 0,
@@ -200,19 +653,19 @@
     },
     "service_tier": "standard",
     "cache_creation": {
-     "ephemeral_1h_input_tokens": 16991,
+     "ephemeral_1h_input_tokens": 24905,
      "ephemeral_5m_input_tokens": 0
     },
     "inference_geo": "global",
     "iterations": [
      {
       "input_tokens": 2,
-      "output_tokens": 1107,
-      "cache_read_input_tokens": 52561,
-      "cache_creation_input_tokens": 1698,
+      "output_tokens": 990,
+      "cache_read_input_tokens": 61078,
+      "cache_creation_input_tokens": 1690,
       "cache_creation": {
        "ephemeral_5m_input_tokens": 0,
-       "ephemeral_1h_input_tokens": 1698
+       "ephemeral_1h_input_tokens": 1690
       },
       "type": "message"
      }
@@ -221,7 +674,76 @@
     "fallback_credit": null
    },
    "error": null,
-   "run": "claude-code_default_U2_retrofit_20261017_191040"
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261026_000510"
+  },
+  {
+   "task": "U2_retrofit",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 2,
+   "checks_total": 2,
+   "checks": {
+    "scenario_compared": {
+     "passed": true,
+     "detail": "comparison found"
+    },
+    "answer_scenario_savings": {
+     "passed": true,
+     "detail": "expected 15.4%"
+    }
+   },
+   "tool_calls": 23,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_retrofit_scenario",
+    "get_batch_status",
+    "list_retrofit_measures",
+    "load_building_stock",
+    "simulate_building_stock",
+    "simulate_retrofit_scenario"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 1014.1,
+   "turns": 24,
+   "usage": {
+    "input_tokens": 44,
+    "cache_creation_input_tokens": 24452,
+    "cache_read_input_tokens": 1122633,
+    "output_tokens": 3281,
+    "output_tokens_details": {
+     "thinking_tokens": 122
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 24452,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 894,
+      "cache_read_input_tokens": 60618,
+      "cache_creation_input_tokens": 1697,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1697
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U2_retrofit_20261026_004202"
   },
   {
    "task": "U3_data",
@@ -241,7 +763,7 @@
     },
     "export_with_parcel": {
      "passed": true,
-     "detail": "parcels_inventory_structures.csv"
+     "detail": "parcels_inventory_export.csv"
     },
     "answer_structure_count": {
      "passed": true,
@@ -265,13 +787,94 @@
    ],
    "used_guide": false,
    "non_ubem_tool_calls": 0,
-   "duration_s": 39.8,
+   "duration_s": 55.5,
    "turns": 5,
    "usage": {
     "input_tokens": 10,
-    "cache_creation_input_tokens": 44700,
-    "cache_read_input_tokens": 167589,
-    "output_tokens": 1759,
+    "cache_creation_input_tokens": 9892,
+    "cache_read_input_tokens": 218655,
+    "output_tokens": 1623,
+    "output_tokens_details": {
+     "thinking_tokens": 287
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 9892,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 822,
+      "cache_read_input_tokens": 47167,
+      "cache_creation_input_tokens": 588,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 588
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_data_20261025_234443"
+  },
+  {
+   "task": "U3_data",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "checks": {
+    "no_simulation": {
+     "passed": true,
+     "detail": "0 model sets"
+    },
+    "data_stock_complete": {
+     "passed": true,
+     "detail": "data stock with 10 structures"
+    },
+    "export_with_parcel": {
+     "passed": true,
+     "detail": "parcels_inventory_export.csv"
+    },
+    "answer_structure_count": {
+     "passed": true,
+     "detail": "expected 10"
+    },
+    "answer_known_year_share": {
+     "passed": true,
+     "detail": "expected 70%"
+    },
+    "mentions_personal_columns": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 5,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "export_stock",
+    "load_building_stock",
+    "query_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 53.8,
+   "turns": 6,
+   "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 9786,
+    "cache_read_input_tokens": 217309,
+    "output_tokens": 1740,
     "output_tokens_details": {
      "thinking_tokens": 228
     },
@@ -281,19 +884,19 @@
     },
     "service_tier": "standard",
     "cache_creation": {
-     "ephemeral_1h_input_tokens": 44700,
+     "ephemeral_1h_input_tokens": 9786,
      "ephemeral_5m_input_tokens": 0
     },
     "inference_geo": "global",
     "iterations": [
      {
       "input_tokens": 2,
-      "output_tokens": 974,
-      "cache_read_input_tokens": 44113,
-      "cache_creation_input_tokens": 587,
+      "output_tokens": 873,
+      "cache_read_input_tokens": 46344,
+      "cache_creation_input_tokens": 1305,
       "cache_creation": {
        "ephemeral_5m_input_tokens": 0,
-       "ephemeral_1h_input_tokens": 587
+       "ephemeral_1h_input_tokens": 1305
       },
       "type": "message"
      }
@@ -302,7 +905,88 @@
     "fallback_credit": null
    },
    "error": null,
-   "run": "claude-code_default_U3_data_20261017_190540"
+   "run": "claude-code_claude-opus-5-5_U3_data_20261026_001937"
+  },
+  {
+   "task": "U3_data",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 6,
+   "checks_total": 6,
+   "checks": {
+    "no_simulation": {
+     "passed": true,
+     "detail": "0 model sets"
+    },
+    "data_stock_complete": {
+     "passed": true,
+     "detail": "data stock with 10 structures"
+    },
+    "export_with_parcel": {
+     "passed": true,
+     "detail": "parcels_inventory_export.csv"
+    },
+    "answer_structure_count": {
+     "passed": true,
+     "detail": "expected 10"
+    },
+    "answer_known_year_share": {
+     "passed": true,
+     "detail": "expected 70%"
+    },
+    "mentions_personal_columns": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "export_stock",
+    "load_building_stock",
+    "query_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 61.3,
+   "turns": 5,
+   "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 9922,
+    "cache_read_input_tokens": 218680,
+    "output_tokens": 1707,
+    "output_tokens_details": {
+     "thinking_tokens": 294
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 9922,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 870,
+      "cache_read_input_tokens": 47192,
+      "cache_creation_input_tokens": 593,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 593
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_data_20261026_005903"
   },
   {
    "task": "U3_resstock",
@@ -337,15 +1021,15 @@
    ],
    "used_guide": false,
    "non_ubem_tool_calls": 0,
-   "duration_s": 39.3,
+   "duration_s": 89.5,
    "turns": 5,
    "usage": {
     "input_tokens": 8,
-    "cache_creation_input_tokens": 8385,
-    "cache_read_input_tokens": 164894,
-    "output_tokens": 1421,
+    "cache_creation_input_tokens": 11196,
+    "cache_read_input_tokens": 175569,
+    "output_tokens": 1389,
     "output_tokens_details": {
-     "thinking_tokens": 167
+     "thinking_tokens": 116
     },
     "server_tool_use": {
      "web_search_requests": 0,
@@ -353,15 +1037,87 @@
     },
     "service_tier": "standard",
     "cache_creation": {
-     "ephemeral_1h_input_tokens": 8385,
+     "ephemeral_1h_input_tokens": 11196,
      "ephemeral_5m_input_tokens": 0
     },
     "inference_geo": "global",
     "iterations": [
      {
       "input_tokens": 2,
-      "output_tokens": 872,
-      "cache_read_input_tokens": 45062,
+      "output_tokens": 772,
+      "cache_read_input_tokens": 48433,
+      "cache_creation_input_tokens": 626,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 626
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261025_234542"
+  },
+  {
+   "task": "U3_resstock",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "resstock_fetched": {
+     "passed": true,
+     "detail": "ResStock Pima County baseline downloaded"
+    },
+    "answer_sfd_count": {
+     "passed": true,
+     "detail": "expected 280056"
+    },
+    "answer_sfd_eui": {
+     "passed": true,
+     "detail": "expected 102.8 (median 110.2) kWh/m2"
+    },
+    "answer_heat_pump_savings": {
+     "passed": true,
+     "detail": "expected 14.8% (all homes 14.1%)"
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "fetch_comstock_resstock",
+    "query_comstock_resstock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 82.1,
+   "turns": 5,
+   "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 11156,
+    "cache_read_input_tokens": 175551,
+    "output_tokens": 1388,
+    "output_tokens_details": {
+     "thinking_tokens": 184
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 11156,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 803,
+      "cache_read_input_tokens": 48428,
       "cache_creation_input_tokens": 591,
       "cache_creation": {
        "ephemeral_5m_input_tokens": 0,
@@ -374,7 +1130,79 @@
     "fallback_credit": null
    },
    "error": null,
-   "run": "claude-code_default_U3_resstock_20261017_190659"
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261026_002036"
+  },
+  {
+   "task": "U3_resstock",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 4,
+   "checks_total": 4,
+   "checks": {
+    "resstock_fetched": {
+     "passed": true,
+     "detail": "ResStock Pima County baseline downloaded"
+    },
+    "answer_sfd_count": {
+     "passed": true,
+     "detail": "expected 280056"
+    },
+    "answer_sfd_eui": {
+     "passed": true,
+     "detail": "expected 102.8 (median 110.2) kWh/m2"
+    },
+    "answer_heat_pump_savings": {
+     "passed": true,
+     "detail": "expected 14.8% (all homes 14.1%)"
+    }
+   },
+   "tool_calls": 4,
+   "failed_tool_calls": 0,
+   "distinct_tools": [
+    "fetch_comstock_resstock",
+    "query_comstock_resstock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 80.0,
+   "turns": 5,
+   "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 11196,
+    "cache_read_input_tokens": 175596,
+    "output_tokens": 1339,
+    "output_tokens_details": {
+     "thinking_tokens": 26
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 11196,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 720,
+      "cache_read_input_tokens": 48468,
+      "cache_creation_input_tokens": 591,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 591
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U3_resstock_20261026_010010"
   },
   {
    "task": "U4_validate",
@@ -397,7 +1225,7 @@
      "detail": ""
     }
    },
-   "tool_calls": 12,
+   "tool_calls": 18,
    "failed_tool_calls": 1,
    "distinct_tools": [
     "aggregate_stock_results",
@@ -412,15 +1240,15 @@
    ],
    "used_guide": false,
    "non_ubem_tool_calls": 0,
-   "duration_s": 185.0,
-   "turns": 13,
+   "duration_s": 549.9,
+   "turns": 19,
    "usage": {
-    "input_tokens": 22,
-    "cache_creation_input_tokens": 15027,
-    "cache_read_input_tokens": 487653,
-    "output_tokens": 3220,
+    "input_tokens": 36,
+    "cache_creation_input_tokens": 20392,
+    "cache_read_input_tokens": 889931,
+    "output_tokens": 3680,
     "output_tokens_details": {
-     "thinking_tokens": 306
+     "thinking_tokens": 268
     },
     "server_tool_use": {
      "web_search_requests": 0,
@@ -428,19 +1256,19 @@
     },
     "service_tier": "standard",
     "cache_creation": {
-     "ephemeral_1h_input_tokens": 15027,
+     "ephemeral_1h_input_tokens": 20392,
      "ephemeral_5m_input_tokens": 0
     },
     "inference_geo": "global",
     "iterations": [
      {
       "input_tokens": 2,
-      "output_tokens": 1403,
-      "cache_read_input_tokens": 50621,
-      "cache_creation_input_tokens": 1674,
+      "output_tokens": 1322,
+      "cache_read_input_tokens": 56552,
+      "cache_creation_input_tokens": 1703,
       "cache_creation": {
        "ephemeral_5m_input_tokens": 0,
-       "ephemeral_1h_input_tokens": 1674
+       "ephemeral_1h_input_tokens": 1703
       },
       "type": "message"
      }
@@ -449,7 +1277,157 @@
     "fallback_credit": null
    },
    "error": null,
-   "run": "claude-code_default_U4_validate_20261017_191526"
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261025_234735"
+  },
+  {
+   "task": "U4_validate",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 3,
+   "checks_total": 3,
+   "checks": {
+    "measured_compared": {
+     "passed": true,
+     "detail": "8 meters compared"
+    },
+    "answer_measured_district_error": {
+     "passed": true,
+     "detail": "expected -31.6%"
+    },
+    "mentions_weather_year": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 18,
+   "failed_tool_calls": 1,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_to_measured",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "load_measured_energy",
+    "query_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 583.1,
+   "turns": 19,
+   "usage": {
+    "input_tokens": 32,
+    "cache_creation_input_tokens": 20852,
+    "cache_read_input_tokens": 799012,
+    "output_tokens": 3601,
+    "output_tokens_details": {
+     "thinking_tokens": 344
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 20852,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1171,
+      "cache_read_input_tokens": 57012,
+      "cache_creation_input_tokens": 1703,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1703
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261026_002221"
+  },
+  {
+   "task": "U4_validate",
+   "client": "claude-code",
+   "model": "claude-opus-5-5",
+   "passed": true,
+   "checks_passed": 3,
+   "checks_total": 3,
+   "checks": {
+    "measured_compared": {
+     "passed": true,
+     "detail": "8 meters compared"
+    },
+    "answer_measured_district_error": {
+     "passed": true,
+     "detail": "expected -31.6%"
+    },
+    "mentions_weather_year": {
+     "passed": true,
+     "detail": ""
+    }
+   },
+   "tool_calls": 16,
+   "failed_tool_calls": 1,
+   "distinct_tools": [
+    "aggregate_stock_results",
+    "compare_to_measured",
+    "get_batch_status",
+    "get_building_stock",
+    "get_site_weather",
+    "load_building_stock",
+    "load_measured_energy",
+    "query_stock",
+    "simulate_building_stock"
+   ],
+   "used_guide": false,
+   "non_ubem_tool_calls": 0,
+   "duration_s": 477.7,
+   "turns": 17,
+   "usage": {
+    "input_tokens": 26,
+    "cache_creation_input_tokens": 19699,
+    "cache_read_input_tokens": 636904,
+    "output_tokens": 3561,
+    "output_tokens_details": {
+     "thinking_tokens": 284
+    },
+    "server_tool_use": {
+     "web_search_requests": 0,
+     "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+     "ephemeral_1h_input_tokens": 19699,
+     "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+     {
+      "input_tokens": 2,
+      "output_tokens": 1345,
+      "cache_read_input_tokens": 55859,
+      "cache_creation_input_tokens": 1703,
+      "cache_creation": {
+       "ephemeral_5m_input_tokens": 0,
+       "ephemeral_1h_input_tokens": 1703
+      },
+      "type": "message"
+     }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+   },
+   "error": null,
+   "run": "claude-code_claude-opus-5-5_U4_validate_20261026_010149"
   }
  ]
 }
