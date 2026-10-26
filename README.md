@@ -1,5 +1,7 @@
 # UBEM-MCP
 
+[![CI](https://github.com/TensorBuildLab/UBEM-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/TensorBuildLab/UBEM-MCP/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/TensorBuildLab/UBEM-MCP)](https://github.com/TensorBuildLab/UBEM-MCP/releases) [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE) ![Python 3.10-3.12](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue.svg) ![EnergyPlus 26.1](https://img.shields.io/badge/EnergyPlus-26.1-orange.svg)
+
 An open, model-neutral server for **urban building energy modeling (UBEM)** data and simulation, built on EnergyPlus. Through **68 tools** it takes an AI assistant, a script or a person from building footprints and parcel data to a building stock with recorded provenance, archetype or user-supplied EnergyPlus models, background batch runs, district results, retrofit scenarios, comparisons with measured energy use and NREL ComStock/ResStock reference data. It uses only the open Model Context Protocol, so it works with any MCP client and any model, and the same tools are a Python library and a command line.
 
 > **Version**: 1.0.0
@@ -37,6 +39,7 @@ This project is derived from [EnergyPlus-MCP](https://github.com/LBNL-ETA/Energy
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
+- [Reproducing the paper](#reproducing-the-paper)
 - [Cite this work](#cite-this-work)
 - [License](#license)
 
@@ -57,7 +60,7 @@ UBEM studies chain the same steps: gather building data, fill what is missing, a
 
 ## What it is for
 
-The four use cases come from the UBEM research literature (16 reviews and a coded sample of 118 papers; see the paper), not from the authors' preferences. Each has a workflow guide inside the server and a worked example script.
+The four use cases come from the UBEM research literature (eleven published reviews and a coded sample of 118 papers; see [paper/](paper/README.md)), not from the authors' preferences. Each has a workflow guide inside the server and a worked example script.
 
 | Use case | What UBEM-MCP does | Guide | Worked example |
 |---|---|---|---|
@@ -793,7 +796,7 @@ The server follows a layered architecture:
 ┌─────────────────────────┐
 │   MCP Protocol Layer    │  FastMCP server handling client communications
 ├─────────────────────────┤
-│     Tools Layer         │  55 tools organized into 11 categories
+│     Tools Layer         │  68 tools in 11 families
 ├─────────────────────────┤
 │  Orchestration Layer    │  EnergyPlus, Batch & Stock Managers, Config     
 ├─────────────────────────┤
@@ -833,7 +836,7 @@ The server auto-detects EnergyPlus installation and uses sensible defaults. Conf
 
 **Common Issues:**
 
-1. **"IDD file not found"**: Ensure EnergyPlus is installed
+1. **"IDD file not found"**: EnergyPlus 26.1 is missing. Use the Docker image, set `EPLUS_IDD_PATH`, or install EnergyPlus in its default folder (found automatically). Tools that do not simulate (data mode, queries, exports) work without it
 2. **"Module not found"**: Run `uv sync` to install dependencies
 3. **"Permission denied"**: Check file permissions
 4. **"Simulation failed"**: Check EnergyPlus error messages in the model's output directory
@@ -858,9 +861,13 @@ The server auto-detects EnergyPlus installation and uses sensible defaults. Conf
    ```
 5. Submit a pull request
 
+## Reproducing the paper
+
+[paper/README.md](paper/README.md) lists the script behind every table and figure of the SoftwareX paper, the result files they produced, and how to regenerate the figures (`python paper/figures/make_figures.py`). `scripts/verify_examples.py` regenerates the worked examples' models and checks them against the models that were simulated.
+
 ## Cite this work
 
-UBEM-MCP is built on EnergyPlus-MCP. If you use UBEM-MCP in your research, please cite the original EnergyPlus-MCP paper — see [NOTICE.md](NOTICE.md) for the full citation and BibTeX entry.
+If you use UBEM-MCP, please cite the software (see [CITATION.cff](CITATION.cff); GitHub's "Cite this repository" button gives APA and BibTeX) and the EnergyPlus-MCP paper it builds on — see [NOTICE.md](NOTICE.md) for that citation.
 
 ## License
 

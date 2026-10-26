@@ -1,10 +1,36 @@
 # Paper materials
 
-Material behind the SoftwareX manuscript on UBEM-MCP. The manuscript itself is drafted separately and will be added here on submission.
+Everything behind the numbers, tables and figures of the SoftwareX paper on UBEM-MCP v1.0.0, "UBEM-MCP: Urban building energy modeling data and simulation for AI assistants". All examples run through the UBEM-MCP Python library, which calls the same code as the MCP tools. Scripts live in `ubem-mcp-server/scripts/`; run them inside the dev container from `ubem-mcp-server/` (see the repository README).
 
-## Literature evidence for the use cases (Section 1.4)
+## Figures
 
-`literature/` reproduces the corpus analysis behind Table 2.
+```bash
+python paper/figures/make_figures.py      # needs matplotlib; writes paper/figures/fig*.png and fig*.pdf
+```
+
+The script reads only the files in `results/`. Fig. 3 draws footprints from `ubem-mcp-server/agent_tests/fixtures/campus.geojson` (© OpenStreetMap contributors, ODbL).
+
+## Where each result comes from
+
+| Paper | What | Script and command | Result files in `results/` |
+|---|---|---|---|
+| Table 1 | Use cases in the UBEM literature | `literature/analyze_sample.py` (see below) | `literature/manual_codes.csv` |
+| Table 2, Fig. 1 | Tool families | the server's tool list | `tool_counts.json` |
+| Sec. 2.5, Fig. 2 | Archetypes against DOE reference results: Tucson (2B), San Francisco (3C), Baltimore (4A) | `validate_archetypes.py --epw <file> --climate-zone 2B --out <dir> --workers 4` | `archetypes_2B_tucson.json`, `archetypes_3C_san_francisco.json`, `archetypes_4A_baltimore.json` |
+| Sec. 2.5 | Batch throughput: 1, 2 and 4 workers on 24 buildings; the full 1,961-building neighbourhood on 4 workers | `benchmark_scaling.py --geojson <neighbourhood> --weather-file <Tucson TMYx> --climate-zone 2B --sizes 24 --workers 1 2 4` and `--sizes 1961 --workers 4` | `batch_scaling_workers.json`, `batch_full_neighbourhood.json` |
+| Sec. 3.1, Table 4, Fig. 3 | Campus electrification (U1, U2) | `run_case_study.py --geojson agent_tests/fixtures/campus.geojson --default-year 1960 --out <dir> --workers 4` | `campus_electrification.json`, `campus_buildings_comparison.csv`, `campus_district_hourly_baseline.csv`, `campus_district_hourly_electrified.csv` |
+| Sec. 3.1 | Reproduction by an AI assistant (task `S41_campus`) and short agent tasks | `agent_tests/harness/claude_code.py S41_campus --timeout 10800` (see `agent_tests/README.md`) | `agent_runs.json` |
+| Sec. 3.1, 3.3 | Models regenerated from project records and compared with the simulated ones | `verify_examples.py` | `verify_examples.json` |
+| Sec. 3.2 | Data-only inventory (U3): OpenStreetMap, Pima County parcels, ComStock/ResStock | `run_data_example.py` | `data_only_inventory.json` |
+| Sec. 3.3, Table 5, Fig. 4 | Seattle benchmarking comparison (U4), with step 6 (heating fuel from the meters) | `run_measured_example.py --out <dir> --workers 4`, then `--compare-only --fuel-step` | `seattle_measured.json`, `seattle_meters_archetype_fuel.csv`, `seattle_meters_fuel_from_data.csv` |
+
+Data sources and licences: OpenStreetMap (ODbL 1.0), Climate.OneBuilding.Org weather (downloaded at run time, not redistributed), Pima County parcels (requested fields: parcel number and land-use code only), City of Seattle building energy benchmarking (public domain), NREL ComStock/ResStock (CC BY 4.0), DOE Commercial Reference Buildings and residential prototypes (CC BY 4.0).
+
+OpenStreetMap and the county and city data change over time; the data-only and Seattle examples record the fetch date (17 October 2026) and keep the raw responses with their outputs, so a new fetch can give slightly different counts.
+
+## Literature evidence for the use cases (Table 1)
+
+`literature/` reproduces the corpus analysis behind Table 1.
 
 | File | What it is |
 |---|---|
@@ -19,27 +45,9 @@ Material behind the SoftwareX manuscript on UBEM-MCP. The manuscript itself is d
 
 ```bash
 cd paper/literature
-python analyze_sample.py                      # Table 2, column 2
+python analyze_sample.py                      # Table 1, column 2
 python fetch_openalex.py works.jsonl          # a new fetch (results change as OpenAlex grows)
 python make_tables.py --second-coder works.jsonl 30 sheet.csv
 ```
 
 OpenAlex metadata are CC0.
-
-## Worked examples (Section 4)
-
-Each example is a script in `ubem-mcp-server/scripts/` that calls the UBEM-MCP library, which runs the same code as the MCP tools. Their summaries are copied to `results/` (`section_4_1_campus.json`, `section_4_2_data_only.json`, `section_4_3_measured.json`).
-
-| Section | Script | Data |
-|---|---|---|
-| 4.1 Campus electrification (U1, U2) | `run_case_study.py` | OpenStreetMap (ODbL), Climate.OneBuilding.Org weather |
-| 4.2 Data-only workflow (U3) | `run_data_example.py` | OpenStreetMap, Pima County parcels, NREL ComStock/ResStock (CC BY 4.0) |
-| 4.3 Comparison with measured energy use (U4) | `run_measured_example.py` | OpenStreetMap, City of Seattle building energy benchmarking (public domain) |
-| 4.5 Reproduction by an agent | `agent_tests/` task `S41_campus` | as 4.1 |
-
-## Verification (Section 5)
-
-| Section | Script | Result file |
-|---|---|---|
-| 5.2 Archetype check against DOE reference results, Tucson | `validate_archetypes.py` | `results/section_5_2_archetypes_tucson.json` |
-| 5.3 Background batch scaling | `benchmark_scaling.py` | `results/section_5_3_scaling.json` |

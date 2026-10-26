@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use UBEM-MCP, please cite it as below, together with EnergyPlus-MCP (see NOTICE.md)."
+title: "UBEM-MCP: Urban building energy modeling data and simulation for AI assistants"
+type: software
+authors:
+  - family-names: Zhang
+    given-names: Liang
+    email: liangzhang1@arizona.edu
+    affiliation: "Department of Civil and Architectural Engineering and Mechanics, University of Arizona"
+version: 1.0.0
+date-released: 2026-10-26
+license: BSD-3-Clause
+repository-code: "https://github.com/TensorBuildLab/UBEM-MCP"
+url: "https://github.com/TensorBuildLab/UBEM-MCP"
+abstract: >-
+  An open-source Model Context Protocol (MCP) server, Python library and
+  command line that gives AI assistants, scripts and people one tested
+  interface to urban building energy modeling: building data with recorded
+  provenance, archetype or user-supplied EnergyPlus models, background batch
+  runs, district results, retrofit scenarios, comparison with measured energy
+  use and national reference data.
+keywords:
+  - urban building energy modeling
+  - UBEM
+  - Model Context Protocol
+  - MCP
+  - AI agents
+  - EnergyPlus
+  - building stock
+references:
+  - type: article
+    title: "EnergyPlus-MCP: A model-context-protocol server for AI-driven building energy modeling"
+    authors:
+      - family-names: Li
+        given-names: Han
+      - family-names: Xu
+        given-names: Yujie
+      - family-names: Hong
+        given-names: Tianzhen
+    journal: SoftwareX
+    volume: 32
+    start: 102367
+    year: 2025
+    doi: 10.1016/j.softx.2025.102367

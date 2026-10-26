@@ -104,3 +104,9 @@ EnergyPlus-MCP paper this project is built on:
   url={https://www.sciencedirect.com/science/article/pii/S2352711025003334}
 }
 ```
+
+## Third-party data in this repository
+
+- `ubem-mcp-server/agent_tests/fixtures/campus.geojson` and `campus_small.geojson`: building footprints © OpenStreetMap contributors, available under the Open Database License 1.0 (https://opendatacommons.org/licenses/odbl/). Fig. 3 of the paper draws these footprints.
+- `ubem-mcp-server/ubem_mcp_server/urban/data/`: archetype parameters derived from the U.S. DOE Commercial Reference Buildings and the DOE residential prototype building models (Open Energy Data Initiative, CC BY 4.0; see each file's `source` entry for the reference and file hashes).
+- Parcels, benchmarking data, weather files and ComStock/ResStock results are downloaded at run time by the scripts that use them and are not redistributed here; each example records their source and licence with its outputs.

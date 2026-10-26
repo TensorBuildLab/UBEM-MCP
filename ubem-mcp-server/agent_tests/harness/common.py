@@ -262,7 +262,7 @@ def _campus_expected():
 
 
 def _c_campus_reproduced(out, ans):
-    """The agent's comparison equals the published Section 4.1 run (to 0.1%)."""
+    """The agent's comparison equals the published Section 3.1 run (to 0.1%)."""
     c, e = comparison(out), _campus_expected()
     if not c:
         return False, "no comparison"

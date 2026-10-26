@@ -285,5 +285,199 @@
   "wall_clock_h": 2.8,
   "note": "from first model file to last result file"
  },
- "nmbe_sign": "ASHRAE Guideline 14: sum(measured - modeled); negative means the models over-predict"
+ "nmbe_sign": "ASHRAE Guideline 14: sum(measured - modeled); negative means the models over-predict",
+ "fuel_step": {
+  "what": "step 6: heating fuel set from each building's 2019 meters (gas use > 0: natural_gas; no gas and no district steam: electricity), models regenerated and simulated, compared again",
+  "fuel_records": {
+   "natural_gas": 104,
+   "district_steam": 4,
+   "electricity": 50
+  },
+  "selection": {
+   "model_stock_buildings": 1271,
+   "with_record": 146,
+   "single_building_records_modeled": 144
+  },
+  "compare_fuel_from_meters": {
+   "meters_compared": 141,
+   "meters_suspect": [
+    {
+     "group_id": "g0063",
+     "building_ids": [
+      "way_231753651"
+     ],
+     "reason": "measured EUI 1.0 kWh/m2 is outside 10-2000; probably a data error"
+    }
+   ],
+   "district": {
+    "electricity": {
+     "meters": 141,
+     "measured_kwh": 63989008,
+     "modeled_kwh": 84298145,
+     "percent_error": 31.7
+    },
+    "natural_gas": {
+     "meters": 93,
+     "measured_kwh": 34166841,
+     "modeled_kwh": 48635994,
+     "percent_error": 42.3
+    },
+    "total": {
+     "meters": 141,
+     "measured_kwh": 99584007,
+     "modeled_kwh": 136046876,
+     "percent_error": 36.6
+    }
+   },
+   "across_meters_guideline14": {
+    "electricity": {
+     "n": 141,
+     "nmbe_percent": -31.97,
+     "cvrmse_percent": 98.72
+    },
+    "natural_gas": {
+     "n": 93,
+     "nmbe_percent": -42.81,
+     "cvrmse_percent": 142.35
+    },
+    "total": {
+     "n": 141,
+     "nmbe_percent": -36.88,
+     "cvrmse_percent": 104.96
+    }
+   },
+   "percent_error_spread": {
+    "electricity": {
+     "n": 141,
+     "median_percent_error": 44.4,
+     "median_absolute_percent_error": 46.2,
+     "within_10_percent": 0.135,
+     "within_25_percent": 0.355,
+     "within_50_percent": 0.532
+    },
+    "natural_gas": {
+     "n": 93,
+     "median_percent_error": 72.6,
+     "median_absolute_percent_error": 85.3,
+     "within_10_percent": 0.065,
+     "within_25_percent": 0.226,
+     "within_50_percent": 0.43
+    },
+    "total": {
+     "n": 141,
+     "median_percent_error": 53.5,
+     "median_absolute_percent_error": 54.5,
+     "within_10_percent": 0.128,
+     "within_25_percent": 0.284,
+     "within_50_percent": 0.468
+    }
+   },
+   "by_archetype": {
+    "highrise_apartment": {
+     "meters": 2,
+     "median_percent_error": 232.7
+    },
+    "large_hotel": {
+     "meters": 2,
+     "median_percent_error": 101.1
+    },
+    "large_office": {
+     "meters": 3,
+     "median_percent_error": 100.1
+    },
+    "medium_office": {
+     "meters": 11,
+     "median_percent_error": 4.3
+    },
+    "midrise_apartment": {
+     "meters": 111,
+     "median_percent_error": 55.2
+    },
+    "primary_school": {
+     "meters": 1,
+     "median_percent_error": 272.9
+    },
+    "secondary_school": {
+     "meters": 5,
+     "median_percent_error": 84.0
+    },
+    "single_family": {
+     "meters": 3,
+     "median_percent_error": -5.0
+    },
+    "small_hotel": {
+     "meters": 2,
+     "median_percent_error": 32.7
+    },
+    "standalone_retail": {
+     "meters": 1,
+     "median_percent_error": 37.5
+    }
+   },
+   "caveats": [
+    "the models use the weather file USA_WA_Seattle.994014_TMYx.2011-2025.epw, the measured data are from 2019; part of any difference is weather",
+    "57 meter(s) have modeled floor area more than 25% from the measured floor area; compare their EUI rather than totals",
+    "1 meter(s) left out of the statistics because their measured EUI is implausible (g0063); check those records"
+   ]
+  },
+  "groups": {
+   "no_gas_account": {
+    "meters": 48,
+    "archetype_fuel": {
+     "district_total_error_pct": 54.0,
+     "district_electricity_error_pct": -10.7,
+     "median_total_error_pct": 113.0,
+     "median_electricity_error_pct": -10.1,
+     "median_eui_measured_kwh_m2": 85.3,
+     "median_eui_modeled_kwh_m2": 174.7
+    },
+    "fuel_from_meters": {
+     "district_total_error_pct": 40.4,
+     "district_electricity_error_pct": 33.4,
+     "median_total_error_pct": 81.8,
+     "median_electricity_error_pct": 76.0,
+     "median_eui_measured_kwh_m2": 85.3,
+     "median_eui_modeled_kwh_m2": 149.1
+    }
+   },
+   "gas_account": {
+    "meters": 93,
+    "archetype_fuel": {
+     "district_total_error_pct": 34.9,
+     "district_electricity_error_pct": 30.2,
+     "median_total_error_pct": 43.6,
+     "median_electricity_error_pct": 25.0,
+     "median_eui_measured_kwh_m2": 139.1,
+     "median_eui_modeled_kwh_m2": 176.2
+    },
+    "fuel_from_meters": {
+     "district_total_error_pct": 34.9,
+     "district_electricity_error_pct": 30.2,
+     "median_total_error_pct": 43.6,
+     "median_electricity_error_pct": 25.0,
+     "median_eui_measured_kwh_m2": 139.1,
+     "median_eui_modeled_kwh_m2": 176.2
+    }
+   }
+  },
+  "simulate_s": 11201.0
+ },
+ "regenerated_with_release_code": {
+  "lqa_model": [
+   {
+    "model_set_id": "benchmarked",
+    "num_models": 144,
+    "identical": 144,
+    "different": 0
+   }
+  ],
+  "lqa_model_fuel": [
+   {
+    "model_set_id": "benchmarked_fuel",
+    "num_models": 144,
+    "identical": 144,
+    "different": 0
+   }
+  ]
+ }
 }

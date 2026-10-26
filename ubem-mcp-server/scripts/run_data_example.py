@@ -1,5 +1,5 @@
 """
-Data-only example (paper Section 4.2, use case U3): characterise a district's
+Data-only example (paper Section 3.2, use case U3): characterise a district's
 building stock without running a model.
 
 Steps, all through the UBEM-MCP tools (here called from the Python library):

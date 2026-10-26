@@ -1,5 +1,5 @@
 """
-Measured-data example (paper Section 4.3, use case U4): compare archetype
+Measured-data example (paper Section 3.3, use case U4): compare archetype
 models with disclosed energy use in Seattle.
 
 Steps, all through the UBEM-MCP tools (called from the Python library):

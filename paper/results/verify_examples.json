@@ -1,0 +1,65 @@
+{
+ "ubem-mcp-server/outputs/release/case_study": {
+  "case_study": {
+   "record": "ubem-mcp-server/outputs/release/case_study/stocks/case_study/project_record.json",
+   "record_warnings": [],
+   "reproduced": true,
+   "warnings": [],
+   "model_sets": [
+    {
+     "model_set_id": "baseline",
+     "num_models": 106,
+     "identical": 106,
+     "different": 0,
+     "different_buildings": [],
+     "models_identical": true
+    },
+    {
+     "model_set_id": "baseline__electrify",
+     "num_models": 106,
+     "identical": 106,
+     "different": 0,
+     "different_buildings": [],
+     "models_identical": true
+    }
+   ],
+   "error": null
+  }
+ },
+ "ubem-mcp-server/outputs/examples/measured/outputs": {
+  "lqa_model": {
+   "record": "ubem-mcp-server/outputs/examples/measured/outputs/stocks/lqa_model/project_record.json",
+   "record_warnings": [],
+   "reproduced": true,
+   "warnings": [],
+   "model_sets": [
+    {
+     "model_set_id": "benchmarked",
+     "num_models": 144,
+     "identical": 144,
+     "different": 0,
+     "different_buildings": [],
+     "models_identical": true
+    }
+   ],
+   "error": null
+  },
+  "lqa_model_fuel": {
+   "record": "ubem-mcp-server/outputs/examples/measured/outputs/stocks/lqa_model_fuel/project_record.json",
+   "record_warnings": [],
+   "reproduced": true,
+   "warnings": [],
+   "model_sets": [
+    {
+     "model_set_id": "benchmarked_fuel",
+     "num_models": 144,
+     "identical": 144,
+     "different": 0,
+     "different_buildings": [],
+     "models_identical": true
+    }
+   ],
+   "error": null
+  }
+ }
+}

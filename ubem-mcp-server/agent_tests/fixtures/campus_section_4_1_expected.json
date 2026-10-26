@@ -1,5 +1,5 @@
 {
- "about": "Paper Section 4.1 results (scripts/run_case_study.py, 2026-10-17), the reference the S41_campus task must reproduce.",
+ "about": "Paper Section 3.1 results (scripts/run_case_study.py; 2026-10-17, reproduced exactly by the v1.0.0 release run), the reference the S41_campus task must reproduce.",
  "baseline_kwh": 36488973.0,
  "scenario_kwh": 28916027.45,
  "savings_pct": 20.75406602975644,

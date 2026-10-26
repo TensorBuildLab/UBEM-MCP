@@ -1,0 +1,13 @@
+{
+  "title": "UBEM-MCP: Urban building energy modeling data and simulation for AI assistants",
+  "upload_type": "software",
+  "description": "An open-source Model Context Protocol (MCP) server, Python library and command line that gives AI assistants, scripts and people one tested interface to urban building energy modeling: building data with recorded provenance, archetype or user-supplied EnergyPlus models, background batch runs, district results, retrofit scenarios, comparison with measured energy use and national reference data.",
+  "creators": [
+    {"name": "Zhang, Liang", "affiliation": "University of Arizona"}
+  ],
+  "license": "BSD-3-Clause",
+  "keywords": ["urban building energy modeling", "UBEM", "Model Context Protocol", "MCP", "AI agents", "EnergyPlus", "building stock"],
+  "related_identifiers": [
+    {"identifier": "10.1016/j.softx.2025.102367", "relation": "isDerivedFrom", "scheme": "doi"}
+  ]
+}

@@ -71,7 +71,7 @@
     },
     {
       "id": "S41_campus",
-      "use_case": "U1+U2 (paper Section 4.1)",
+      "use_case": "U1+U2 (paper Section 3.1)",
       "files": [
         "campus.geojson"
       ],

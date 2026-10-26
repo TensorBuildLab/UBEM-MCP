@@ -12,7 +12,7 @@ These tests check that agents can do the community's common UBEM tasks (U1 to U4
 | `U2_retrofit` | U2 | Simulate a baseline and a retrofit scenario; report the savings |
 | `U3_data` | U3 | Characterise an inventory without simulating, export it for GIS, and flag personal data |
 | `U3_resstock` | U3 | Answer questions about a county's homes from NREL ResStock, including an upgrade's savings |
-| `S41_campus` | U1, U2 | Rerun the paper's Section 4.1 campus electrification study from a plain request; passes only if the numbers match the published run |
+| `S41_campus` | U1, U2 | Rerun the paper's Section 3.1 campus electrification study from a plain request; passes only if the numbers match the published run |
 | `U4_validate` | U4 | Simulate buildings and compare them with metered energy use |
 
 Checks (`harness/common.py`) look only at what the server wrote and at the agent's final answer. For example, does the answer state the district total that the aggregated results contain? They never look at how the client works, so every client and model is scored the same way.
@@ -44,4 +44,4 @@ Each run keeps its workspace, transcript and score under `results/runs/` (not co
 
 ## Fixtures
 
-`fixtures/` holds eight building footprints from part of the University of Arizona campus and, in `campus.geojson`, the 116 footprints of the paper's Section 4.1 case study with its published results in `campus_section_4_1_expected.json` (OpenStreetMap, © OpenStreetMap contributors, ODbL 1.0). Parcel numbers, years, land-use codes, owner names, mailing addresses and meter readings in `parcels_inventory.geojson` and `bills_2023.csv` are synthetic, made up for these tests (`build_fixtures.py`).
+`fixtures/` holds eight building footprints from part of the University of Arizona campus and, in `campus.geojson`, the 116 footprints of the paper's Section 3.1 case study with its published results in `campus_section_4_1_expected.json` (OpenStreetMap, © OpenStreetMap contributors, ODbL 1.0). Parcel numbers, years, land-use codes, owner names, mailing addresses and meter readings in `parcels_inventory.geojson` and `bills_2023.csv` are synthetic, made up for these tests (`build_fixtures.py`).

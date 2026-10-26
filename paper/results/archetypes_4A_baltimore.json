@@ -1,0 +1,2610 @@
+{
+ "summary": {
+  "climate_zone": "4A",
+  "weather": "USA_MD_Baltimore-Washington.Intl.AP.724060_TMY3.epw",
+  "cases": 49,
+  "compared": 49,
+  "failed": 0,
+  "mean_abs_diff_pct": 19.3,
+  "median_abs_diff_pct": 13.5,
+  "mean_diff_pct": -3.5,
+  "within_10_pct": 20,
+  "within_20_pct": 33,
+  "within_30_pct": 38,
+  "cv_rmse_pct": 28.2
+ },
+ "cases": [
+  {
+   "case": "full_service_restaurant_pre1980",
+   "archetype": "full_service_restaurant",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    22.61,
+    22.61
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 5868.5,
+   "ref_eui_mj_m2": 6282.6,
+   "diff_pct": -6.6,
+   "sim_eui_no_refrigeration": 5868.5,
+   "ref_eui_no_refrigeration": 6165.2,
+   "diff_no_refrigeration_pct": -4.8,
+   "severe_errors": 0,
+   "warnings": 14,
+   "modelgen_s": 0.1,
+   "simulation_s": 62.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 489.73,
+     "interior_lighting": 567.24,
+     "exterior_lighting": 155.7,
+     "interior_equipment": 1136.43,
+     "fans": 302.88
+    },
+    "natural_gas": {
+     "heating": 1047.96,
+     "interior_equipment": 1567.51,
+     "water_systems": 601.09
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 224.259,
+     "interior_lighting": 566.957,
+     "exterior_lighting": 156.216,
+     "interior_equipment": 1171.965,
+     "fans": 454.407,
+     "refrigeration": 117.422
+    },
+    "natural_gas": {
+     "heating": 1541.328,
+     "interior_equipment": 1566.898,
+     "water_systems": 483.165
+    }
+   }
+  },
+  {
+   "case": "full_service_restaurant_1980_2004",
+   "archetype": "full_service_restaurant",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    22.61,
+    22.61
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 5735.4,
+   "ref_eui_mj_m2": 5831.9,
+   "diff_pct": -1.7,
+   "sim_eui_no_refrigeration": 5735.4,
+   "ref_eui_no_refrigeration": 5713.2,
+   "diff_no_refrigeration_pct": 0.4,
+   "severe_errors": 0,
+   "warnings": 14,
+   "modelgen_s": 0.06,
+   "simulation_s": 63.4,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 485.85,
+     "interior_lighting": 567.24,
+     "exterior_lighting": 155.7,
+     "interior_equipment": 1136.43,
+     "fans": 285.75
+    },
+    "natural_gas": {
+     "heating": 920.37,
+     "interior_equipment": 1567.51,
+     "water_systems": 616.5
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 179.184,
+     "interior_lighting": 566.957,
+     "exterior_lighting": 156.216,
+     "interior_equipment": 1171.965,
+     "fans": 224.044,
+     "refrigeration": 118.752
+    },
+    "natural_gas": {
+     "heating": 1352.401,
+     "interior_equipment": 1566.898,
+     "water_systems": 495.51
+    }
+   }
+  },
+  {
+   "case": "full_service_restaurant_post2004",
+   "archetype": "full_service_restaurant",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    22.61,
+    22.61
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 5292.9,
+   "ref_eui_mj_m2": 5625.2,
+   "diff_pct": -5.9,
+   "sim_eui_no_refrigeration": 5292.9,
+   "ref_eui_no_refrigeration": 5505.7,
+   "diff_no_refrigeration_pct": -3.9,
+   "severe_errors": 0,
+   "warnings": 14,
+   "modelgen_s": 0.07,
+   "simulation_s": 68.2,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 468.0,
+     "interior_lighting": 464.28,
+     "exterior_lighting": 129.79,
+     "interior_equipment": 1136.43,
+     "fans": 264.75
+    },
+    "natural_gas": {
+     "heating": 661.03,
+     "interior_equipment": 1567.51,
+     "water_systems": 601.09
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 168.033,
+     "interior_lighting": 464.11,
+     "exterior_lighting": 130.216,
+     "interior_equipment": 1171.965,
+     "fans": 206.965,
+     "refrigeration": 119.495
+    },
+    "natural_gas": {
+     "heating": 1314.389,
+     "interior_equipment": 1566.898,
+     "water_systems": 483.165
+    }
+   }
+  },
+  {
+   "case": "hospital_pre1980",
+   "archetype": "hospital",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    74.87,
+    49.91
+   ],
+   "floors": 5,
+   "floor_area_m2": 18683.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 1318.7,
+   "ref_eui_mj_m2": 2843.3,
+   "diff_pct": -53.6,
+   "sim_eui_no_refrigeration": 1318.7,
+   "ref_eui_no_refrigeration": 2835.1,
+   "diff_no_refrigeration_pct": -53.5,
+   "severe_errors": 0,
+   "warnings": 9,
+   "modelgen_s": 0.11,
+   "simulation_s": 91.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 266.51,
+     "interior_lighting": 246.61,
+     "exterior_lighting": 14.55,
+     "interior_equipment": 425.63,
+     "fans": 107.37,
+     "pumps": 93.41,
+     "heat_rejection": 7.0
+    },
+    "natural_gas": {
+     "heating": 77.76,
+     "interior_equipment": 60.6,
+     "water_systems": 19.24
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 905.093,
+     "interior_lighting": 373.514,
+     "exterior_lighting": 14.599,
+     "interior_equipment": 291.755,
+     "exterior_equipment": 111.472,
+     "fans": 173.899,
+     "pumps": 73.492,
+     "heat_rejection": 51.201,
+     "humidification": 64.038,
+     "refrigeration": 8.232
+    },
+    "natural_gas": {
+     "heating": 684.282,
+     "interior_equipment": 60.584,
+     "water_systems": 31.17
+    }
+   }
+  },
+  {
+   "case": "hospital_1980_2004",
+   "archetype": "hospital",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    74.87,
+    49.91
+   ],
+   "floors": 5,
+   "floor_area_m2": 18683.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 1280.8,
+   "ref_eui_mj_m2": 2689.2,
+   "diff_pct": -52.4,
+   "sim_eui_no_refrigeration": 1280.8,
+   "ref_eui_no_refrigeration": 2681.0,
+   "diff_no_refrigeration_pct": -52.2,
+   "severe_errors": 0,
+   "warnings": 7,
+   "modelgen_s": 0.07,
+   "simulation_s": 88.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 270.54,
+     "interior_lighting": 246.61,
+     "exterior_lighting": 14.55,
+     "interior_equipment": 425.63,
+     "fans": 102.68,
+     "pumps": 87.16,
+     "heat_rejection": 6.95
+    },
+    "natural_gas": {
+     "heating": 46.31,
+     "interior_equipment": 60.6,
+     "water_systems": 19.73
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 906.105,
+     "interior_lighting": 373.514,
+     "exterior_lighting": 14.599,
+     "interior_equipment": 291.755,
+     "exterior_equipment": 111.472,
+     "fans": 158.405,
+     "pumps": 69.708,
+     "heat_rejection": 48.601,
+     "humidification": 58.222,
+     "refrigeration": 8.257
+    },
+    "natural_gas": {
+     "heating": 556.023,
+     "interior_equipment": 60.584,
+     "water_systems": 31.969
+    }
+   }
+  },
+  {
+   "case": "hospital_post2004",
+   "archetype": "hospital",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    74.87,
+    49.91
+   ],
+   "floors": 5,
+   "floor_area_m2": 18683.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 1079.0,
+   "ref_eui_mj_m2": 2308.8,
+   "diff_pct": -53.3,
+   "sim_eui_no_refrigeration": 1079.0,
+   "ref_eui_no_refrigeration": 2300.6,
+   "diff_no_refrigeration_pct": -53.1,
+   "severe_errors": 0,
+   "warnings": 9,
+   "modelgen_s": 0.06,
+   "simulation_s": 86.7,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 203.9,
+     "interior_lighting": 135.73,
+     "exterior_lighting": 10.76,
+     "interior_equipment": 425.63,
+     "fans": 87.64,
+     "pumps": 75.36,
+     "heat_rejection": 6.26
+    },
+    "natural_gas": {
+     "heating": 53.86,
+     "interior_equipment": 60.6,
+     "water_systems": 19.24
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 686.549,
+     "interior_lighting": 185.741,
+     "exterior_lighting": 10.8,
+     "interior_equipment": 291.755,
+     "exterior_equipment": 111.472,
+     "fans": 140.483,
+     "pumps": 61.854,
+     "heat_rejection": 42.287,
+     "humidification": 48.762,
+     "refrigeration": 8.249
+    },
+    "natural_gas": {
+     "heating": 629.1,
+     "interior_equipment": 60.584,
+     "water_systems": 31.171
+    }
+   }
+  },
+  {
+   "case": "large_hotel_pre1980",
+   "archetype": "large_hotel",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    49.31,
+    32.87
+   ],
+   "floors": 6,
+   "floor_area_m2": 9724.9,
+   "zones": 15,
+   "sim_eui_mj_m2": 1913.0,
+   "ref_eui_mj_m2": 2226.7,
+   "diff_pct": -14.1,
+   "sim_eui_no_refrigeration": 1913.0,
+   "ref_eui_no_refrigeration": 2220.3,
+   "diff_no_refrigeration_pct": -13.8,
+   "severe_errors": 0,
+   "warnings": 8,
+   "modelgen_s": 0.07,
+   "simulation_s": 121.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 327.9,
+     "interior_lighting": 213.97,
+     "exterior_lighting": 38.4,
+     "interior_equipment": 199.17,
+     "fans": 64.09,
+     "pumps": 58.01,
+     "heat_rejection": 5.35
+    },
+    "natural_gas": {
+     "heating": 78.62,
+     "interior_equipment": 88.14,
+     "water_systems": 839.35
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 0.103,
+     "cooling": 844.433,
+     "interior_lighting": 199.395,
+     "exterior_lighting": 38.524,
+     "interior_equipment": 172.07,
+     "exterior_equipment": 83.518,
+     "fans": 115.095,
+     "pumps": 5.94,
+     "refrigeration": 6.448
+    },
+    "natural_gas": {
+     "heating": 78.779,
+     "interior_equipment": 109.177,
+     "water_systems": 573.233
+    }
+   }
+  },
+  {
+   "case": "large_hotel_1980_2004",
+   "archetype": "large_hotel",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    49.31,
+    32.87
+   ],
+   "floors": 6,
+   "floor_area_m2": 9724.9,
+   "zones": 15,
+   "sim_eui_mj_m2": 1866.6,
+   "ref_eui_mj_m2": 2478.7,
+   "diff_pct": -24.7,
+   "sim_eui_no_refrigeration": 1866.6,
+   "ref_eui_no_refrigeration": 2472.4,
+   "diff_no_refrigeration_pct": -24.5,
+   "severe_errors": 0,
+   "warnings": 8,
+   "modelgen_s": 0.08,
+   "simulation_s": 186.5,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 308.9,
+     "interior_lighting": 213.97,
+     "exterior_lighting": 38.4,
+     "interior_equipment": 199.17,
+     "fans": 58.04,
+     "pumps": 49.58,
+     "heat_rejection": 5.11
+    },
+    "natural_gas": {
+     "heating": 44.4,
+     "interior_equipment": 88.14,
+     "water_systems": 860.87
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 0.019,
+     "cooling": 939.911,
+     "interior_lighting": 199.395,
+     "exterior_lighting": 38.524,
+     "interior_equipment": 172.07,
+     "exterior_equipment": 83.518,
+     "fans": 99.554,
+     "pumps": 6.359,
+     "refrigeration": 6.337
+    },
+    "natural_gas": {
+     "heating": 235.953,
+     "interior_equipment": 109.177,
+     "water_systems": 587.929
+    }
+   }
+  },
+  {
+   "case": "large_hotel_post2004",
+   "archetype": "large_hotel",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    49.31,
+    32.87
+   ],
+   "floors": 6,
+   "floor_area_m2": 9724.9,
+   "zones": 15,
+   "sim_eui_mj_m2": 1557.5,
+   "ref_eui_mj_m2": 1814.7,
+   "diff_pct": -14.2,
+   "sim_eui_no_refrigeration": 1557.5,
+   "ref_eui_no_refrigeration": 1808.3,
+   "diff_no_refrigeration_pct": -13.9,
+   "severe_errors": 0,
+   "warnings": 8,
+   "modelgen_s": 0.08,
+   "simulation_s": 189.3,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 126.67,
+     "interior_lighting": 139.49,
+     "exterior_lighting": 23.12,
+     "interior_equipment": 199.17,
+     "fans": 52.55,
+     "pumps": 40.59,
+     "heat_rejection": 3.9
+    },
+    "natural_gas": {
+     "heating": 44.54,
+     "interior_equipment": 88.14,
+     "water_systems": 839.35
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 0.015,
+     "cooling": 420.519,
+     "interior_lighting": 128.102,
+     "exterior_lighting": 23.195,
+     "interior_equipment": 172.07,
+     "exterior_equipment": 83.518,
+     "fans": 97.359,
+     "pumps": 6.278,
+     "refrigeration": 6.359
+    },
+    "natural_gas": {
+     "heating": 194.844,
+     "interior_equipment": 109.177,
+     "water_systems": 573.232
+    }
+   }
+  },
+  {
+   "case": "large_office_pre1980",
+   "archetype": "large_office",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    73.11,
+    48.74
+   ],
+   "floors": 12,
+   "floor_area_m2": 42760.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 741.5,
+   "ref_eui_mj_m2": 829.4,
+   "diff_pct": -10.6,
+   "sim_eui_no_refrigeration": 741.5,
+   "ref_eui_no_refrigeration": 829.4,
+   "diff_no_refrigeration_pct": -10.6,
+   "severe_errors": 0,
+   "warnings": 6,
+   "modelgen_s": 0.62,
+   "simulation_s": 148.0,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 141.37,
+     "interior_lighting": 179.77,
+     "exterior_lighting": 20.82,
+     "interior_equipment": 183.48,
+     "fans": 56.56,
+     "pumps": 47.16,
+     "heat_rejection": 3.43
+    },
+    "natural_gas": {
+     "heating": 101.45,
+     "water_systems": 7.42
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 175.648,
+     "interior_lighting": 182.522,
+     "exterior_lighting": 20.887,
+     "interior_equipment": 181.0,
+     "exterior_equipment": 40.912,
+     "fans": 17.703,
+     "pumps": 25.34,
+     "heat_rejection": 17.113
+    },
+    "natural_gas": {
+     "heating": 163.509,
+     "water_systems": 4.782
+    }
+   }
+  },
+  {
+   "case": "large_office_1980_2004",
+   "archetype": "large_office",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    73.11,
+    48.74
+   ],
+   "floors": 12,
+   "floor_area_m2": 42760.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 677.0,
+   "ref_eui_mj_m2": 724.9,
+   "diff_pct": -6.6,
+   "sim_eui_no_refrigeration": 677.0,
+   "ref_eui_no_refrigeration": 724.9,
+   "diff_no_refrigeration_pct": -6.6,
+   "severe_errors": 0,
+   "warnings": 5,
+   "modelgen_s": 0.63,
+   "simulation_s": 132.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 126.11,
+     "interior_lighting": 179.77,
+     "exterior_lighting": 20.82,
+     "interior_equipment": 183.48,
+     "fans": 48.62,
+     "pumps": 41.91,
+     "heat_rejection": 3.16
+    },
+    "natural_gas": {
+     "heating": 65.52,
+     "water_systems": 7.61
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 135.978,
+     "interior_lighting": 182.522,
+     "exterior_lighting": 20.887,
+     "interior_equipment": 181.0,
+     "exterior_equipment": 40.912,
+     "fans": 14.099,
+     "pumps": 20.13,
+     "heat_rejection": 13.176
+    },
+    "natural_gas": {
+     "heating": 111.244,
+     "water_systems": 4.905
+    }
+   }
+  },
+  {
+   "case": "large_office_post2004",
+   "archetype": "large_office",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "vav",
+   "footprint_m": [
+    73.11,
+    48.74
+   ],
+   "floors": 12,
+   "floor_area_m2": 42760.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 550.6,
+   "ref_eui_mj_m2": 586.3,
+   "diff_pct": -6.1,
+   "sim_eui_no_refrigeration": 550.6,
+   "ref_eui_no_refrigeration": 586.3,
+   "diff_no_refrigeration_pct": -6.1,
+   "severe_errors": 0,
+   "warnings": 6,
+   "modelgen_s": 0.61,
+   "simulation_s": 134.2,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 103.92,
+     "interior_lighting": 124.98,
+     "exterior_lighting": 17.33,
+     "interior_equipment": 183.54,
+     "fans": 42.0,
+     "pumps": 36.06,
+     "heat_rejection": 2.83
+    },
+    "natural_gas": {
+     "heating": 32.55,
+     "water_systems": 7.42
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 110.946,
+     "interior_lighting": 121.681,
+     "exterior_lighting": 17.383,
+     "interior_equipment": 181.0,
+     "exterior_equipment": 40.912,
+     "fans": 12.136,
+     "pumps": 16.176,
+     "heat_rejection": 11.212
+    },
+    "natural_gas": {
+     "heating": 70.1,
+     "water_systems": 4.783
+    }
+   }
+  },
+  {
+   "case": "medium_office_pre1980",
+   "archetype": "medium_office",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    49.91,
+    33.27
+   ],
+   "floors": 3,
+   "floor_area_m2": 4981.5,
+   "zones": 15,
+   "sim_eui_mj_m2": 758.3,
+   "ref_eui_mj_m2": 810.8,
+   "diff_pct": -6.5,
+   "sim_eui_no_refrigeration": 758.3,
+   "ref_eui_no_refrigeration": 810.8,
+   "diff_no_refrigeration_pct": -6.5,
+   "severe_errors": 0,
+   "warnings": 17,
+   "modelgen_s": 0.27,
+   "simulation_s": 229.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 100.57,
+     "interior_lighting": 196.21,
+     "exterior_lighting": 55.96,
+     "interior_equipment": 183.48,
+     "fans": 72.69
+    },
+    "natural_gas": {
+     "heating": 140.83,
+     "water_systems": 8.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 88.427,
+     "interior_lighting": 191.004,
+     "exterior_lighting": 56.146,
+     "interior_equipment": 214.067,
+     "fans": 145.326,
+     "pumps": 0.054
+    },
+    "natural_gas": {
+     "heating": 109.109,
+     "water_systems": 6.712
+    }
+   }
+  },
+  {
+   "case": "medium_office_1980_2004",
+   "archetype": "medium_office",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    49.91,
+    33.27
+   ],
+   "floors": 3,
+   "floor_area_m2": 4981.5,
+   "zones": 15,
+   "sim_eui_mj_m2": 680.1,
+   "ref_eui_mj_m2": 711.5,
+   "diff_pct": -4.4,
+   "sim_eui_no_refrigeration": 680.1,
+   "ref_eui_no_refrigeration": 711.5,
+   "diff_no_refrigeration_pct": -4.4,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.19,
+   "simulation_s": 121.1,
+   "sim_end_uses": {
+    "electricity": {
+     "heating": 87.33,
+     "cooling": 93.77,
+     "interior_lighting": 196.21,
+     "exterior_lighting": 55.96,
+     "interior_equipment": 183.48,
+     "fans": 54.61
+    },
+    "natural_gas": {
+     "water_systems": 8.77
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 112.776,
+     "cooling": 91.165,
+     "interior_lighting": 191.004,
+     "exterior_lighting": 56.146,
+     "interior_equipment": 214.067,
+     "fans": 14.973,
+     "pumps": 0.054
+    },
+    "natural_gas": {
+     "heating": 24.413,
+     "water_systems": 6.881
+    }
+   }
+  },
+  {
+   "case": "medium_office_post2004",
+   "archetype": "medium_office",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    49.91,
+    33.27
+   ],
+   "floors": 3,
+   "floor_area_m2": 4981.5,
+   "zones": 15,
+   "sim_eui_mj_m2": 539.5,
+   "ref_eui_mj_m2": 572.3,
+   "diff_pct": -5.7,
+   "sim_eui_no_refrigeration": 539.5,
+   "ref_eui_no_refrigeration": 572.3,
+   "diff_no_refrigeration_pct": -5.7,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.18,
+   "simulation_s": 112.9,
+   "sim_end_uses": {
+    "electricity": {
+     "heating": 57.04,
+     "cooling": 71.8,
+     "interior_lighting": 124.98,
+     "exterior_lighting": 46.52,
+     "interior_equipment": 183.54,
+     "fans": 47.05
+    },
+    "natural_gas": {
+     "water_systems": 8.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 76.739,
+     "cooling": 73.584,
+     "interior_lighting": 121.681,
+     "exterior_lighting": 46.672,
+     "interior_equipment": 214.067,
+     "fans": 13.592,
+     "pumps": 0.054
+    },
+    "natural_gas": {
+     "heating": 19.224,
+     "water_systems": 6.712
+    }
+   }
+  },
+  {
+   "case": "midrise_apartment_pre1980",
+   "archetype": "midrise_apartment",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    46.33,
+    16.84
+   ],
+   "floors": 4,
+   "floor_area_m2": 3120.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 743.1,
+   "ref_eui_mj_m2": 868.7,
+   "diff_pct": -14.5,
+   "sim_eui_no_refrigeration": 743.1,
+   "ref_eui_no_refrigeration": 868.7,
+   "diff_no_refrigeration_pct": -14.5,
+   "severe_errors": 0,
+   "warnings": 9,
+   "modelgen_s": 0.13,
+   "simulation_s": 423.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 51.08,
+     "interior_lighting": 45.99,
+     "exterior_lighting": 32.14,
+     "interior_equipment": 116.54,
+     "fans": 18.1
+    },
+    "natural_gas": {
+     "heating": 359.4,
+     "water_systems": 119.85
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 1.461,
+     "cooling": 52.026,
+     "interior_lighting": 73.088,
+     "exterior_lighting": 32.25,
+     "interior_equipment": 142.985,
+     "fans": 27.318
+    },
+    "natural_gas": {
+     "heating": 448.799,
+     "water_systems": 90.813
+    }
+   }
+  },
+  {
+   "case": "midrise_apartment_1980_2004",
+   "archetype": "midrise_apartment",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    46.33,
+    16.84
+   ],
+   "floors": 4,
+   "floor_area_m2": 3120.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 674.5,
+   "ref_eui_mj_m2": 783.2,
+   "diff_pct": -13.9,
+   "sim_eui_no_refrigeration": 674.5,
+   "ref_eui_no_refrigeration": 783.2,
+   "diff_no_refrigeration_pct": -13.9,
+   "severe_errors": 0,
+   "warnings": 11,
+   "modelgen_s": 0.16,
+   "simulation_s": 368.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 48.13,
+     "interior_lighting": 45.99,
+     "exterior_lighting": 32.14,
+     "interior_equipment": 116.54,
+     "fans": 14.24
+    },
+    "natural_gas": {
+     "heating": 294.49,
+     "water_systems": 122.93
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 0.772,
+     "cooling": 43.237,
+     "interior_lighting": 73.088,
+     "exterior_lighting": 32.25,
+     "interior_equipment": 142.985,
+     "fans": 22.156
+    },
+    "natural_gas": {
+     "heating": 377.928,
+     "water_systems": 90.813
+    }
+   }
+  },
+  {
+   "case": "midrise_apartment_post2004",
+   "archetype": "midrise_apartment",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    46.33,
+    16.84
+   ],
+   "floors": 4,
+   "floor_area_m2": 3120.8,
+   "zones": 15,
+   "sim_eui_mj_m2": 447.7,
+   "ref_eui_mj_m2": 472.8,
+   "diff_pct": -5.3,
+   "sim_eui_no_refrigeration": 447.7,
+   "ref_eui_no_refrigeration": 472.8,
+   "diff_no_refrigeration_pct": -5.3,
+   "severe_errors": 0,
+   "warnings": 23,
+   "modelgen_s": 0.13,
+   "simulation_s": 320.5,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 42.3,
+     "interior_lighting": 42.35,
+     "exterior_lighting": 26.75,
+     "interior_equipment": 116.54,
+     "fans": 10.48
+    },
+    "natural_gas": {
+     "heating": 89.41,
+     "water_systems": 119.85
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 37.453,
+     "interior_lighting": 55.35,
+     "exterior_lighting": 26.842,
+     "interior_equipment": 142.985,
+     "fans": 12.292
+    },
+    "natural_gas": {
+     "heating": 109.319,
+     "water_systems": 88.544
+    }
+   }
+  },
+  {
+   "case": "outpatient_pre1980",
+   "archetype": "outpatient",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    43.61,
+    29.07
+   ],
+   "floors": 3,
+   "floor_area_m2": 3803.2,
+   "zones": 15,
+   "sim_eui_mj_m2": 1365.3,
+   "ref_eui_mj_m2": 2692.8,
+   "diff_pct": -49.3,
+   "sim_eui_no_refrigeration": 1365.3,
+   "ref_eui_no_refrigeration": 2692.8,
+   "diff_no_refrigeration_pct": -49.3,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.11,
+   "simulation_s": 99.5,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 198.82,
+     "interior_lighting": 246.87,
+     "exterior_lighting": 69.76,
+     "interior_equipment": 413.25,
+     "fans": 143.28,
+     "pumps": 5.26
+    },
+    "natural_gas": {
+     "heating": 207.82,
+     "interior_equipment": 61.7,
+     "water_systems": 18.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 112.379,
+     "cooling": 400.83,
+     "interior_lighting": 209.163,
+     "exterior_lighting": 69.995,
+     "interior_equipment": 472.975,
+     "fans": 266.529,
+     "pumps": 5.936,
+     "humidification": 98.033
+    },
+    "natural_gas": {
+     "heating": 996.146,
+     "interior_equipment": 49.519,
+     "water_systems": 11.264
+    }
+   }
+  },
+  {
+   "case": "outpatient_1980_2004",
+   "archetype": "outpatient",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    43.61,
+    29.07
+   ],
+   "floors": 3,
+   "floor_area_m2": 3803.2,
+   "zones": 15,
+   "sim_eui_mj_m2": 1292.5,
+   "ref_eui_mj_m2": 2515.5,
+   "diff_pct": -48.6,
+   "sim_eui_no_refrigeration": 1292.5,
+   "ref_eui_no_refrigeration": 2515.5,
+   "diff_no_refrigeration_pct": -48.6,
+   "severe_errors": 0,
+   "warnings": 4,
+   "modelgen_s": 0.1,
+   "simulation_s": 96.4,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 206.52,
+     "interior_lighting": 246.87,
+     "exterior_lighting": 69.76,
+     "interior_equipment": 413.25,
+     "fans": 130.96,
+     "pumps": 3.57
+    },
+    "natural_gas": {
+     "heating": 140.83,
+     "interior_equipment": 61.7,
+     "water_systems": 19.02
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 60.873,
+     "cooling": 394.686,
+     "interior_lighting": 209.163,
+     "exterior_lighting": 69.995,
+     "interior_equipment": 472.975,
+     "fans": 238.183,
+     "pumps": 5.589,
+     "humidification": 87.86
+    },
+    "natural_gas": {
+     "heating": 915.155,
+     "interior_equipment": 49.519,
+     "water_systems": 11.548
+    }
+   }
+  },
+  {
+   "case": "outpatient_post2004",
+   "archetype": "outpatient",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    43.61,
+    29.07
+   ],
+   "floors": 3,
+   "floor_area_m2": 3803.2,
+   "zones": 15,
+   "sim_eui_mj_m2": 1074.1,
+   "ref_eui_mj_m2": 2164.6,
+   "diff_pct": -50.4,
+   "sim_eui_no_refrigeration": 1074.1,
+   "ref_eui_no_refrigeration": 2164.6,
+   "diff_no_refrigeration_pct": -50.4,
+   "severe_errors": 0,
+   "warnings": 4,
+   "modelgen_s": 0.18,
+   "simulation_s": 94.2,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 162.2,
+     "interior_lighting": 169.76,
+     "exterior_lighting": 58.01,
+     "interior_equipment": 413.25,
+     "fans": 119.46,
+     "pumps": 2.16
+    },
+    "natural_gas": {
+     "heating": 68.99,
+     "interior_equipment": 61.7,
+     "water_systems": 18.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 48.599,
+     "cooling": 310.638,
+     "interior_lighting": 147.857,
+     "exterior_lighting": 58.202,
+     "interior_equipment": 472.975,
+     "fans": 215.565,
+     "pumps": 5.342,
+     "humidification": 74.797
+    },
+    "natural_gas": {
+     "heating": 769.853,
+     "interior_equipment": 49.519,
+     "water_systems": 11.264
+    }
+   }
+  },
+  {
+   "case": "primary_school_pre1980",
+   "archetype": "primary_school",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    101.52,
+    67.68
+   ],
+   "floors": 1,
+   "floor_area_m2": 6870.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 1328.2,
+   "ref_eui_mj_m2": 997.5,
+   "diff_pct": 33.2,
+   "sim_eui_no_refrigeration": 1328.2,
+   "ref_eui_no_refrigeration": 987.4,
+   "diff_no_refrigeration_pct": 34.5,
+   "severe_errors": 0,
+   "warnings": 4,
+   "modelgen_s": 0.04,
+   "simulation_s": 40.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 111.02,
+     "interior_lighting": 253.86,
+     "exterior_lighting": 23.97,
+     "interior_equipment": 245.4,
+     "fans": 70.06
+    },
+    "natural_gas": {
+     "heating": 559.25,
+     "interior_equipment": 34.74,
+     "water_systems": 29.86
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 88.919,
+     "interior_lighting": 269.374,
+     "exterior_lighting": 24.047,
+     "interior_equipment": 179.047,
+     "fans": 28.556,
+     "pumps": 0.396,
+     "refrigeration": 10.063
+    },
+    "natural_gas": {
+     "heating": 338.236,
+     "interior_equipment": 34.106,
+     "water_systems": 24.717
+    }
+   }
+  },
+  {
+   "case": "primary_school_1980_2004",
+   "archetype": "primary_school",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    101.52,
+    67.68
+   ],
+   "floors": 1,
+   "floor_area_m2": 6870.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 1266.6,
+   "ref_eui_mj_m2": 835.0,
+   "diff_pct": 51.7,
+   "sim_eui_no_refrigeration": 1266.6,
+   "ref_eui_no_refrigeration": 824.9,
+   "diff_no_refrigeration_pct": 53.5,
+   "severe_errors": 0,
+   "warnings": 6,
+   "modelgen_s": 0.05,
+   "simulation_s": 88.3,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 104.54,
+     "interior_lighting": 253.86,
+     "exterior_lighting": 23.97,
+     "interior_equipment": 245.4,
+     "fans": 65.14
+    },
+    "natural_gas": {
+     "heating": 508.3,
+     "interior_equipment": 34.74,
+     "water_systems": 30.62
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 60.885,
+     "interior_lighting": 269.374,
+     "exterior_lighting": 24.047,
+     "interior_equipment": 179.047,
+     "fans": 20.93,
+     "pumps": 0.218,
+     "refrigeration": 10.093
+    },
+    "natural_gas": {
+     "heating": 210.93,
+     "interior_equipment": 34.106,
+     "water_systems": 25.349
+    }
+   }
+  },
+  {
+   "case": "primary_school_post2004",
+   "archetype": "primary_school",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    101.52,
+    67.68
+   ],
+   "floors": 1,
+   "floor_area_m2": 6870.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 895.8,
+   "ref_eui_mj_m2": 702.9,
+   "diff_pct": 27.4,
+   "sim_eui_no_refrigeration": 895.8,
+   "ref_eui_no_refrigeration": 692.8,
+   "diff_no_refrigeration_pct": 29.3,
+   "severe_errors": 0,
+   "warnings": 12,
+   "modelgen_s": 0.13,
+   "simulation_s": 115.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 91.91,
+     "interior_lighting": 183.06,
+     "exterior_lighting": 19.54,
+     "interior_equipment": 245.4,
+     "fans": 42.56
+    },
+    "natural_gas": {
+     "heating": 248.69,
+     "interior_equipment": 34.74,
+     "water_systems": 29.86
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 56.495,
+     "interior_lighting": 179.457,
+     "exterior_lighting": 19.603,
+     "interior_equipment": 179.047,
+     "fans": 19.735,
+     "pumps": 0.175,
+     "refrigeration": 10.137
+    },
+    "natural_gas": {
+     "heating": 179.415,
+     "interior_equipment": 34.106,
+     "water_systems": 24.717
+    }
+   }
+  },
+  {
+   "case": "quick_service_restaurant_pre1980",
+   "archetype": "quick_service_restaurant",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    15.24,
+    15.24
+   ],
+   "floors": 1,
+   "floor_area_m2": 232.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 6576.8,
+   "ref_eui_mj_m2": 7951.5,
+   "diff_pct": -17.3,
+   "sim_eui_no_refrigeration": 6576.8,
+   "ref_eui_no_refrigeration": 7691.5,
+   "diff_no_refrigeration_pct": -14.5,
+   "severe_errors": 0,
+   "warnings": 14,
+   "modelgen_s": 0.08,
+   "simulation_s": 62.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 569.31,
+     "interior_lighting": 373.36,
+     "exterior_lighting": 199.77,
+     "interior_equipment": 1697.23,
+     "fans": 354.78
+    },
+    "natural_gas": {
+     "heating": 544.57,
+     "interior_equipment": 2427.93,
+     "water_systems": 409.81
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 198.201,
+     "interior_lighting": 743.221,
+     "exterior_lighting": 200.439,
+     "interior_equipment": 1761.901,
+     "fans": 309.934,
+     "refrigeration": 259.964
+    },
+    "natural_gas": {
+     "heating": 1704.743,
+     "interior_equipment": 2427.09,
+     "water_systems": 345.959
+    }
+   }
+  },
+  {
+   "case": "quick_service_restaurant_1980_2004",
+   "archetype": "quick_service_restaurant",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    15.24,
+    15.24
+   ],
+   "floors": 1,
+   "floor_area_m2": 232.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 6451.2,
+   "ref_eui_mj_m2": 7154.2,
+   "diff_pct": -9.8,
+   "sim_eui_no_refrigeration": 6451.2,
+   "ref_eui_no_refrigeration": 6893.0,
+   "diff_no_refrigeration_pct": -6.4,
+   "severe_errors": 0,
+   "warnings": 14,
+   "modelgen_s": 0.07,
+   "simulation_s": 58.3,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 560.88,
+     "interior_lighting": 373.36,
+     "exterior_lighting": 199.77,
+     "interior_equipment": 1697.23,
+     "fans": 343.86
+    },
+    "natural_gas": {
+     "heating": 427.84,
+     "interior_equipment": 2427.93,
+     "water_systems": 420.32
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 144.788,
+     "interior_lighting": 373.16,
+     "exterior_lighting": 200.439,
+     "interior_equipment": 1761.901,
+     "fans": 248.687,
+     "refrigeration": 261.126
+    },
+    "natural_gas": {
+     "heating": 1382.199,
+     "interior_equipment": 2427.09,
+     "water_systems": 354.782
+    }
+   }
+  },
+  {
+   "case": "quick_service_restaurant_post2004",
+   "archetype": "quick_service_restaurant",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    15.24,
+    15.24
+   ],
+   "floors": 1,
+   "floor_area_m2": 232.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 6210.9,
+   "ref_eui_mj_m2": 6970.0,
+   "diff_pct": -10.9,
+   "sim_eui_no_refrigeration": 6210.9,
+   "ref_eui_no_refrigeration": 6707.5,
+   "diff_no_refrigeration_pct": -7.4,
+   "severe_errors": 0,
+   "warnings": 16,
+   "modelgen_s": 0.06,
+   "simulation_s": 51.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 601.63,
+     "interior_lighting": 413.06,
+     "exterior_lighting": 170.52,
+     "interior_equipment": 1697.23,
+     "fans": 325.51
+    },
+    "natural_gas": {
+     "heating": 165.25,
+     "interior_equipment": 2427.93,
+     "water_systems": 409.81
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 147.456,
+     "interior_lighting": 412.843,
+     "exterior_lighting": 171.085,
+     "interior_equipment": 1761.901,
+     "fans": 246.105,
+     "refrigeration": 262.417
+    },
+    "natural_gas": {
+     "heating": 1195.102,
+     "interior_equipment": 2427.09,
+     "water_systems": 345.959
+    }
+   }
+  },
+  {
+   "case": "secondary_school_pre1980",
+   "archetype": "secondary_school",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    121.22,
+    80.81
+   ],
+   "floors": 2,
+   "floor_area_m2": 19591.6,
+   "zones": 10,
+   "sim_eui_mj_m2": 1052.0,
+   "ref_eui_mj_m2": 980.4,
+   "diff_pct": 7.3,
+   "sim_eui_no_refrigeration": 1052.0,
+   "ref_eui_no_refrigeration": 973.3,
+   "diff_no_refrigeration_pct": 8.1,
+   "severe_errors": 0,
+   "warnings": 20,
+   "modelgen_s": 0.63,
+   "simulation_s": 79.0,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 93.26,
+     "interior_lighting": 216.96,
+     "exterior_lighting": 17.48,
+     "interior_equipment": 155.43,
+     "fans": 57.68
+    },
+    "natural_gas": {
+     "heating": 465.87,
+     "interior_equipment": 18.37,
+     "water_systems": 26.94
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 83.27,
+     "interior_lighting": 209.089,
+     "exterior_lighting": 17.537,
+     "interior_equipment": 116.263,
+     "fans": 95.214,
+     "pumps": 0.621,
+     "refrigeration": 7.109
+    },
+    "natural_gas": {
+     "heating": 411.531,
+     "interior_equipment": 18.037,
+     "water_systems": 21.735
+    }
+   }
+  },
+  {
+   "case": "secondary_school_1980_2004",
+   "archetype": "secondary_school",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    121.22,
+    80.81
+   ],
+   "floors": 2,
+   "floor_area_m2": 19591.6,
+   "zones": 10,
+   "sim_eui_mj_m2": 893.1,
+   "ref_eui_mj_m2": 1070.3,
+   "diff_pct": -16.6,
+   "sim_eui_no_refrigeration": 893.1,
+   "ref_eui_no_refrigeration": 1063.2,
+   "diff_no_refrigeration_pct": -16.0,
+   "severe_errors": 0,
+   "warnings": 10,
+   "modelgen_s": 0.06,
+   "simulation_s": 55.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 88.25,
+     "interior_lighting": 216.96,
+     "exterior_lighting": 17.48,
+     "interior_equipment": 155.43,
+     "fans": 71.58,
+     "pumps": 5.29
+    },
+    "natural_gas": {
+     "heating": 292.13,
+     "interior_equipment": 18.37,
+     "water_systems": 27.63
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 270.821,
+     "interior_lighting": 209.089,
+     "exterior_lighting": 17.537,
+     "interior_equipment": 116.263,
+     "fans": 55.303,
+     "pumps": 1.349,
+     "refrigeration": 7.107
+    },
+    "natural_gas": {
+     "heating": 352.51,
+     "interior_equipment": 18.037,
+     "water_systems": 22.292
+    }
+   }
+  },
+  {
+   "case": "secondary_school_post2004",
+   "archetype": "secondary_school",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "pvav",
+   "footprint_m": [
+    121.22,
+    80.81
+   ],
+   "floors": 2,
+   "floor_area_m2": 19591.6,
+   "zones": 10,
+   "sim_eui_mj_m2": 719.6,
+   "ref_eui_mj_m2": 956.7,
+   "diff_pct": -24.8,
+   "sim_eui_no_refrigeration": 719.6,
+   "ref_eui_no_refrigeration": 949.5,
+   "diff_no_refrigeration_pct": -24.2,
+   "severe_errors": 0,
+   "warnings": 6,
+   "modelgen_s": 0.06,
+   "simulation_s": 51.0,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 80.36,
+     "interior_lighting": 173.87,
+     "exterior_lighting": 14.33,
+     "interior_equipment": 155.43,
+     "fans": 63.57,
+     "pumps": 1.95
+    },
+    "natural_gas": {
+     "heating": 184.8,
+     "interior_equipment": 18.37,
+     "water_systems": 26.94
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 237.203,
+     "interior_lighting": 172.629,
+     "exterior_lighting": 14.373,
+     "interior_equipment": 116.263,
+     "fans": 55.925,
+     "pumps": 1.216,
+     "refrigeration": 7.138
+    },
+    "natural_gas": {
+     "heating": 312.143,
+     "interior_equipment": 18.037,
+     "water_systems": 21.735
+    }
+   }
+  },
+  {
+   "case": "single_family_post2004",
+   "archetype": "single_family",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    12.19,
+    9.06
+   ],
+   "floors": 2,
+   "floor_area_m2": 220.9,
+   "zones": 2,
+   "sim_eui_mj_m2": 728.2,
+   "ref_eui_mj_m2": 744.8,
+   "diff_pct": -2.2,
+   "sim_eui_no_refrigeration": 728.2,
+   "ref_eui_no_refrigeration": 744.8,
+   "diff_no_refrigeration_pct": -2.2,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.05,
+   "simulation_s": 31.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 32.49,
+     "interior_lighting": 26.44,
+     "exterior_lighting": 5.62,
+     "interior_equipment": 114.89,
+     "fans": 18.29
+    },
+    "natural_gas": {
+     "heating": 397.49,
+     "interior_equipment": 52.58,
+     "water_systems": 80.42
+    }
+   },
+   "ref_end_uses": {
+    "natural_gas": {
+     "heating": 388.621,
+     "interior_equipment": 52.618,
+     "water_systems": 102.049
+    },
+    "electricity": {
+     "cooling": 34.952,
+     "interior_lighting": 26.455,
+     "exterior_lighting": 6.272,
+     "interior_equipment": 114.962,
+     "fans": 18.828
+    }
+   }
+  },
+  {
+   "case": "small_hotel_pre1980",
+   "archetype": "small_hotel",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "ptac",
+   "footprint_m": [
+    54.86,
+    18.29
+   ],
+   "floors": 4,
+   "floor_area_m2": 4013.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 1032.9,
+   "ref_eui_mj_m2": 811.3,
+   "diff_pct": 27.3,
+   "sim_eui_no_refrigeration": 1032.9,
+   "ref_eui_no_refrigeration": 811.3,
+   "diff_no_refrigeration_pct": 27.3,
+   "severe_errors": 0,
+   "warnings": 7,
+   "modelgen_s": 0.16,
+   "simulation_s": 91.8,
+   "sim_end_uses": {
+    "electricity": {
+     "heating": 337.42,
+     "cooling": 79.95,
+     "interior_lighting": 216.9,
+     "exterior_lighting": 65.23,
+     "interior_equipment": 142.95,
+     "fans": 9.6
+    },
+    "natural_gas": {
+     "interior_equipment": 55.0,
+     "water_systems": 125.83
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 41.883,
+     "cooling": 99.549,
+     "interior_lighting": 244.255,
+     "exterior_lighting": 65.45,
+     "interior_equipment": 202.367,
+     "fans": 14.797,
+     "pumps": 0.426
+    },
+    "natural_gas": {
+     "interior_equipment": 47.21,
+     "water_systems": 95.334
+    }
+   }
+  },
+  {
+   "case": "small_hotel_1980_2004",
+   "archetype": "small_hotel",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "ptac",
+   "footprint_m": [
+    54.86,
+    18.29
+   ],
+   "floors": 4,
+   "floor_area_m2": 4013.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 1041.8,
+   "ref_eui_mj_m2": 927.5,
+   "diff_pct": 12.3,
+   "sim_eui_no_refrigeration": 1041.8,
+   "ref_eui_no_refrigeration": 927.5,
+   "diff_no_refrigeration_pct": 12.3,
+   "severe_errors": 0,
+   "warnings": 8,
+   "modelgen_s": 0.13,
+   "simulation_s": 91.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 80.51,
+     "interior_lighting": 216.9,
+     "exterior_lighting": 65.23,
+     "interior_equipment": 142.95,
+     "fans": 8.31
+    },
+    "natural_gas": {
+     "heating": 343.83,
+     "interior_equipment": 55.0,
+     "water_systems": 129.06
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 14.498,
+     "cooling": 109.324,
+     "interior_lighting": 244.255,
+     "exterior_lighting": 65.45,
+     "interior_equipment": 202.367,
+     "fans": 55.89,
+     "pumps": 0.426
+    },
+    "natural_gas": {
+     "heating": 90.343,
+     "interior_equipment": 47.21,
+     "water_systems": 97.775
+    }
+   }
+  },
+  {
+   "case": "small_hotel_post2004",
+   "archetype": "small_hotel",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "ptac",
+   "footprint_m": [
+    54.86,
+    18.29
+   ],
+   "floors": 4,
+   "floor_area_m2": 4013.6,
+   "zones": 15,
+   "sim_eui_mj_m2": 733.8,
+   "ref_eui_mj_m2": 761.1,
+   "diff_pct": -3.6,
+   "sim_eui_no_refrigeration": 733.8,
+   "ref_eui_no_refrigeration": 761.1,
+   "diff_no_refrigeration_pct": -3.6,
+   "severe_errors": 0,
+   "warnings": 19,
+   "modelgen_s": 0.16,
+   "simulation_s": 91.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 58.73,
+     "interior_lighting": 137.88,
+     "exterior_lighting": 29.41,
+     "interior_equipment": 142.95,
+     "fans": 6.09
+    },
+    "natural_gas": {
+     "heating": 177.88,
+     "interior_equipment": 55.0,
+     "water_systems": 125.83
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 5.878,
+     "cooling": 88.016,
+     "interior_lighting": 156.553,
+     "exterior_lighting": 29.507,
+     "interior_equipment": 202.367,
+     "fans": 50.675,
+     "pumps": 0.426
+    },
+    "natural_gas": {
+     "heating": 85.141,
+     "interior_equipment": 47.21,
+     "water_systems": 95.336
+    }
+   }
+  },
+  {
+   "case": "small_office_pre1980",
+   "archetype": "small_office",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    27.69,
+    18.46
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1065.7,
+   "ref_eui_mj_m2": 1043.6,
+   "diff_pct": 2.1,
+   "sim_eui_no_refrigeration": 1065.7,
+   "ref_eui_no_refrigeration": 1043.6,
+   "diff_no_refrigeration_pct": 2.1,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.08,
+   "simulation_s": 75.0,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 88.11,
+     "interior_lighting": 206.15,
+     "exterior_lighting": 84.72,
+     "interior_equipment": 130.4,
+     "fans": 88.78
+    },
+    "natural_gas": {
+     "heating": 454.03,
+     "water_systems": 13.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 83.809,
+     "interior_lighting": 200.798,
+     "exterior_lighting": 85.003,
+     "interior_equipment": 171.629,
+     "fans": 171.394
+    },
+    "natural_gas": {
+     "heating": 308.944,
+     "water_systems": 22.048
+    }
+   }
+  },
+  {
+   "case": "small_office_1980_2004",
+   "archetype": "small_office",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    27.69,
+    18.46
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 999.4,
+   "ref_eui_mj_m2": 757.6,
+   "diff_pct": 31.9,
+   "sim_eui_no_refrigeration": 999.4,
+   "ref_eui_no_refrigeration": 757.6,
+   "diff_no_refrigeration_pct": 31.9,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.09,
+   "simulation_s": 72.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 87.08,
+     "interior_lighting": 206.15,
+     "exterior_lighting": 84.72,
+     "interior_equipment": 173.81,
+     "fans": 71.1
+    },
+    "natural_gas": {
+     "heating": 362.67,
+     "water_systems": 13.9
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 57.888,
+     "interior_lighting": 200.798,
+     "exterior_lighting": 85.003,
+     "interior_equipment": 171.629,
+     "fans": 93.004
+    },
+    "natural_gas": {
+     "heating": 126.673,
+     "water_systems": 22.576
+    }
+   }
+  },
+  {
+   "case": "small_office_post2004",
+   "archetype": "small_office",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    27.69,
+    18.46
+   ],
+   "floors": 1,
+   "floor_area_m2": 511.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 669.9,
+   "ref_eui_mj_m2": 574.0,
+   "diff_pct": 16.7,
+   "sim_eui_no_refrigeration": 669.9,
+   "ref_eui_no_refrigeration": 574.0,
+   "diff_no_refrigeration_pct": 16.7,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.07,
+   "simulation_s": 64.8,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 62.34,
+     "interior_lighting": 113.89,
+     "exterior_lighting": 70.53,
+     "interior_equipment": 173.87,
+     "fans": 53.81
+    },
+    "natural_gas": {
+     "heating": 181.93,
+     "water_systems": 13.55
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 38.677,
+     "interior_lighting": 110.905,
+     "exterior_lighting": 70.761,
+     "interior_equipment": 171.629,
+     "fans": 72.952
+    },
+    "natural_gas": {
+     "heating": 87.057,
+     "water_systems": 22.048
+    }
+   }
+  },
+  {
+   "case": "standalone_retail_pre1980",
+   "archetype": "standalone_retail",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    54.25,
+    42.29
+   ],
+   "floors": 1,
+   "floor_area_m2": 2294.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1436.2,
+   "ref_eui_mj_m2": 1383.9,
+   "diff_pct": 3.8,
+   "sim_eui_no_refrigeration": 1436.2,
+   "ref_eui_no_refrigeration": 1383.9,
+   "diff_no_refrigeration_pct": 3.8,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.06,
+   "simulation_s": 59.7,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 125.47,
+     "interior_lighting": 429.54,
+     "exterior_lighting": 68.21,
+     "interior_equipment": 87.48,
+     "fans": 103.25
+    },
+    "natural_gas": {
+     "heating": 622.3
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 2.668,
+     "cooling": 89.272,
+     "interior_lighting": 423.315,
+     "exterior_lighting": 68.44,
+     "interior_equipment": 86.666,
+     "fans": 183.789
+    },
+    "natural_gas": {
+     "heating": 529.763
+    }
+   }
+  },
+  {
+   "case": "standalone_retail_1980_2004",
+   "archetype": "standalone_retail",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    54.25,
+    42.29
+   ],
+   "floors": 1,
+   "floor_area_m2": 2294.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1349.2,
+   "ref_eui_mj_m2": 1287.7,
+   "diff_pct": 4.8,
+   "sim_eui_no_refrigeration": 1349.2,
+   "ref_eui_no_refrigeration": 1287.7,
+   "diff_no_refrigeration_pct": 4.8,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.06,
+   "simulation_s": 64.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 117.35,
+     "interior_lighting": 429.54,
+     "exterior_lighting": 68.21,
+     "interior_equipment": 87.48,
+     "fans": 89.39
+    },
+    "natural_gas": {
+     "heating": 557.27
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 1.874,
+     "cooling": 70.467,
+     "interior_lighting": 423.315,
+     "exterior_lighting": 68.44,
+     "interior_equipment": 86.666,
+     "fans": 150.663
+    },
+    "natural_gas": {
+     "heating": 486.292
+    }
+   }
+  },
+  {
+   "case": "standalone_retail_post2004",
+   "archetype": "standalone_retail",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    54.25,
+    42.29
+   ],
+   "floors": 1,
+   "floor_area_m2": 2294.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 877.8,
+   "ref_eui_mj_m2": 835.9,
+   "diff_pct": 5.0,
+   "sim_eui_no_refrigeration": 877.8,
+   "ref_eui_no_refrigeration": 835.9,
+   "diff_no_refrigeration_pct": 5.0,
+   "severe_errors": 0,
+   "warnings": 5,
+   "modelgen_s": 0.07,
+   "simulation_s": 63.8,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 83.38,
+     "interior_lighting": 221.29,
+     "exterior_lighting": 56.41,
+     "interior_equipment": 87.48,
+     "fans": 61.25
+    },
+    "natural_gas": {
+     "heating": 367.94
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "heating": 2.162,
+     "cooling": 49.12,
+     "interior_lighting": 218.083,
+     "exterior_lighting": 56.6,
+     "interior_equipment": 86.666,
+     "fans": 102.847
+    },
+    "natural_gas": {
+     "heating": 320.416
+    }
+   }
+  },
+  {
+   "case": "strip_mall_pre1980",
+   "archetype": "strip_mall",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    91.44,
+    22.86
+   ],
+   "floors": 1,
+   "floor_area_m2": 2090.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 1637.1,
+   "ref_eui_mj_m2": 1502.7,
+   "diff_pct": 8.9,
+   "sim_eui_no_refrigeration": 1637.1,
+   "ref_eui_no_refrigeration": 1502.7,
+   "diff_no_refrigeration_pct": 8.9,
+   "severe_errors": 0,
+   "warnings": 5,
+   "modelgen_s": 0.08,
+   "simulation_s": 70.1,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 145.57,
+     "interior_lighting": 511.1,
+     "exterior_lighting": 101.1,
+     "interior_equipment": 72.19,
+     "fans": 123.1
+    },
+    "natural_gas": {
+     "heating": 684.02
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 96.201,
+     "interior_lighting": 503.751,
+     "exterior_lighting": 101.434,
+     "interior_equipment": 71.434,
+     "fans": 146.824
+    },
+    "natural_gas": {
+     "heating": 583.016
+    }
+   }
+  },
+  {
+   "case": "strip_mall_1980_2004",
+   "archetype": "strip_mall",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    91.44,
+    22.86
+   ],
+   "floors": 1,
+   "floor_area_m2": 2090.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 1527.2,
+   "ref_eui_mj_m2": 1408.0,
+   "diff_pct": 8.5,
+   "sim_eui_no_refrigeration": 1527.2,
+   "ref_eui_no_refrigeration": 1408.0,
+   "diff_no_refrigeration_pct": 8.5,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.1,
+   "simulation_s": 65.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 134.0,
+     "interior_lighting": 511.1,
+     "exterior_lighting": 101.1,
+     "interior_equipment": 72.19,
+     "fans": 106.65
+    },
+    "natural_gas": {
+     "heating": 602.12
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 76.28,
+     "interior_lighting": 503.751,
+     "exterior_lighting": 101.434,
+     "interior_equipment": 71.434,
+     "fans": 117.494
+    },
+    "natural_gas": {
+     "heating": 537.611
+    }
+   }
+  },
+  {
+   "case": "strip_mall_post2004",
+   "archetype": "strip_mall",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    91.44,
+    22.86
+   ],
+   "floors": 1,
+   "floor_area_m2": 2090.3,
+   "zones": 5,
+   "sim_eui_mj_m2": 978.1,
+   "ref_eui_mj_m2": 885.0,
+   "diff_pct": 10.5,
+   "sim_eui_no_refrigeration": 978.1,
+   "ref_eui_no_refrigeration": 885.0,
+   "diff_no_refrigeration_pct": 10.5,
+   "severe_errors": 0,
+   "warnings": 5,
+   "modelgen_s": 0.07,
+   "simulation_s": 56.2,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 90.24,
+     "interior_lighting": 231.96,
+     "exterior_lighting": 86.02,
+     "interior_equipment": 72.19,
+     "fans": 73.16
+    },
+    "natural_gas": {
+     "heating": 424.53
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 49.409,
+     "interior_lighting": 228.582,
+     "exterior_lighting": 86.303,
+     "interior_equipment": 71.434,
+     "fans": 78.246
+    },
+    "natural_gas": {
+     "heating": 371.015
+    }
+   }
+  },
+  {
+   "case": "supermarket_pre1980",
+   "archetype": "supermarket",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    79.19,
+    52.8
+   ],
+   "floors": 1,
+   "floor_area_m2": 4181.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1549.4,
+   "ref_eui_mj_m2": 2578.0,
+   "diff_pct": -39.9,
+   "sim_eui_no_refrigeration": 1549.4,
+   "ref_eui_no_refrigeration": 1745.9,
+   "diff_no_refrigeration_pct": -11.3,
+   "severe_errors": 0,
+   "warnings": 3,
+   "modelgen_s": 0.07,
+   "simulation_s": 69.6,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 137.85,
+     "interior_lighting": 366.61,
+     "exterior_lighting": 61.45,
+     "interior_equipment": 186.69,
+     "fans": 108.6
+    },
+    "natural_gas": {
+     "heating": 634.86,
+     "interior_equipment": 47.97,
+     "water_systems": 5.37
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 51.301,
+     "interior_lighting": 361.81,
+     "exterior_lighting": 61.656,
+     "interior_equipment": 187.929,
+     "fans": 269.289,
+     "refrigeration": 832.132
+    },
+    "natural_gas": {
+     "heating": 760.584,
+     "interior_equipment": 47.63,
+     "water_systems": 5.695
+    }
+   }
+  },
+  {
+   "case": "supermarket_1980_2004",
+   "archetype": "supermarket",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    79.19,
+    52.8
+   ],
+   "floors": 1,
+   "floor_area_m2": 4181.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1466.6,
+   "ref_eui_mj_m2": 2527.3,
+   "diff_pct": -42.0,
+   "sim_eui_no_refrigeration": 1466.6,
+   "ref_eui_no_refrigeration": 1695.0,
+   "diff_no_refrigeration_pct": -13.5,
+   "severe_errors": 0,
+   "warnings": 4,
+   "modelgen_s": 0.07,
+   "simulation_s": 65.7,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 130.08,
+     "interior_lighting": 366.61,
+     "exterior_lighting": 61.45,
+     "interior_equipment": 186.69,
+     "fans": 96.13
+    },
+    "natural_gas": {
+     "heating": 572.27,
+     "interior_equipment": 47.97,
+     "water_systems": 5.37
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 42.822,
+     "interior_lighting": 361.81,
+     "exterior_lighting": 61.656,
+     "interior_equipment": 187.929,
+     "fans": 252.833,
+     "refrigeration": 832.271
+    },
+    "natural_gas": {
+     "heating": 734.493,
+     "interior_equipment": 47.63,
+     "water_systems": 5.836
+    }
+   }
+  },
+  {
+   "case": "supermarket_post2004",
+   "archetype": "supermarket",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    79.19,
+    52.8
+   ],
+   "floors": 1,
+   "floor_area_m2": 4181.2,
+   "zones": 5,
+   "sim_eui_mj_m2": 1043.3,
+   "ref_eui_mj_m2": 2112.9,
+   "diff_pct": -50.6,
+   "sim_eui_no_refrigeration": 1043.3,
+   "ref_eui_no_refrigeration": 1288.8,
+   "diff_no_refrigeration_pct": -19.0,
+   "severe_errors": 0,
+   "warnings": 5,
+   "modelgen_s": 0.07,
+   "simulation_s": 60.3,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 104.0,
+     "interior_lighting": 226.34,
+     "exterior_lighting": 50.87,
+     "interior_equipment": 186.69,
+     "fans": 73.99
+    },
+    "natural_gas": {
+     "heating": 348.07,
+     "interior_equipment": 47.97,
+     "water_systems": 5.37
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 26.777,
+     "interior_lighting": 223.345,
+     "exterior_lighting": 51.036,
+     "interior_equipment": 187.929,
+     "fans": 138.823,
+     "refrigeration": 824.038
+    },
+    "natural_gas": {
+     "heating": 607.584,
+     "interior_equipment": 47.63,
+     "water_systems": 5.695
+    }
+   }
+  },
+  {
+   "case": "warehouse_pre1980",
+   "archetype": "warehouse",
+   "vintage": "pre1980",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    100.58,
+    48.07
+   ],
+   "floors": 1,
+   "floor_area_m2": 4834.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 844.5,
+   "ref_eui_mj_m2": 555.8,
+   "diff_pct": 52.0,
+   "sim_eui_no_refrigeration": 844.5,
+   "ref_eui_no_refrigeration": 555.8,
+   "diff_no_refrigeration_pct": 52.0,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.09,
+   "simulation_s": 79.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 23.4,
+     "interior_lighting": 67.39,
+     "exterior_lighting": 35.48,
+     "interior_equipment": 22.99,
+     "fans": 42.88
+    },
+    "natural_gas": {
+     "heating": 652.37
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 6.968,
+     "interior_lighting": 65.938,
+     "exterior_lighting": 35.598,
+     "interior_equipment": 21.596,
+     "fans": 46.683
+    },
+    "natural_gas": {
+     "heating": 378.978
+    }
+   }
+  },
+  {
+   "case": "warehouse_1980_2004",
+   "archetype": "warehouse",
+   "vintage": "1980_2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    100.58,
+    48.07
+   ],
+   "floors": 1,
+   "floor_area_m2": 4834.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 771.2,
+   "ref_eui_mj_m2": 508.2,
+   "diff_pct": 51.8,
+   "sim_eui_no_refrigeration": 771.2,
+   "ref_eui_no_refrigeration": 508.2,
+   "diff_no_refrigeration_pct": 51.8,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.08,
+   "simulation_s": 71.9,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 18.71,
+     "interior_lighting": 67.39,
+     "exterior_lighting": 35.48,
+     "interior_equipment": 22.99,
+     "fans": 38.07
+    },
+    "natural_gas": {
+     "heating": 588.6
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 5.51,
+     "interior_lighting": 65.938,
+     "exterior_lighting": 35.598,
+     "interior_equipment": 21.596,
+     "fans": 42.34
+    },
+    "natural_gas": {
+     "heating": 337.246
+    }
+   }
+  },
+  {
+   "case": "warehouse_post2004",
+   "archetype": "warehouse",
+   "vintage": "post2004",
+   "climate_zone": "4A",
+   "hvac_system": "psz",
+   "footprint_m": [
+    100.58,
+    48.07
+   ],
+   "floors": 1,
+   "floor_area_m2": 4834.9,
+   "zones": 5,
+   "sim_eui_mj_m2": 456.5,
+   "ref_eui_mj_m2": 361.0,
+   "diff_pct": 26.4,
+   "sim_eui_no_refrigeration": 456.5,
+   "ref_eui_no_refrigeration": 361.0,
+   "diff_no_refrigeration_pct": 26.4,
+   "severe_errors": 0,
+   "warnings": 1,
+   "modelgen_s": 0.09,
+   "simulation_s": 61.2,
+   "sim_end_uses": {
+    "electricity": {
+     "cooling": 23.04,
+     "interior_lighting": 115.24,
+     "exterior_lighting": 28.89,
+     "interior_equipment": 22.99,
+     "fans": 25.05
+    },
+    "natural_gas": {
+     "heating": 241.3
+    }
+   },
+   "ref_end_uses": {
+    "electricity": {
+     "cooling": 4.949,
+     "interior_lighting": 112.727,
+     "exterior_lighting": 28.988,
+     "interior_equipment": 21.596,
+     "fans": 26.154
+    },
+    "natural_gas": {
+     "heating": 166.622
+    }
+   }
+  }
+ ]
+}
